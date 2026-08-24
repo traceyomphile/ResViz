@@ -12,7 +12,7 @@ app.add_middleware(
     allow_origins=[FRONTEND_URL],
     allow_credentials=True,
     allow_methods=['*'],
-    allow_headers=['*'],
+    allow_headers=['Content-Type', 'X-Tab-ID'],
 )
 
 app.include_router(api_router)

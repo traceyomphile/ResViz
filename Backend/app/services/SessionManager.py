@@ -1,3 +1,4 @@
+import hashlib
 import secrets
 import redis.asyncio as redis
 from datetime import timedelta, datetime
@@ -9,34 +10,36 @@ class SessionManager:
         self._redis = redis.from_url(redis_url, decode_responses=True)      # Return strings instead of bytes
         self._duration = duration   # A session expires after this amount of inactivity.
 
-    def _key(self, session_id: str) -> str:
+    def _key(self, browser_id: str, tab_id: str) -> str:
         """Create the Redis key used to store a session."""
-        return f"session:{session_id}"
+        identity = f"{browser_id}:{tab_id}".encode()
+        digest = hashlib.sha256(identity).hexdigest()
 
-    async def get(self, session_id: str, now: datetime) -> SessionResponse | None:
+        return f"tab-session:{digest}"
+
+    async def get(self, browser_id: str, tab_id: str, now: datetime) -> SessionResponse | None:
         """
-        Retrieve a session and reset its inactivity timeout.
+        Retrieve a session and reset its inactivity timeout |
+        Creates a session if none exists.
         GETEX gets the value and refreshes its Redis TTL in one operation.
         If the key has already expired, Redis returns None.
+        SETEX sets the the value while supporting an EX option directly.
         """
-        raw = await self._redis.getex(self._key(session_id), ex=int(self._duration.total_seconds()))
+        key = self._key(browser_id, tab_id)
+        ttl_seconds = int(self._duration.total_seconds())
 
-        return SessionResponse.model_validate_json(raw) if raw else None
+        raw_session = await self._redis.getex(key, ex=ttl_seconds)
+        if raw_session:
+            return SessionResponse.model_validate_json(raw_session)
 
-    async def create(self, now: datetime) -> SessionResponse:
-        session_id = secrets.token_urlsafe(32)
         session = SessionResponse(
-            session_id=session_id,
+            session_id=secrets.token_urlsafe(32),
             active_project_id=None,
             project_ids=[],
-            created_at=now
+            expires_at=now + self._duration
         )
 
-        await self._redis.set(
-            self._key(session_id),
-            session.model_dump_json(),
-            ex=int(self._duration.total_seconds()),
-        )
+        await self._redis.setex(key, ttl_seconds, session.model_dump_json())
         return session
 
     async def save(self, session: SessionResponse) -> None:

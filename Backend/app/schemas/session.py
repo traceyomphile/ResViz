@@ -12,3 +12,4 @@ class SessionResponse(BaseModel):
     active_project_id: str | None    
     project_ids: list[str]
     created_at: datetime
+    expires_at: datetime

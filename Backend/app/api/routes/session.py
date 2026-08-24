@@ -1,17 +1,20 @@
 # app/api/routes/session.py
-
+import os
+import secrets
 from datetime import datetime, timezone
-from fastapi import APIRouter, Cookie, Response
+from fastapi import APIRouter, Cookie, Header, Response
 from app.schemas.session import SessionResponse
-from app.config import SESSION_COOKIE_NAME, SESSION_DURATION
+from app.config import SESSION_COOKIE_NAME
 from app.services.SessionManager import session_manager
 
 session_router = APIRouter(prefix='/session', tags=['Session'])
+IS_PRODUCTION = os.environ.get('ENVIRONMENT') == 'production'
 
 @session_router.get('', response_model=SessionResponse)
 async def restore_session(
     response: Response,
-    resviz_session: str | None = Cookie(default=None),
+    tab_id: str = Header(alias='X-Tab-ID'),
+    browser_id: str | None = Cookie(default=None, alias=SESSION_COOKIE_NAME),
 ) -> SessionResponse:
     """
     Implements a "get or create" session pattern.
@@ -19,20 +22,20 @@ async def restore_session(
     now = datetime.now(timezone.utc)
 
     # Restore an exisiting session if one exists.
-    if resviz_session:
-        existing = await session_manager.get(resviz_session, now)
-        if existing:
-            return existing
+    if browser_id:
+        browser_id = secrets.token_urlsafe(32)
 
-        new_session = await session_manager.create(now)
         response.set_cookie(
             key=SESSION_COOKIE_NAME,
-            value=new_session.session_id,
+            value=browser_id,
             httponly=True,
-            secure=False,
+            secure=IS_PRODUCTION,
             samesite='lax',
-            max_age=int(SESSION_DURATION.total_seconds()),
             path='/'
         )
 
-        return new_session
+    return await session_manager.get(
+        browser_id=browser_id,
+        tab_id=tab_id,
+        now=now
+    )

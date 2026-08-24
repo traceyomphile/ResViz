@@ -1,11 +1,8 @@
 # Session Endpoints
 
-* POST /api/session
-    > Create a new session and sets and HTTP-only cookie
 * GET /api/session
-    > Returns the current session and its active project.
-* DELETE /api/session
-    > End the session and removes the cookie/session data.
+    > Returns the current session or creates one if one does not exist. Sets an HTTP-only cookie
+
 
 # Project Endpoints
 
