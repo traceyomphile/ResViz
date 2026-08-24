@@ -6,7 +6,7 @@ interface SplashViewProps{
 }
 
 const TITLE="ResViz";
-const WELCOME_DURATION=2000;
+const WELCOME_DURATION=5000;
 
 export function SplashView({onComplete}:SplashViewProps){
     const [typedTitle,setTypedTitle]=useState("");
