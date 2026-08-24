@@ -1,6 +1,13 @@
-import  {useState,useMemo} from "react";
+import { useState } from 'react'
+import './App.css'
+import { SplashView } from './components/SplashView.tsx'
 
-export default function App() {
-
-    return null;
+function App() {
+  return (
+    <SplashView onComplete={() => {
+        console.log("Splash screen complete");
+    }} />
+  )
 }
+
+export default App
