@@ -266,4 +266,3 @@ The frontend stores the temporary project name, knowledge base, uploaded file co
 
 Use React state if refreshing should erase everything. Use `sessionStorage` if refreshing should preserve the work while closing the tab should normally remove it.
 
-The backend therefore does not need database models, repositories, SQLAlchemy, migrations, project CRUD endpoints or server-side sessions.
