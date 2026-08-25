@@ -2,11 +2,11 @@ import hashlib
 import secrets
 import redis.asyncio as redis
 from datetime import timedelta, datetime
-from app.config import SESSION_DURATION, _REDIS
+from app.config import SESSION_DURATION, _REDIS_URL
 from app.schemas.session import SessionResponse
 
 class SessionManager:
-    def __init__(self, redis_url: str = _REDIS, duration: timedelta = SESSION_DURATION):
+    def __init__(self, redis_url: str = _REDIS_URL, duration: timedelta = SESSION_DURATION):
         self._redis = redis.from_url(redis_url, decode_responses=True)      # Return strings instead of bytes
         self._duration = duration   # A session expires after this amount of inactivity.
 

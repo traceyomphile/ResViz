@@ -1,18 +1,23 @@
-import FileUpload from './components/fileUpload'
-import './App.css'
+// src/App.tsx
 
-function App() {
-    return (
-        <main>
-            <h1>ResolutionVis</h1>
+import {useEffect, useState} from 'react';
+import {restoreSession} from './api/session';
+import type {Session} from './types/session';
 
-            <p>
-                Visualise the resolution process for logical formulas.
-            </p>
+export default function App() {
+    const [session, setSession] = useState<Session | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
-            <FileUpload />
-        </main>
-    )
+    useEffect(() => {
+        restoreSession()
+            .then(setSession)
+            .catch(() => setError('Could not restore your session'))
+            .finally(() => setLoading(false));
+    }, []);
+
+    if (loading) return <div>loading...</div>;
+    if (error) return <div>{error}</div>;
+
+    return <div>Welcome - active project: {session?.active_project_id ?? "none"}</div>;
 }
-
-export default App
