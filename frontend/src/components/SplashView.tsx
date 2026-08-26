@@ -1,4 +1,6 @@
 import {useEffect, useState} from 'react';
+// CSS is processed by the bundler and has no TypeScript module declaration.
+// @ts-ignore
 import './SplashView.css';
 
 interface SplashViewProps{
