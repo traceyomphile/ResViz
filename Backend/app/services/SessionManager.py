@@ -1,8 +1,8 @@
 import hashlib
-import secrets
+import hmac
 import redis.asyncio as redis
 from datetime import timedelta, datetime
-from app.config import SESSION_DURATION, _REDIS_URL
+from app.config import SESSION_DURATION, _REDIS_URL, SESSION_SECRET
 from app.schemas.session import SessionResponse
 
 class SessionManager:
@@ -10,12 +10,17 @@ class SessionManager:
         self._redis = redis.from_url(redis_url, decode_responses=True)      # Return strings instead of bytes
         self._duration = duration   # A session expires after this amount of inactivity.
 
-    def _key(self, browser_id: str, tab_id: str) -> str:
+    def _session_id(self, browser_id: str, tab_id: str) -> str:
+        identity = f'{browser_id}:{tab_id}'.encode()
+        return hmac.new(
+            SESSION_SECRET.encode(),
+            identity,
+            hashlib.sha256,
+        ).hexdigest()
+    
+    def _key(self, session_id) -> str:
         """Create the Redis key used to store a session."""
-        identity = f"{browser_id}:{tab_id}".encode()
-        digest = hashlib.sha256(identity).hexdigest()
-
-        return f"tab-session:{digest}"
+        return f"session:{session_id}"
 
     async def get(self, browser_id: str, tab_id: str, now: datetime) -> SessionResponse | None:
         """
@@ -25,15 +30,25 @@ class SessionManager:
         If the key has already expired, Redis returns None.
         SETEX sets the the value while supporting an EX option directly.
         """
-        key = self._key(browser_id, tab_id)
+        session_id = self._session_id(browser_id, tab_id)
+        key = self._key(session_id)
         ttl_seconds = int(self._duration.total_seconds())
 
         raw_session = await self._redis.getex(key, ex=ttl_seconds)
         if raw_session:
-            return SessionResponse.model_validate_json(raw_session)
+            session = SessionResponse.model_validate_json(raw_session)
+            session.expires_at = now + self._duration
+
+            await self._redis.set(
+                key,
+                session.model_dump_json(),
+                ex=ttl_seconds,
+            )
+
+            return session
 
         session = SessionResponse(
-            session_id=secrets.token_urlsafe(32),
+            session_id=session_id,
             active_project_id=None,
             project_ids=[],
             created_at=now,
