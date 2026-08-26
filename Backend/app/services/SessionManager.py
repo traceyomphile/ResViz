@@ -36,6 +36,7 @@ class SessionManager:
             session_id=secrets.token_urlsafe(32),
             active_project_id=None,
             project_ids=[],
+            created_at=now,
             expires_at=now + self._duration
         )
 
