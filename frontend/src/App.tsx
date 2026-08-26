@@ -12,7 +12,10 @@ export default function App() {
     useEffect(() => {
         restoreSession()
             .then(setSession)
-            .catch(() => setError('Could not restore your session'))
+            .catch((err) => {
+                alert('CAUGHT:' + String( err));
+                setError('Could not restore your session');
+                })
             .finally(() => setLoading(false));
     }, []);
 
