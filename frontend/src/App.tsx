@@ -2,16 +2,15 @@
 
 import {useEffect, useState} from 'react';
 import {restoreSession} from './api/session';
-import type {Session} from './types/session';
+import SplashScreen from './components/SplashScreen';
 
 export default function App() {
-    const [session, setSession] = useState<Session | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         restoreSession()
-            .then(setSession)
+            .then(() => {})
             .catch((err) => {
                 alert('CAUGHT:' + String( err));
                 setError('Could not restore your session');
@@ -19,8 +18,8 @@ export default function App() {
             .finally(() => setLoading(false));
     }, []);
 
-    if (loading) return <div>loading...</div>;
+    if (loading) return <SplashScreen />;
     if (error) return <div>{error}</div>;
 
-    return <div>Welcome - active project: {session?.active_project_id ?? "none"}</div>;
+    return <SplashScreen />;
 }
