@@ -22,7 +22,7 @@ async def restore_session(
     now = datetime.now(timezone.utc)
 
     # Restore an exisiting session if one exists.
-    if browser_id:
+    if not browser_id:
         browser_id = secrets.token_urlsafe(32)
 
         response.set_cookie(
@@ -34,7 +34,7 @@ async def restore_session(
             path='/'
         )
 
-    return await session_manager.get(
+    return await session_manager.get_or_create(
         browser_id=browser_id,
         tab_id=tab_id,
         now=now

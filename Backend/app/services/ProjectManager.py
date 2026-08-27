@@ -3,6 +3,7 @@ import redis.asyncio as redis
 from datetime import timedelta
 from app.config import _REDIS_URL, SESSION_DURATION
 from app.schemas.project import Project
+from app.services.SessionManager import session_manager
 
 class ProjectManager:
     def __init__(self, redis_url: str = _REDIS_URL, duration: timedelta = SESSION_DURATION):
@@ -37,4 +38,5 @@ class ProjectManager:
         return deleted_count > 0
 
     async def get_all(self, session_id: str) -> list[Project]:
+        
         values = await self._redis.hvals()
