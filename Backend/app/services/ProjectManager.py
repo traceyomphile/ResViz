@@ -1,6 +1,6 @@
 # app.services.ProjectManager
 import redis.asyncio as redis
-from datetime import timedelta
+from datetime import timedelta, datetime, timezone
 from app.config import _REDIS_URL, SESSION_DURATION
 from app.schemas.project import Project
 from app.services.SessionManager import session_manager
@@ -13,19 +13,31 @@ class ProjectManager:
     def _key(self, session_id: str, project_id: str) -> str:
         return f"project:{session_id}:{project_id}"
 
-    async def create(self, session_id: str, project: Project) -> Project | None:
-        key = self._key(session_id, project.project_id)
+    async def create(self, session_id: str, project: Project) -> Project:
+        now = datetime.now(timezone.utc)
+        session = await session_manager.get(session_id, now)
 
+        if session is None: return None
+
+        key = self._key(session_id, project.project_id)
         await self._redis.set(
             key,
-            project.project_id,
+            project.model_dump_json(),
             ex=int(self._duration.total_seconds()),
         )
 
+        if project.project_id not in session.project_ids:
+            session.project_ids.append(project.project_id)
+
+        session.active_project_id = project.project_id
+        await session_manager.save(session)
+        
         return project
 
     async def get(self, session_id: str, project_id: str) -> Project | None:
-        raw = await self._redis.get(self._key(session_id, project_id))
+        key = self._key(session_id, project_id)
+
+        raw = await self._redis.getex(key, ex=int(self._duration.total_seconds()))
 
         if not raw:
             return None
@@ -38,5 +50,29 @@ class ProjectManager:
         return deleted_count > 0
 
     async def get_all(self, session_id: str) -> list[Project]:
-        
-        values = await self._redis.hvals()
+        now = datetime.now(timezone.utc)
+        session = await session_manager.get(session_id, now)
+
+        if session is None: return []
+
+        if not session.project_ids: return []
+
+        projects: list[Project] = []
+        for proj_id in session.project_ids:
+            proj = await self.get(session_id, proj_id)
+
+            if proj is not None:
+                projects.append(proj)
+
+        return projects
+
+    async def refresh_all(self, session_id: str, project_ids: list[str]) -> None:
+        if not project_ids:
+            return None
+        ttl = int(self._duration.total_seconds())
+
+        async with self._redis.pipeline() as pipe:
+            for project_id in project_ids:
+                pipe.expire(self._key(session_id, project_id), ttl)
+
+            await pipe.execute()
