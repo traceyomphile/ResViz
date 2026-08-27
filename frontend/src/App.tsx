@@ -1,12 +1,29 @@
 import { useState } from 'react'
 import './App.css'
 import { SplashView } from './components/SplashView.tsx'
+import {ProjectView} from  './components/ProjectView.tsx'
+
 
 function App() {
+  const[screen, setScreen]=useState('splash');
   return (
-    <SplashView onComplete={() => {
-        console.log("Splash screen complete");
-    }} />
+    <>
+    {screen==="splash" &&(
+      <SplashView
+      onComplete={() =>{
+        setScreen("projects");
+      }}
+     />
+    )}
+    
+    {screen=== "projects" &&(
+      <ProjectView
+      onContinue= {(project)=>{
+        console.log("Selected project:", project)
+      }}
+      />
+    )}
+    </>
   )
 }
 
