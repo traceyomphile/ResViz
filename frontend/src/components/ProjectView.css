@@ -1,0 +1,70 @@
+.project-screen{
+    min-height: 100vh;
+    position:relative;
+    padding: 26px clamp(22px, 4vw, 68px) 34px;
+}
+
+.project-screen .content-shell--wide{
+    width:min(1240px,100%);
+    margin: 54px auto 0;
+}
+
+.project-screen .page-heading{
+    margin: 0 auto clamp(42px, 7vh, 76px);
+    max-width: 760px;
+    text-align: center;
+}
+
+.project-screen .page-heading h1{
+  margin: 0;
+  color: var(--cyan, #24bfe8);
+  font-size: clamp(46px, 6vw, 78px);
+  font-style: italic;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  text-shadow:
+    3px 0 0 rgba(255, 79, 154, 0.72),
+    0 0 15px rgba(255, 79, 154, 0.45);
+}
+
+.project-screen .page-heading p{
+    margin: 18px 0 0;
+    color: var(--muted,#9aa0ab);
+    font-size: 17px;
+}
+
+/* Container holding all the project cards */
+.project-grid{
+  display:flex;
+  flex-direction: row;
+  gap: 30px;
+}
+
+.project-card{
+    flex:1;
+    min-height: 180px;
+    padding: 28px;
+    border: 1px solid #3c404a;
+    border-radius:22px;
+    background:linear-gradient(160deg, #d7d7d8 0%, #8c8d90 100%);
+    box-shadow: inst 0 1p 0 rgba(255,255,255,0.55);
+    cursor: pointer;
+}
+
+.project-card:hover{
+    border-color:var(--green,#89d483 );
+}
+
+.project-card span{
+    display:block;
+    font-size:clamp(22px, 2vw, 30px);
+    font-weight:850;
+}
+
+.project-card small{
+    display:block;
+    margin-top:12px;
+    color:#32343a;
+    font-size: 14px;
+}
+
