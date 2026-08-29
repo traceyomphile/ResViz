@@ -13,7 +13,7 @@ class ProjectManager:
     def _key(self, session_id: str, project_id: str) -> str:
         return f"project:{session_id}:{project_id}"
 
-    async def create(self, session_id: str, project: Project) -> Project:
+    async def create(self, session_id: str, project: Project) -> Project | None:
         now = datetime.now(timezone.utc)
         session = await session_manager.get(session_id, now)
 
@@ -76,3 +76,5 @@ class ProjectManager:
                 pipe.expire(self._key(session_id, project_id), ttl)
 
             await pipe.execute()
+
+project_manager = ProjectManager()

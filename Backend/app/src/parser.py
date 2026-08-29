@@ -1,5 +1,7 @@
 import ply.yacc as yacc
-from lexer import tokens
+from app.src.lexer import tokens
+from pydantic import GetCoreSchemaHandler
+from pydantic_core import core_schema
 
 class Node(object):
 	def __init__(self, label, left=None, right=None):
@@ -31,6 +33,19 @@ class Node(object):
 		right_part = str(self.right) if self.right is not None else ""
 		
 		return f"({left_part} {self.label} {right_part})"
+
+	@classmethod
+	def __get_pydantic_core_schema(cls, source_type, handler: GetCoreSchemaHandler):
+		return core_schema.no_info_plain_validator_function(
+			cls._validate,
+			serialization=core_schema.plain_serializer_function_ser_schema(str)
+		)
+
+	@classmethod
+	def _validate(cls, value):
+		if isinstance(value, cls):
+			return value
+		raise TypeError(f'Expected Node instance, got {type(value)}')
 
 def p_binary_conju(p):
 	'''formula : LPAREN formula CONJUCTION formula RPAREN

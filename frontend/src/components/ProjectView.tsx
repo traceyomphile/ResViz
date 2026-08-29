@@ -1,49 +1,53 @@
-// @ts-expect-error CSS is handled by the bundler and has no TypeScript declarations.
+import { useState } from "react";
+import type { ProjectSummary } from "../api/projects";
 import "./ProjectView.css";
 
 interface ProjectViewProps{
-    onContinue(project: {
-        id: string;
-        name: string;
-        description: string;
-        formulas: string[];
-        goal: string;
-    }): void;
-}
+    projects: ProjectSummary[];
+    onContinue(project: ProjectSummary): void;
+    onNewProject(): void;
+} 
 
-const DEMO_PROJECTS: {
-    id: string;
-    name: string;
-    description: string;
-    formulas: string[];
-    goal: string;
-}[] = [
-    {
-    id: "new",
-    name: "+ NEW WORKSPACE",
-    description: "Start with an empty knowledge base",
-    formulas: [],
-    goal: "",
-  },
-  {
-    id: "demo-a",
-    name: "DEMO A",
-    description: "Sample project with two formulas",
-    formulas: ["P -> Q", "P"],
-    goal: "Q",
-  },
-  {
-    id: "demo-b",
-    name: "DEMO B",
-    description: "Sample project with four formulas",
-    formulas: ["M -> A", "D -> A", "A -> S", "M"],
-    goal: "S",
-  },
-];  
+export function ProjectView({
+    projects,
+    onContinue,
+    onNewProject,
+}: ProjectViewProps){
+    const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
 
-export function ProjectView({onContinue}: ProjectViewProps){
- return (
+    const handleNext = () => {
+        if (!selectedProjectId) {return;}
+
+        if (selectedProjectId === 'new') {
+            onNewProject();
+            return;
+        }
+
+        const selectedProject = projects.find(
+            (project) => project.id === selectedProjectId,
+        );
+
+        if (selectedProject) {
+            onContinue(selectedProject);
+        }
+    };
+
+    return (
     <main className="screen project-screen">
+        <nav className='top-bar'>
+            <span className="top-bar-logo">ResViz</span>
+            <button
+                className='theme-toggle'
+                type='button'
+                aria-label="Toggle light/dark mode"
+                onClick={() => {
+                    // theme switching logic to go here later.
+                }}
+            >
+                🔆
+            </button>
+        </nav>
+
         <section className="content-shell content-shell--wide">
             <header className="page-heading">
                 <h1> PROJECT</h1>
@@ -51,20 +55,55 @@ export function ProjectView({onContinue}: ProjectViewProps){
             </header>
 
             <div className="project-grid" role="list" aria-label="Projects">   
-                {DEMO_PROJECTS.map((project)=>(
-                    <button
-                     className="project-card"
-                    key={project.id}
-                    type="button"
-                    onClick={()=>onContinue(project)}
-                    role="listitem"
-                 >
-                    <span>{project.name}</span>
-                    <small>{project.description}</small>
+                <button
+                    type='button'
+                    role='listitem'
+                    className={`project-card ${
+                        selectedProjectId === 'new'
+                            ? 'project-card--selected'
+                            : ''
+                    }`}
+                    onClick={() => setSelectedProjectId('new')}
+                >
+                    <span>+ NEW PROJECT</span>
+
+                    <small>
+                        Start with an empty knowledge base
+                    </small>
                 </button>
+
+                {projects.map((project) => (
+                    <button
+                        key={project.id}
+                        type='button'
+                        role='listitem'
+                        className={`project-card ${
+                            selectedProjectId === project.id
+                                ? 'project-card--selected'
+                                : ''
+                        }`}
+                        onClick={() => setSelectedProjectId(project.id)}
+                    >
+                        <span>{project.name}</span>
+
+                        {project.description && (
+                            <small>{project.description}</small>
+                        )}
+                    </button>
                 ))}
+            </div>
+
+            <div className="project-actions">
+                <button
+                    type='button'
+                    className='project-next-button'
+                    disabled={!selectedProjectId}
+                    onClick={handleNext}
+                >
+                    Next
+                </button>
             </div>
         </section>
     </main>
- )
+    );
 }
