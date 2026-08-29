@@ -1,7 +1,8 @@
-import {useEffect, useState} from 'react';
+import { useEffect, useState } from 'react';
+import './SplashScreen.css';
 
 const LOGO_TEXT = 'ResViz';
-const TYPE_SPEED_MS = 150;
+const TYPE_SPEED_MS = 70;
 
 export default function SplashScreen() {
     const [typedText, setTypedText] = useState('');
@@ -24,59 +25,44 @@ export default function SplashScreen() {
     }, []);
 
     return (
-        <div style={styles.wrapper}>
-            <div style={styles.logo}>
-                {typedText}
-                <span style={styles.cursor}>|</span>
+        <div className="splash-screen">
+            <div className='logic-background' aria-hidden='true'>
+                <span className='logic-formula formula-1'>
+                    C1: Rain v Sunny
+                </span>
+
+                <span className='logic-formula formula-2'>
+                    P → Q
+                </span>
+
+                <span className='logic-formula formula-3'>
+                    ¬P v Q
+                </span>
+
+                <span className='logic-formula formula-4'>
+                    C7: (¬Sunny v Warm) → Raining
+                </span>
+
+                <span className='logic-formula formula-5'>
+                    (¬R v Q) ↔ (R → Q)
+                </span>
+
+                <span className='logic-formula formula-6'>
+                    ResViz
+                </span>
             </div>
+            <div className="splash-logo">
+                {typedText}
+                <span className="splash-cursor">|</span>
+            </div>
+
             <div
-                style={{
-                    ...styles.tagline,
-                    opacity: showTagline ? 1 : 0,
-                }}
+                className={`splash-tagline ${
+                    showTagline ? 'splash-tagline-visible' : ''
+                }`}
             >
-                Find your resolution
+                Find your resolution, visualise your w0rld!
             </div>
         </div>
     );
 }
-
-const styles: Record<string, React.CSSProperties> = {
-    wrapper: {
-        width: '100%',
-        height: '100vh',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: '#000',
-    },
-    logo: {
-        fontFamily: "'Georgia', serif",
-        fontStyle: 'italic',
-        fontSize: '8rem',
-        fontWeight: 1000,
-        background: 'linear-gradient(195deg, #6fe3ff 50%, #e916ca 40%, #c20d73 15%)',
-        WebkitBackgroundClip: 'text',
-        backgroundClip: 'text',
-        color: 'transparent',
-        textShadow: '0 0 2px rgba(11, 41, 112, 0), 0 0 2px rgba(24, 58, 153, 0.88)',
-        letterSpacing: '2px',
-        marginBottom: '0px',
-        minHeight: '0.8em',
-    },
-    cursor: {
-        color: '#020303f9',
-        WebkitTextFillColor: '#010101ef',
-        animation: 'blink 0.8s step-end infinite',
-    },
-    tagline: {
-        marginTop: '0px',
-        fontFamily: "'Georgia', serif",
-        fontStyle: 'italic',
-        fontSize: '2rem',
-        color: '#8a8a8a',
-        letterSpacing: '5px',
-        transition: 'opacity 0.5s ease-in',
-    },
-};

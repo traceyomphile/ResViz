@@ -10,11 +10,10 @@ class SessionManager:
         self._redis = redis.from_url(redis_url, decode_responses=True)      # Return strings instead of bytes
         self._duration = duration   # A session expires after this amount of inactivity.
 
-    def _session_id(self, browser_id: str, tab_id: str) -> str:
-        identity = f'{browser_id}:{tab_id}'.encode()
+    def _session_id(self, tab_id: str) -> str:
         return hmac.new(
             SESSION_SECRET.encode(),
-            identity,
+            tab_id.encode(),
             hashlib.sha256,
         ).hexdigest()
     
@@ -22,7 +21,7 @@ class SessionManager:
         """Create the Redis key used to store a session."""
         return f"session:{session_id}"
 
-    async def get_or_create(self, browser_id: str, tab_id: str, now: datetime) -> SessionResponse | None:
+    async def get_or_create(self, tab_id: str, now: datetime) -> SessionResponse:
         """
         Retrieve a session and reset its inactivity timeout |
         Creates a session if none exists.
@@ -30,7 +29,7 @@ class SessionManager:
         If the key has already expired, Redis returns None.
         SETEX sets the the value while supporting an EX option directly.
         """
-        session_id = self._session_id(browser_id, tab_id)
+        session_id = self._session_id(tab_id)
 
         session = await self.get(session_id, now)
 
@@ -87,6 +86,6 @@ class SessionManager:
         Permanently remove a session from Redis
         """
         deleted_count = await self._redis.delete(self._key(session_id))
-        return deleted_count > 0        # Returns true if at least one session was True
+        return deleted_count > 0        # True if a Redis key was deleted.
 
 session_manager = SessionManager()

@@ -2,54 +2,50 @@
 
 import { useEffect, useState } from 'react';
 import './App.css';
-
+import type { Session } from './types/session';
 import { restoreSession } from './api/session';
-import { SplashView } from './components/SplashView';
+import SplashScreen from './components/SplashScreen';
 import { ProjectView } from './components/ProjectView';
 
-type Screen = 'splash' | 'projects';
+const SPLASH_DURATION_MS =6400;
 
 export default function App() {
-    const [loading, setLoading] = useState(true);
+    const [showSplash, setShowSplash] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [screen, setScreen] = useState<Screen>('splash');
+    const [session, setSession] = useState<Session | null>(null);
 
     useEffect(() => {
         restoreSession()
+          .then((restoredSession) => {
+            console.log('Restored session:', restoredSession);
+            setSession(restoredSession);
+          })
             .catch((err) => {
                 console.error('Failed to restore session:', err);
                 setError('Could not restore your session');
-            })
-            .finally(() => {
-                setLoading(false);
             });
     }, []);
 
-    if (loading) {
-        return <SplashView onComplete={() => {}} />;
-    }
-
-    if (error) {
-        return <div>{error}</div>;
-    }
+    useEffect(() => {
+      const timer = setTimeout(() => setShowSplash(false), SPLASH_DURATION_MS);
+      return () => clearTimeout(timer);
+    }, []);
 
     return (
-        <>
-            {screen === 'splash' && (
-                <SplashView
-                    onComplete={() => {
-                        setScreen('projects');
-                    }}
-                />
-            )}
-
-            {screen === 'projects' && (
-                <ProjectView
-                    onContinue={(project) => {
-                        console.log('Selected project:', project);
-                    }}
-                />
-            )}
-        </>
+      <>
+        {showSplash ? (
+          <SplashScreen />
+        ) : error ? (
+          <div>{error}</div>
+        ) : session ? (
+          <ProjectView
+            onContinue={(project) => {
+              console.log('Selected project', project);
+            }}
+          />
+        ) : (
+            <div>NO SESSION FOUND</div>
+        )}
+      </>
     );
 }
