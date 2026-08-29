@@ -3,11 +3,37 @@ import type { ProjectSummary } from "../api/projects";
 import { useTheme } from "../context/ThemeContext";
 import "./ProjectView.css";
 
+interface DemoProject {
+    id: string;
+    name: string;
+    description: string;
+    formulas: string[];
+    goal: string;
+}
+
+type SelectableProject = ProjectSummary | DemoProject;
 interface ProjectViewProps{
     projects: ProjectSummary[];
-    onContinue(project: ProjectSummary): void;
+    onContinue(project: SelectableProject): void;
     onNewProject(): void;
 } 
+
+const DEMO_PROJECTS: DemoProject[] = [
+    {
+        id: "demo-a",
+        name: "DEMO A",
+        description: "Sample project with two formulas",
+        formulas: ["P -> Q", "P"],
+        goal: "Q",
+    },
+    {
+        id: "demo-b",
+        name: "DEMO B",
+        description: "Sample project with four formulas",
+        formulas: ["M -> A", "D -> A", "A -> S", "M"],
+        goal: "S",
+    },
+]
 
 export function ProjectView({
     projects,
@@ -20,6 +46,15 @@ export function ProjectView({
     const handleOPen = (id: string) => {
         if (id === 'new') {
             onNewProject();
+            return;
+        }
+
+        const selectedDemoProject = DEMO_PROJECTS.find(
+            (project) => project.id == id,
+        );
+
+        if (selectedDemoProject) {
+            onContinue(selectedDemoProject);
             return;
         }
 
@@ -85,6 +120,25 @@ export function ProjectView({
                         Start with an empty knowledge base
                     </small>
                 </button>
+
+                {DEMO_PROJECTS.map((project) => (
+                    <button 
+                        key={project.id}
+                        type='button'
+                        role='listitem'
+                        className={`project-card ${
+                            selectedProjectId === project.id
+                                ? 'project-card--selected'
+                                : ''
+                        }`}
+                        onClick={() => setSelectedProjectId(project.id)}
+                        onDoubleClick={() => handleOPen(project.id)}
+                    >
+                        <span>{project.name}</span>
+                        
+                        <small>{project.description}</small>
+                    </button>
+                ))}
 
                 {projects.map((project) => (
                     <button
