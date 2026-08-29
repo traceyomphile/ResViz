@@ -2,8 +2,9 @@
 
 * GET /api/session
     > Returns the current session or creates one if one does not exist. Sets an HTTP-only cookie
-
-
+* DELETE /api/session
+    > Deletes the current when the tab closes.
+    
 # Project Endpoints
 
 * POST /api/projects
