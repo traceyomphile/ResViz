@@ -1,0 +1,328 @@
+.input-screen{
+    min-height: 100vh;
+    background-color:#000000;
+    color:white;
+    padding:30px 50px;
+    box-sizing:border-box;
+}
+
+.content-shell--input{
+    width: min(110px,100%);
+    margin:0 auto;
+}
+
+.page-heading--input{
+    text-align: center;
+    margin-top:45px;
+    margin-bottom: 45px;
+}
+
+.page-heading--input .eyebrow{
+    color:#69b6d9;
+    font-size: 0.9rem;
+    letter-spacing:0.12em;
+    text-transform:uppercase;
+}
+
+.page-heading--input h1{
+    margin:0;
+    color:#78c7e8;
+    font-family:Georgia, 'Times New Roman', Times, serif;
+    font-size: 3.5rem;
+    font-style: italic;
+    text-shadow:
+        0 0 8px rgba(61, 170, 220, 0.7),
+        0 0 18px rgba(255, 90, 160, 0.25);   
+}
+
+.input-panel {
+    width:min(900px, 100%);
+    margin:0 auto;
+    padding: 30px;
+    box-sizing:border-box;
+    background-color: #071521;
+    border:1px solid #24536d;
+    border-radius: 14px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+}
+
+.panel-heading {
+    display:flex;
+    align-items:center;
+    gap:15px;
+    margin-bottom:30px;
+}
+
+.step-number {
+    display: flex;
+    align-items: center;
+    width:38px;
+    height:38px;
+    border:1px solid #4a9bc1;
+    border-radius:50%;
+    color: #70c3e7;
+    font-family:'Courier New', Courier, monospace
+}
+
+.panel-heading h2 {
+    margin: 0 0 5px;
+    color:#e6f5fb;
+    font-family:Georgia, 'Times New Roman', Times, serif;
+    font-size: 1.5rem;
+}
+
+.visually--hidden {
+    position:absolute;
+    width:1px;
+    height:1px;
+    overflow:hidden;
+    clip:rect(0, 0, 0, 0);
+}
+
+.upload-zone {
+    width:100%;
+    min-height: 180px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content:center;
+    background-color:#102b3d;
+    border:2px dashed #4384a2;
+    border-radius: 12px;
+    color:white;
+    cursor:pointer;
+    transition:
+        background-color 0.2s ease,
+        border-color 0.2s ease;
+}
+
+.upload-zone:hover   {
+    background-color: #15374d;
+    border-color: #6ac0e7;
+}
+
+.upload-zone:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.upload-icon {
+    width:50px;
+    height:50px;
+    display:flex;
+    align-items:center;
+    justify-content: center;
+    margin-bottom: 15px;
+    border:1px solid #4b9cc2;
+    border-radius: 50%;
+    color:#70c4e6;
+    font-size:1.6rem;
+}
+
+.upload-icon::before {
+   content: "↑";
+}
+
+.upload-zone strong {
+    font-family:Georgia, 'Times New Roman', Times, serif;
+    font-size:1.2rem;
+}
+
+.upload-zone strong small {
+    margin-top:8px;
+    color: #8ca5b3;
+    font-size: 0.8rem;
+}
+
+.upload-summary {
+    margin-top: 20px;
+    padding:18px;
+    background-color: #0c202e;
+    border:1px solid #294b5e;
+    border-radius: 8px;
+}
+
+.upload-summary div {
+    margin-bottom:10px;
+}
+
+.upload-summary span {
+    display: block;
+    color: #7e9aaa;
+    font-size: 0.8rem;
+}
+
+.upload-summary strong {
+    color:#d9edf5;
+    font-family:Georgia, 'Times New Roman', Times, serif;
+}
+
+.upload-summary p {
+    margin-bottom: 0;
+    color: #75bad6;
+}
+
+.formula-entry {
+    margin-bottom: 30px;
+}
+
+.formula-entry label,
+.goal-field label {
+    display: block;
+    margin-bottom: 8px;
+    color: #c9dce5;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.inline-field {
+    display: flex;
+    gap:10px;
+}
+
+.formula-entry input,
+.goal-field input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 13px 15px;
+    background-color: #020b12;
+    border: 1px solid #355d70;
+    border-radius: 7px;
+    color: #f0f8fb;
+    outline: none;
+    font-family: "Cambria Math", Georgia, serif;
+    font-size: 1.05rem;
+}
+
+.formula-entry input:focus,
+.goal-field input:focus {
+    border-color: #5eb5d8;
+    box-shadow: 0 0 0 3px rgba(94, 181, 216, 0.12);
+}
+
+.inline-field button {
+    min-width: 85px;
+    border: 1px solid #4286a8;
+    border-radius: 7px;
+    background-color: #153b52;
+    color: white;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.inline-field button:hover {
+    background-color: #1d4c66;
+}
+
+.operator-help {
+    margin-top: 8px;
+    color:#718c9b;
+    font-family: "Cambria Math", Georgia, serif;
+    font-size: 0.85rem;
+}
+
+.formula-list {
+    display:flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 30px;
+    padding: 10px;
+    background-color: #020b12;
+    border: 1px solid #263f4d;
+    border-radius: 9px;
+}
+
+.empty-state {
+    margin:20px;
+    color:#718b99;
+    text-align:center;
+    font-family:Georgia, 'Times New Roman', Times, serif;
+    font-style: italic;;
+}
+
+.fomula-row {
+    display: grid;
+    grid-template-columns: 50px 1fr 40px;
+    align-items: center;
+    min-height: 50px;
+    padding: 0 8px 0 15px;
+    background-color: #9db1c1;
+    border:1p solid #287ba4;
+    border-radius: 8px;
+    color:#000000;
+}
+
+.formula-row > span {
+    color: #17455d;
+    font-family:Georgia, 'Times New Roman', Times, serif;
+    font-weight:bold;
+}
+
+.fomula-row code {
+    color:#000000;
+    font-family: "Cambria Math",Georgia, Times, serif;
+    font-size:1.1rem;
+    text-align: center;
+}
+
+.fomula-row button {
+    width: 30px;
+    height: 30px;
+    border: none;
+    border-radius: 50%;
+    background-color:transparent;
+    color: #263943;
+    font-size: 1.1rem;
+    cursor: pointer;
+}
+
+.formula-row button:hover {
+    background-color: rgba(0, 0, 0, 0.1);
+    color: #000000;
+}
+
+.status-message {
+    margin-top: 15px;
+    padding:12px;
+    border-radius: 7px;
+    font-size:0.09rem;
+}
+
+.status-message--error {
+    background-color: #321b20;
+    border:1px solid #713d49;
+    color:#e8aeb9;
+}
+
+.input-screen .screen-actions {
+    width: min(900px, 100%);
+    margin: 35px auto 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;  
+}
+
+.input-screen .nav-button {
+    min-width:130px;
+    padding: 12px 25px;
+    border: 2px ssolid #58a83f;
+    border-radius: 8px;
+    background-color: #a8d79c;
+    color: #000000;
+    font-size: 1rem;
+    cursor:pointer;
+    transition: 
+        background-color 0.2s ease,
+        transform 0.2s ease;
+}
+
+.input-screen .nav-button:hover:not(disabled) {
+    background-color: #b9e5ad;
+transform:translateY(-2px);
+}
+
+.input-screen .nav-button:disabled {
+    opacity:0.4;
+    cursor: not-allowed;
+}

@@ -1,0 +1,123 @@
+.screen{
+    min-height:100vh;
+    background-color: #0000;
+    color:white;
+    padding: 30px 50px;
+    box-sizing: border-box;
+}
+
+.content-shell{
+    width:min(1100px,100%);
+    margin:0 auto;
+}
+
+.page-heading{
+    text-align:center;
+    margin-top: 70px;
+    margin-bottom: 70px;
+}
+
+.eyebrow{
+    margin:0 0 10px;
+    color:#69b6d9;
+    font-size:0.9rem;
+    font-weight:600;
+    letter-spacing: 0.15em;
+    text-transform:uppercase;
+}
+
+.page-heading h1{
+    margin:0;
+    color:#78c7e8;
+    font-family: Georgia,"Times New Roman",serif;
+    font-size: 4rem;
+    font-style:italic;
+}
+
+.page-heading >p:last-child{
+    margin-top:15px;
+    color:#a8bbc5;
+    font-size:1rem;
+}
+
+.choice-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:80px;
+    max-width:900px;
+    margin: 0 auto;
+}
+
+.choice-card{
+    min-height: 160px;
+    padding: 25px;
+    box-sizing: border-box;
+    border: 2px solid #267da5;
+    border-radius: 14px;
+    background-color: #9db1c1;
+    color: #000000;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content: center;
+    cursor: pointer;
+    transition:
+        transform 0.2s ease,
+        background-color 0.2s ease,
+        box-shadow 0.2s ease;   
+}
+
+.choice-card strong{
+    margin-bottom: 10px;
+    font-family:Georgia, 'Times New Roman', Times, serif;
+    font-size: 1.5rem;
+}
+
+
+.choice-card span{
+    color: #263640;
+    font-size: 0.9rem;
+}
+
+.choice-card:hover{
+ background-color: #aec2d2;
+ transform: translateY(-5px);
+ box-shadow:  0 10px 25px rgba(45, 157, 204, 0.25);
+}
+
+.choice-card:active{
+    transform: translateY(-1px);
+}
+
+.screen-actions{
+    display:flex;
+    margin-top:100px;
+}
+
+.screen-actions--choice{
+    justify-content:flex-start;
+}
+
+.nav-button{
+    min-width:125px;
+    padding:12px 25px;
+    border:2px solid #58a83f;
+    border-radius: 8px;
+    background-color: #a8d79c;
+    color: #000000;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition:
+        background-color 0.2s ease,
+        transform 0.2s ease;    
+}
+.nav-button--back{
+    background-color: #a8d79c;
+}
+
+
+.nav-button:hover{
+    background-color: #b9e5ad;
+    transform: translateY(-2px);
+}
