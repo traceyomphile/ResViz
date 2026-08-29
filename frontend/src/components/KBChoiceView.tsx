@@ -1,4 +1,6 @@
+import "./KBChoiceView.css";
 import type {InputMethod} from "../types"
+
 
 interface KBChoiceViewProps{
     onChoose(method:InputMethod):void;
@@ -8,7 +10,7 @@ interface KBChoiceViewProps{
 export function KBChoiceView({ onChoose,onBack,}:KBChoiceViewProps){
     return(
         <main className="screen">
-            <section className="Content-shell">
+            <section className="content-shell">
                 <header className="page-heading">
                     <p className="eyebrow">Input method</p>
                     <h1>Knowledge Base</h1>
