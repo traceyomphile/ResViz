@@ -59,10 +59,7 @@ export default function App() {
     useEffect(() => {
       if (!splashFinished) {return;}
 
-      if (error) {
-        setSplashFinished(true);
-        return;
-      }
+      if (error) {return;}
 
       if (!session) {return;}
 

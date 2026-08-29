@@ -143,6 +143,15 @@ export function KBInputView({
                                                 value={formula}
                                                 readOnly
                                             />
+
+                                            <button
+                                                type="button"
+                                                className="formula-remove"
+                                                aria-label={`Remove formula ${index + 1}`}
+                                                onClick={() => RemoveFormula(index)}
+                                            >
+                                                ×
+                                            </button>
                                         </div>
                                     ))}
 
