@@ -224,52 +224,6 @@
     font-size: 0.8rem;
 }
 
-.project-actions {
-    width: 100%;
-
-    margin-top: auto;
-    padding-top: 70px;
-
-    display: flex;
-    justify-content: flex-end;
-}
-
-.project-next-button {
-    width: clamp(150px, 15vw, 190px);
-    height: 42px;
-
-    border: 1px solid var(--btn-border);
-    border-radius: 6px;
-
-    background: var(--btn-grad);
-
-    color: var(--btn-text);
-
-    font-size: 1.15rem;
-
-    cursor: pointer;
-
-    box-shadow:
-        0 0 12px var(--btn-glow);
-
-    transition:
-        transform 0.2s ease,
-        opacity 0.2s ease,
-        box-shadow 0.2s ease;
-}
-
-.project-next-button:hover:not(:disabled) {
-    transform: translateY(-2px);
-
-    box-shadow:
-        0 0 16px var(--btn-glow-hover);
-}
-
-.project-next-button:disabled {
-    opacity: 0.35;
-    cursor: not-allowed;
-}
-
 @media (max-width: 850px) {
     .project-grid {
         grid-template-columns: 1fr;

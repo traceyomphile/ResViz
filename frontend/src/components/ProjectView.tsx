@@ -17,16 +17,14 @@ export function ProjectView({
     const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
     const { theme, toggleTheme } = useTheme();
 
-    const handleNext = () => {
-        if (!selectedProjectId) {return;}
-
-        if (selectedProjectId === 'new') {
+    const handleOPen = (id: string) => {
+        if (id === 'new') {
             onNewProject();
             return;
         }
 
         const selectedProject = projects.find(
-            (project) => project.id === selectedProjectId,
+            (project) => project.id === id,
         );
 
         if (selectedProject) {
@@ -79,6 +77,7 @@ export function ProjectView({
                             : ''
                     }`}
                     onClick={() => setSelectedProjectId('new')}
+                    onDoubleClick={() => handleOPen('new')}
                 >
                     <span>+ NEW PROJECT</span>
 
@@ -98,6 +97,7 @@ export function ProjectView({
                                 : ''
                         }`}
                         onClick={() => setSelectedProjectId(project.id)}
+                        onDoubleClick={() => handleOPen(project.id)}
                     >
                         <span>{project.name}</span>
 
@@ -106,17 +106,6 @@ export function ProjectView({
                         )}
                     </button>
                 ))}
-            </div>
-
-            <div className="project-actions">
-                <button
-                    type='button'
-                    className='project-next-button'
-                    disabled={!selectedProjectId}
-                    onClick={handleNext}
-                >
-                    Next
-                </button>
             </div>
         </section>
     </main>
