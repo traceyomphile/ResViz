@@ -66,6 +66,26 @@ class ProjectManager:
 
         return projects
 
+    async def import_project(self, session_id: str, raw_json: str, overwrite: bool = False) -> Project | None:
+        """Import a project fron its JSON representation."""
+        project = Project.model_validate_json(raw_json)
+
+        if not overwrite:
+            existing_project = await self.get(session_id, project.project_id)
+
+            if existing_project is not None:
+                raise FileExistsError(project.project_id)
+
+        return await self.create(session_id, project)
+
+    async def export_project(self, session_id: str, project_id: str) -> str | None:
+        """Return a project's JSON representation, or None"""
+        project = await self.get(session_id, project_id)
+
+        if project is None: return None
+
+        return project.model_dump_json(indent=2)    
+
     async def refresh_all(self, session_id: str, project_ids: list[str]) -> None:
         if not project_ids:
             return None
