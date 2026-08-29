@@ -36,16 +36,31 @@ export function ProjectView({
     <main className="screen project-screen">
         <nav className='top-bar'>
             <span className="top-bar-logo">ResViz</span>
-            <button
-                className='theme-toggle'
-                type='button'
-                aria-label="Toggle light/dark mode"
-                onClick={() => {
-                    // theme switching logic to go here later.
-                }}
-            >
-                🔆
-            </button>
+
+            <div className='top-bar-actions'>
+                <button
+                    className='theme-toggle'
+                    type='button'
+                    aria-label="Toggle light/dark mode"
+                    onClick={() => {
+                        // theme switching logic to go here later.
+                    }}
+                >
+                    🔆
+                </button>
+
+                <button
+                    className="menu-toggle"
+                    type='button'
+                    aria-label='Open Menu'
+                    onClick={() => {
+                        // menu logic to go here later.
+                    }}
+                >
+                    ⁞
+                </button>
+            </div>
+            
         </nav>
 
         <section className="content-shell content-shell--wide">
