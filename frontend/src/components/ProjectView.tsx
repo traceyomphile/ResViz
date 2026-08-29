@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { ProjectSummary } from "../api/projects";
+import { useTheme } from "../context/ThemeContext";
 import "./ProjectView.css";
 
 interface ProjectViewProps{
@@ -14,6 +15,7 @@ export function ProjectView({
     onNewProject,
 }: ProjectViewProps){
     const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
+    const { theme, toggleTheme } = useTheme();
 
     const handleNext = () => {
         if (!selectedProjectId) {return;}
@@ -42,11 +44,9 @@ export function ProjectView({
                     className='theme-toggle'
                     type='button'
                     aria-label="Toggle light/dark mode"
-                    onClick={() => {
-                        // theme switching logic to go here later.
-                    }}
+                    onClick={toggleTheme}
                 >
-                    🔆
+                    {theme == 'dark' ? '🔆':'🌙'}
                 </button>
 
                 <button
