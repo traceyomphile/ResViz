@@ -1,5 +1,6 @@
 import {useRef,useState} from "react";
 import type {InputMethod, KBData} from "../types";
+import "./KBInputView.css";
 
 interface KBInputViewProps {
     method: InputMethod;
@@ -18,7 +19,7 @@ interface KBInputViewProps {
     onBack(): void;
 }
 
-export function KBIInputView({
+export function KBInputView({
     method,
     projectName,
     formulas,
@@ -127,45 +128,49 @@ export function KBIInputView({
                             </div>
 
                             <div className="formula-entry">
-                                <label htmlFor="formula">Formula</label>
-                                <div className="inline-field">
-                                    <input
-                                        id="formula"
-                                        value={formulaDraft}
-                                        placeholder="Example: M-> A"
-                                        onChange={(event) => setFormulaDraft(event.target.value)}
-                                        onKeyDown={(event) => {
-                                            if (event.key === "Enter") {
-                                                event.preventDefault();
-                                                addDraftFormula();
-                                            }
-                                        }}
-                                    />
-                                    <button type="button" onClick={addDraftFormula}>
-                                        Add
-                                    </button>
-                                </div>
-                                <p className="operator-help">Allowed operators: `~`, `&`, `|`, `-&gt;`, `&lt;-&gt;`</p>
-                            </div>
+                                <label htmlFor="formula">Enter formulas</label>
 
-                            <div className="formula-list" aria-label="Knowledge-base formulas">
-                                {formulas.length === 0 ? (
-                                    <p className="empty-state">No formulas added yet.</p>
-                                ) : (
-                                    formulas.map((formula, index) => (
-                                        <div className="formula-row" key={`${formula}-${index}`}>
-                                            <span>C{index + 1}</span>
-                                            <code>{formula}</code>
-                                            <button
-                                                type="button"
-                                                aria-label={`Remove formula ${index + 1}`}
-                                                onClick={() => RemoveFormula(index)}
-                                            >
-                                                x
-                                            </button>
+                                <div className="formula-input-list">
+
+                                    {formulas.map((formula, index) => (
+                                        <div className="formula-input-row" key={`${formula}-${index}`}>
+                                            <span className="formula-number">
+                                                {index + 1}
+                                            </span>
+
+                                            <input
+                                                type="text"
+                                                value={formula}
+                                                readOnly
+                                            />
                                         </div>
-                                    ))
-                                )}
+                                    ))}
+
+                                    <div className="formula-input-row formula-input-row--active">
+                                        <span className="formula-number">
+                                            {formulas.length + 1}
+                                        </span>
+
+                                        <input
+                                            id="formula"
+                                            type="text"
+                                            value={formulaDraft}
+                                            placeholder="Enter formula, e.g. M → A"
+                                            onChange={(event) => setFormulaDraft(event.target.value)}
+                                            onKeyDown={(event) => {
+                                                if (event.key === "Enter") {
+                                                    event.preventDefault();
+                                                    addDraftFormula();
+                                                }
+                                            }}
+                                        />
+                                    </div>
+
+                                </div>
+
+                                <p className="operator-help">
+                                    Allowed operators: ~ &nbsp; · &nbsp; | &nbsp; · &nbsp; → &nbsp; · &nbsp; ↔
+                                </p>
                             </div>
 
                             <div className="goal-field">
@@ -181,7 +186,7 @@ export function KBIInputView({
                                                 
                     )}
                         </div>
-                        <div className="Screen-actions">
+                        <div className="screen-actions">
                             <button className="nav-button nav-button--back" type="button" onClick={onBack}>
                                 Back
                              </button>

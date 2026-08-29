@@ -1,4 +1,3 @@
-// @ts-expect-error CSS is handled by the bundler and has no TypeScript declarations.
 import "./ProjectView.css";
 
 interface ProjectViewProps{
