@@ -32,19 +32,6 @@
         65px;
 }
 
-.kb-choice-screen .eyebrow {
-    margin: 0 0 18px;
-
-    color: var(--text-muted);
-
-    font-size: 0.9rem;
-    font-weight: 600;
-
-    letter-spacing: 0.18em;
-
-    text-transform: uppercase;
-}
-
 .kb-choice-screen .page-heading h1 {
     margin: 0;
 
