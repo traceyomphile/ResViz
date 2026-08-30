@@ -1,8 +1,8 @@
 import hashlib
-import secrets
+import hmac
 import redis.asyncio as redis
 from datetime import timedelta, datetime
-from app.config import SESSION_DURATION, _REDIS_URL
+from app.config import SESSION_DURATION, _REDIS_URL, SESSION_SECRET
 from app.schemas.session import SessionResponse
 
 class SessionManager:
@@ -10,14 +10,18 @@ class SessionManager:
         self._redis = redis.from_url(redis_url, decode_responses=True)      # Return strings instead of bytes
         self._duration = duration   # A session expires after this amount of inactivity.
 
-    def _key(self, browser_id: str, tab_id: str) -> str:
+    def _session_id(self, tab_id: str) -> str:
+        return hmac.new(
+            SESSION_SECRET.encode(),
+            tab_id.encode(),
+            hashlib.sha256,
+        ).hexdigest()
+    
+    def _key(self, session_id) -> str:
         """Create the Redis key used to store a session."""
-        identity = f"{browser_id}:{tab_id}".encode()
-        digest = hashlib.sha256(identity).hexdigest()
+        return f"session:{session_id}"
 
-        return f"tab-session:{digest}"
-
-    async def get(self, browser_id: str, tab_id: str, now: datetime) -> SessionResponse | None:
+    async def get_or_create(self, tab_id: str, now: datetime) -> SessionResponse:
         """
         Retrieve a session and reset its inactivity timeout |
         Creates a session if none exists.
@@ -25,22 +29,45 @@ class SessionManager:
         If the key has already expired, Redis returns None.
         SETEX sets the the value while supporting an EX option directly.
         """
-        key = self._key(browser_id, tab_id)
-        ttl_seconds = int(self._duration.total_seconds())
+        session_id = self._session_id(tab_id)
 
-        raw_session = await self._redis.getex(key, ex=ttl_seconds)
-        if raw_session:
-            return SessionResponse.model_validate_json(raw_session)
+        session = await self.get(session_id, now)
 
+        if session: return session
+
+        return await self.create(session_id, now)
+
+    async def create(self, session_id: str, now: datetime) -> SessionResponse:
         session = SessionResponse(
-            session_id=secrets.token_urlsafe(32),
+            session_id=session_id,
             active_project_id=None,
             project_ids=[],
             created_at=now,
             expires_at=now + self._duration
         )
 
-        await self._redis.setex(key, ttl_seconds, session.model_dump_json())
+        await self._redis.set(
+            self._key(session_id), 
+            session.model_dump_json(),
+            ex=int(self._duration.total_seconds())
+        )
+
+        return session
+
+    async def get(self, session_id: str, now: datetime) -> SessionResponse | None:
+        key = self._key(session_id)
+        ttl_seconds = int(self._duration.total_seconds())
+
+        raw_session = await self._redis.getex(key, ex=ttl_seconds)
+
+        if not raw_session:
+            return None
+
+        session = SessionResponse.model_validate_json(raw_session)
+        session.expires_at = now + self._duration
+
+        await self._redis.set(key, session.model_dump_json(), ex=ttl_seconds)
+
         return session
 
     async def save(self, session: SessionResponse) -> None:
@@ -59,6 +86,6 @@ class SessionManager:
         Permanently remove a session from Redis
         """
         deleted_count = await self._redis.delete(self._key(session_id))
-        return deleted_count > 0        # Returns true if at least one session was True
+        return deleted_count > 0        # True if a Redis key was deleted.
 
 session_manager = SessionManager()

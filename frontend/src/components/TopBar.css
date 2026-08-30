@@ -1,0 +1,96 @@
+.app-top-bar {
+    position: fixed;
+    inset: 0 0 auto 0;
+    height: 72px;
+    z-index: 100;
+    pointer-events: none;
+}
+
+.app-top-bar-logo {
+    position: absolute;
+    top: 22px;
+    left: clamp(24px, 4vw, 1.8rem);
+
+    font-family: Georgia, serif;
+    font-style: italic;
+    font-size: clamp(1.3rem, 2vw, 1.8rem);
+    font-weight: 1000;
+
+    background: var(--brand-grad);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+
+    text-shadow:
+        0 0 2px var(--brand-shadow-1),
+        0 0 10px var(--brand-shadow-2);
+
+    pointer-events: auto;
+}
+
+.app-top-bar-actions {
+    position: absolute;
+    top: 18px;
+    right: clamp(24px, 4vw, 70px);
+
+    display: flex;
+    align-items: center;
+    gap: 18px;
+
+    pointer-events: auto;
+}
+
+.app-theme-toggle {
+    padding: 0;
+
+    border: none;
+    background: none;   
+
+    color: var(--icon-color);
+
+    font-size: 2.2rem;
+    line-height: 1;
+
+    text-shadow:
+        0 0 5px var(--icon-shadow-1),
+        0 0 14px var(--icon-shadow-2);
+
+    cursor: pointer;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+.app-menu-toggle {
+    padding: 0 4px;
+
+    border: none;
+    background: none;
+   
+    color: var(--menu-color);
+
+    font-size: 1.8rem;
+    line-height: 1;
+
+    text-shadow:
+        0 0 5px var(--menu-shadow-1),
+        0 0 12px var(--menu-shadow-2);
+
+    cursor: pointer;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+.app-theme-toggle:hover,
+.app-menu-toggle:hover {
+    filter: brightness(1.2);
+}
+
+@media (max-width: 850px) {
+    .app-theme-toggle {
+        font-size: 1.8rem;
+    }
+
+    .app-menu-toggle {
+        font-size: 1.5rem;
+    }
+}

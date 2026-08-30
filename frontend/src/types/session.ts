@@ -6,4 +6,5 @@ export interface Session {
     active_project_id: string | null;
     project_ids: string[];
     created_at: string;
+    expired_at: string;
 }

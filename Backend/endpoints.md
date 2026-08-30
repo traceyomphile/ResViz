@@ -2,8 +2,9 @@
 
 * GET /api/session
     > Returns the current session or creates one if one does not exist. Sets an HTTP-only cookie
-
-
+* DELETE /api/session
+    > Deletes the current when the tab closes.
+    
 # Project Endpoints
 
 * POST /api/projects
@@ -12,10 +13,16 @@
     > Returns all saved projects
 * GET /api/projects/{project_id}
     > Opens one specific project
+* POST /api/projects/import
+    > Accepts a .json file and loads a project
 * PUT /api/projects/{project_id}
     > Updates the project's name or details
+* GET /api/projects/{project_id}/export
+    > Downloads a <project_id>.json file.
 * DELETE /api/projects/{project_id}
     > Deletes a project
+* POST /api/projects/import?overwrite=true
+    > Replaces an exisitng project with the same ID
 
 # Knowledge-base (KB) Endpoints
 

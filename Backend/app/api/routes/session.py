@@ -2,7 +2,7 @@
 import os
 import secrets
 from datetime import datetime, timezone
-from fastapi import APIRouter, Cookie, Header, Response
+from fastapi import APIRouter, HTTPException, Header
 from app.schemas.session import SessionResponse
 from app.config import SESSION_COOKIE_NAME
 from app.services.SessionManager import session_manager
@@ -12,30 +12,22 @@ IS_PRODUCTION = os.environ.get('ENVIRONMENT') == 'production'
 
 @session_router.get('', response_model=SessionResponse)
 async def restore_session(
-    response: Response,
-    tab_id: str = Header(alias='X-Tab-ID'),
-    browser_id: str | None = Cookie(default=None, alias=SESSION_COOKIE_NAME),
+    x_tab_id: str | None = Header(default=None),
 ) -> SessionResponse:
     """
     Implements a "get or create" session pattern.
     """
+    # Restore an exisiting session if one exists.
+    if not x_tab_id:
+        raise HTTPException(status_code=400, detail='Missing X-Tab-ID header')
+
     now = datetime.now(timezone.utc)
 
-    # Restore an exisiting session if one exists.
-    if browser_id:
-        browser_id = secrets.token_urlsafe(32)
+    return await session_manager.get_or_create(x_tab_id, now)
 
-        response.set_cookie(
-            key=SESSION_COOKIE_NAME,
-            value=browser_id,
-            httponly=True,
-            secure=IS_PRODUCTION,
-            samesite='lax',
-            path='/'
-        )
+@session_router.delete("", status_code=204)
+async def delete_session(x_session_id: str | None = Header(default=None)) -> None:
+    if not x_session_id:
+        return
 
-    return await session_manager.get(
-        browser_id=browser_id,
-        tab_id=tab_id,
-        now=now
-    )
+    await session_manager.delete(x_session_id)

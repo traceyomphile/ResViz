@@ -1,4 +1,6 @@
 fastapi>=0.115.0
 ply>=3.11
+pydantic-settings>=2.0.0
+python-multipart>=0.0.32        # For uploading an actual file
 redis>=5.0.0
 uvicorn[standard]>=0.30.0

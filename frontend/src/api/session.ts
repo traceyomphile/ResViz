@@ -4,6 +4,7 @@ const API_URL = (import.meta as ImportMeta & {
     env?: { VITE_API_URL?: string };
 }).env?.VITE_API_URL ?? "";
 const TAB_ID_KEY = 'resviz_tab_id';
+const SESSION_ID_KEY = 'resviz_session_id';
 
 function generateTabId(): string {
     const bytes = new Uint8Array(16);
@@ -25,15 +26,25 @@ export function getTabId(): string {
     return tabId
 }
 
+export function getSessionId(): string | null {
+    return sessionStorage.getItem(SESSION_ID_KEY)
+}
 export async function restoreSession(): Promise<Session> {
+    const existingSessionId = getSessionId();
+
+    const headers: HeadersInit = {
+        'X-Tab-ID': getTabId(),
+    };
+
+    if (existingSessionId) {
+        headers['X-Session-ID'] = existingSessionId;
+    }
+
     let response: Response;
     try {
         response = await fetch(`${API_URL}/api/session`, {
             method: 'GET',
-            credentials: 'include',
-            headers: {
-                'X-Tab-ID': getTabId(),
-            }
+            headers,
         });
     } catch (err) {
         console.error('restoreSession: network/CORS error', err);
@@ -46,5 +57,34 @@ export async function restoreSession(): Promise<Session> {
         throw new Error(`Could not restore session (${response.status})`);
     }
 
-    return response.json()
+    const session: Session = await response.json()
+
+    sessionStorage.setItem(SESSION_ID_KEY, session.session_id);
+
+    return session;
+}
+
+export async function deleteSession(): Promise<void> {
+    const sessionId = getSessionId();
+
+    if (!sessionId) {
+        sessionStorage.clear();
+        return;
+    }
+
+    try {
+        await fetch(`${API_URL}/api/session`, {
+            method: 'DELETE',
+            headers: {
+                'X-Session-ID': sessionId,
+                'X-Tab-ID': getTabId(),
+            },
+            keepalive: true,
+        });
+    } catch (err) {
+        console.warn('Could not explicitly delete backend session.', err);
+    } finally {
+        sessionStorage.removeItem(SESSION_ID_KEY);
+        sessionStorage.removeItem(TAB_ID_KEY);
+    }
 }
