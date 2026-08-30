@@ -1,94 +1,198 @@
-import { useState } from 'react'
-import './App.css'
-import { SplashView } from './components/SplashView.tsx'
-import {ProjectView} from  './components/ProjectView.tsx'
-import { KBChoiceView } from './components/KBChoiceView.tsx'
-import { KBInputView } from './components/KBInputView.tsx'
+// src/App.tsx
+import { useEffect, useState } from 'react';
+import './App.css';
+import type { Session } from './types/session';
+import { restoreSession } from './api/session';
+import { getProjects, type ProjectSummary } from './api/projects';
+import SplashScreen from './components/SplashScreen';
+import { ProjectView } from './components/ProjectView';
+import { KBChoiceView } from './components/KBChoiceView.tsx';
+import { KBInputView } from './components/KBInputView.tsx';
+import { TopBar } from './components/TopBar.tsx';
 
+const SPLASH_DURATION_MS =6400;
 
+type Screen = 'projects' | 'kb-choice' | 'kb-input';
 
-function App() {
-  const [screen, setScreen]= useState("splash");
-  const [method, setMethod]= useState<"upload" | "type">("upload");
-  const [formulas, setFormulas]=useState<string[]>([]);
-  const [goal,setGoal] =useState("");
-  const [projectName,setProjectName]= useState<string | null>(null);
+export default function App() {
+    const [splashFinished, setSplashFinished] = useState(false);
 
-  /*this is for testing for file selected, since i cannot use the uppload function on my component as i have not connected it to backend */
-  async function uploadKB(file:File) {
-    console.log("Selected file:",file);
-  }
+    const [error, setError] = useState<string | null>(null);
+    const [session, setSession] = useState<Session | null>(null);
+    const [projects, setProjects] = useState<ProjectSummary[]>([]);
 
-  return (
-    <>
-    {screen==="splash" &&(
-      <SplashView
-      onComplete={() =>{
-        setScreen("projects");
-      }}
-     />
-    )}
+    const showSplash = !splashFinished || (splashFinished && session === null && !error);
+
+    const [screen, setScreen] = useState<Screen>('projects')
+    const [method, setMethod] = useState<'upload' | 'type'>('upload');
+
+    const [formulas, setFormulas] = useState<string[]>([]);
+    const [goal, setGoal] = useState('');
+
+    const [projectName, setProjectName] = useState<string | null>(null);
     
-    {screen=== "projects" &&(
-      <ProjectView
-      onContinue= {(project)=>{
-        console.log("Selected project:", project);
-        setScreen("kb-choice");
-      }}
-      />
-    )}
+    /**
+     * Restore/create the current ResViz session.
+     */
+    useEffect(() => {
+        restoreSession()
+          .then((restoredSession) => {
+            console.log('Restored session:', restoredSession);
+            setSession(restoredSession);
+          })
+          .catch((err) => {
+              console.error('Failed to restore session:', err);
+              setError('Could not restore your session');
+          });
+    }, []);
 
-    {screen === "kb-choice" &&(
-      <KBChoiceView
-      onChoose={(method)=>{
-        setMethod(method);
-        setScreen("kb-input");
-      }}
-      onBack={()=>{
-        setScreen("projects");
-      }}
-      />
-    )}
+    /**
+     * Allow the splash screen to finsh before moving on.
+     */
+    useEffect(() => {
+      const timer = setTimeout(() => setSplashFinished(true), SPLASH_DURATION_MS);
+      return () => clearTimeout(timer);
+    }, []);
 
-    {screen === "kb-input" && (
-      <KBInputView
-        method={method}
-        projectName={projectName}
-        formulas={formulas}
-        goal={goal}
-        upload={null}
-        isUploading={false}
-        isConverting={false}
-        uploadError=""
+    /**
+     * Load projects belonging to the current session after.
+     */
+    useEffect(() => {
+      if (!splashFinished) {return;}
 
-        onUpload={uploadKB}
+      if (error) {return;}
 
-        AddFormula={(formula: string)=> {
-          setFormulas((current) => [...current, formula]);
-        }}
-        RemoveFormula= {(index: number) => {
-          setFormulas((current) =>
-            current.filter(
-              (_,currentIndex) => currentIndex !== index
-            )
-          );
-        }}
-        GoalChange={(newGoal: string) => {
-          setGoal(newGoal);
-        }}
+      if (!session) {return;}
 
-        convert ={() =>{
-          console.log("Convert clicked")
-        }}
+      getProjects()
+        .then((loadedProjects) => {
+          console.log('Loaded projects:', loadedProjects);
+          setProjects(loadedProjects);
+          setSplashFinished(true);
+      })
+        .catch((err) => {
+          console.error('Failed to load projects:', err);
+          setError('Could not load your projects');
+          setSplashFinished(true);
+      });
+    }, [splashFinished, session, error]);
 
-        onBack={() =>{
-          setScreen("kb-choice");
-        }}
+    /**
+     * Temporary upload handler. To call backend uplaod endpoint later
+     */
+    async function uploadKBFile(file: File) {
+      console.log('Selected KB file:', file);
+    }
 
-        />
-    )}
+    return (
+      <>
+        {showSplash ? (
+          <SplashScreen />
+        ) : error ? (
+          <div>{error}</div>
+        ) : !session ? (
+            <div>NO SESSION FOUND</div>
+        ) : (
+            <>
+
+              <TopBar />
+              
+              {screen === 'projects' && (
+                <ProjectView
+                  projects={projects}
+                  onNewProject={() => {
+                    console.log('New project selected');
+
+                    setProjectName(null);
+                    setFormulas([]);
+                    setGoal('');
+
+                    setScreen('kb-choice');
+                  }}
+
+                  onContinue={(project) => {
+                    console.log('Selected project:', project);
+
+                    setProjectName(project.name);
+
+                    /**
+                     * Demo projects contain formuals and a goal
+                     */
+                    const projectFormulas = 'formulas' in project &&
+                      Array.isArray(project.formulas) ? project.formulas.filter(
+                        (formula): formula is string => typeof formula === 'string',
+                      )
+                      : [];
+
+                    const projectGoal = 'goal' in project && 
+                      typeof project.goal === 'string' ? project.goal : '';
+
+                    setFormulas(projectFormulas);
+                    setGoal(projectGoal);
+
+                    setScreen('kb-choice');
+                  }}
+                />
+              )}
+
+              {screen === 'kb-choice' && (
+                <KBChoiceView
+                  onChoose={(selectedMethod) => {
+                    setMethod(selectedMethod);
+                    setScreen('kb-input');
+                  }}
+
+                  onBack={() => {
+                    setScreen('projects');
+                  }}
+                />
+              )}
+
+              {screen === 'kb-input' && (
+                <KBInputView
+                  method={method}
+                  projectName={projectName}
+                  formulas={formulas}
+                  goal={goal}
+
+                  upload={null}
+                  isUploading={false}
+                  isConverting={false}
+                  uploadError=''
+
+                  onUpload={uploadKBFile}
+                  AddFormula={(formula: string) => {
+                    setFormulas((current) => [
+                      ...current,
+                      formula,
+                    ]);
+                  }}
+
+                  RemoveFormula={(index: number) => {
+                    setFormulas((current) => 
+                      current.filter(
+                        (_, currentIndex) =>
+                            currentIndex !== index,
+                      ),
+                    );
+                  }}
+
+                  GoalChange={(newGoal: string) => {
+                    setGoal(newGoal);
+                  }}
+
+                  Convert={() => {
+                    console.log('Convert clicked');
+                  }}
+
+                  onBack={() => {
+                    setScreen('kb-choice');
+                  }}
+                />
+              )}
+          </>
+      )}
     </>
-  )
+  );
 }
 
-export default App

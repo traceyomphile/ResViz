@@ -9,10 +9,9 @@ interface KBChoiceViewProps{
 
 export function KBChoiceView({ onChoose,onBack,}:KBChoiceViewProps){
     return(
-        <main className="screen">
+        <main className="kb-choice-screen">
             <section className="content-shell">
                 <header className="page-heading">
-                    <p className="eyebrow">Input method</p>
                     <h1>Knowledge Base</h1>
                     <p>Upload a prepared file or enter formulas manually.</p>
                 </header>

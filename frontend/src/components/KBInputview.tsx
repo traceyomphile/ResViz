@@ -52,11 +52,11 @@ export function KBInputView({
     }
 
     return (
-        <main className="screen input-screen">
+        <main className="input-screen">
             <section className="content-shell content-shell--input">
                 <header className="page-heading page-heading--input">
-                    <p className="eyebrow">{projectName ? "Sample project" : "Knowledge-base input"}</p>
-                    <h1>{projectName ?? (method === "upload" ? "upload Kb" : "Type KB")}</h1>
+                    <p className="eyebrow">Project Input</p>
+                    <h1>{projectName ?? 'New Project'}</h1>
                 </header>
 
                 <div className="input-layout input-layout--single">
@@ -143,6 +143,15 @@ export function KBInputView({
                                                 value={formula}
                                                 readOnly
                                             />
+
+                                            <button
+                                                type="button"
+                                                className="formula-remove"
+                                                aria-label={`Remove formula ${index + 1}`}
+                                                onClick={() => RemoveFormula(index)}
+                                            >
+                                                ×
+                                            </button>
                                         </div>
                                     ))}
 
