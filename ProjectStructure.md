@@ -2,8 +2,10 @@
 
 This project is organized into a FastAPI backend, a Vite + React frontend, and supporting assets for the knowledge-base / project workflow. The current codebase is centered around session management and project persistence, with the logical reasoning engine stored under the backend application source tree.
 
+There is no separate "ResViz" folder inside this repository. The repository root is the current workspace folder itself, and the tree below starts from that root.
+
 ```text
-resviz/
+.
 ├── backend/
 │   ├── .env
 │   ├── .gitkeep
