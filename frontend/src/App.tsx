@@ -8,6 +8,7 @@ import SplashScreen from './components/SplashScreen';
 import { ProjectView } from './components/ProjectView';
 import { KBChoiceView } from './components/KBChoiceView.tsx';
 import { KBInputView } from './components/KBInputView.tsx';
+import { TopBar } from './components/TopBar.tsx';
 
 const SPLASH_DURATION_MS =6400;
 
@@ -93,6 +94,9 @@ export default function App() {
             <div>NO SESSION FOUND</div>
         ) : (
             <>
+
+              <TopBar />
+              
               {screen === 'projects' && (
                 <ProjectView
                   projects={projects}

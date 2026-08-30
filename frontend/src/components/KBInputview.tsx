@@ -52,11 +52,11 @@ export function KBInputView({
     }
 
     return (
-        <main className="screen input-screen">
+        <main className="input-screen">
             <section className="content-shell content-shell--input">
                 <header className="page-heading page-heading--input">
                     <p className="eyebrow">{projectName ? "Sample project" : "Knowledge-base input"}</p>
-                    <h1>{projectName ?? (method === "upload" ? "upload Kb" : "Type KB")}</h1>
+                    <h1>{projectName ?? (method === "upload" ? "Upload Kb" : "Type KB")}</h1>
                 </header>
 
                 <div className="input-layout input-layout--single">

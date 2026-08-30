@@ -1,6 +1,5 @@
 import { useState } from "react";
 import type { ProjectSummary } from "../api/projects";
-import { useTheme } from "../context/ThemeContext";
 import "./ProjectView.css";
 
 interface DemoProject {
@@ -41,9 +40,8 @@ export function ProjectView({
     onNewProject,
 }: ProjectViewProps){
     const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
-    const { theme, toggleTheme } = useTheme();
 
-    const handleOPen = (id: string) => {
+    const handleOpen = (id: string) => {
         if (id === 'new') {
             onNewProject();
             return;
@@ -68,33 +66,7 @@ export function ProjectView({
     };
 
     return (
-    <main className="screen project-screen">
-        <nav className='top-bar'>
-            <span className="top-bar-logo">ResViz</span>
-
-            <div className='top-bar-actions'>
-                <button
-                    className='theme-toggle'
-                    type='button'
-                    aria-label="Toggle light/dark mode"
-                    onClick={toggleTheme}
-                >
-                    {theme == 'dark' ? '🔆':'🌙'}
-                </button>
-
-                <button
-                    className="menu-toggle"
-                    type='button'
-                    aria-label='Open Menu'
-                    onClick={() => {
-                        // menu logic to go here later.
-                    }}
-                >
-                    ⁞
-                </button>
-            </div>
-            
-        </nav>
+    <main className="project-screen">
 
         <section className="content-shell content-shell--wide">
             <header className="page-heading">
@@ -112,7 +84,7 @@ export function ProjectView({
                             : ''
                     }`}
                     onClick={() => setSelectedProjectId('new')}
-                    onDoubleClick={() => handleOPen('new')}
+                    onDoubleClick={() => handleOpen('new')}
                 >
                     <span>+ NEW PROJECT</span>
 
@@ -132,7 +104,7 @@ export function ProjectView({
                                 : ''
                         }`}
                         onClick={() => setSelectedProjectId(project.id)}
-                        onDoubleClick={() => handleOPen(project.id)}
+                        onDoubleClick={() => handleOpen(project.id)}
                     >
                         <span>{project.name}</span>
                         
@@ -151,7 +123,7 @@ export function ProjectView({
                                 : ''
                         }`}
                         onClick={() => setSelectedProjectId(project.id)}
-                        onDoubleClick={() => handleOPen(project.id)}
+                        onDoubleClick={() => handleOpen(project.id)}
                     >
                         <span>{project.name}</span>
 
