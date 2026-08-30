@@ -1,6 +1,12 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
+import {
+    exportProject,
+    importProject,
+    ProjectImportConflictError,
+} from '../api/projects';
 import type { ProjectSummary } from "../api/projects";
 import "./ProjectView.css";
+import { TopBar } from "./TopBar";
 
 interface DemoProject {
     id: string;
@@ -15,6 +21,7 @@ interface ProjectViewProps{
     projects: ProjectSummary[];
     onContinue(project: SelectableProject): void;
     onNewProject(): void;
+    onProjectImported?(project: ProjectSummary): void;
 } 
 
 const DEMO_PROJECTS: DemoProject[] = [
@@ -38,8 +45,21 @@ export function ProjectView({
     projects,
     onContinue,
     onNewProject,
+    onProjectImported,
 }: ProjectViewProps){
     const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
+    const [importedProjects, setImportedProjects] = useState<ProjectSummary[]>([]);
+    const [isBusy, setIsBusy] = useState(false);
+    const [message, setMessage] = useState<string | null>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const availableProjects = [...projects];
+    importedProjects.forEach((imported) => {
+        const index = availableProjects.findIndex((project) => project.id ===
+            imported.id);
+        if (index >= 0) availableProjects[index] = imported;
+        else availableProjects.push(imported);
+    });
 
     const handleOpen = (id: string) => {
         if (id === 'new') {
@@ -56,7 +76,7 @@ export function ProjectView({
             return;
         }
 
-        const selectedProject = projects.find(
+        const selectedProject = availableProjects.find(
             (project) => project.id === id,
         );
 
@@ -65,7 +85,82 @@ export function ProjectView({
         }
     };
 
+    const handleImport = async (file: File) => {
+        setIsBusy(true);
+        setMessage(null);
+
+        try {
+            let imported: ProjectSummary;
+
+            try {
+                imported = await importProject(file)
+            } catch (error) {
+                if (!(error instanceof ProjectImportConflictError)) throw error;
+
+                const overwrite = window.confirm(
+                    'A project with this ID already exists. Replace it with the imported project?',
+                );
+                if (!overwrite) {
+                    setMessage('Import cancelled. The existing project was not changed.');
+                    return;
+                }
+                imported = await importProject(file, true);
+            }
+
+            setImportedProjects((current) => [
+                ...current.filter((project) => project.id !== imported.id),
+                imported,
+            ]);
+            setSelectedProjectId(imported.id);
+            setMessage(`Imported ${imported.name} successfully.`);
+            onProjectImported?.(imported);
+        } catch (error) {
+            setMessage(error instanceof Error ? error.message : 'Could not import project.');
+        } finally {
+            setIsBusy(false);
+            if (fileInputRef.current) fileInputRef.current.value = '';
+        }
+    };
+
+    const handleExport = async () => {
+        if (!selectedProjectId) return;
+        setIsBusy(true);
+        setMessage(null);
+
+        try {
+            await exportProject(selectedProjectId);
+            setMessage('Project exported successfully.');
+        } catch (error) {
+            setMessage(error instanceof Error ? error.message : 'Could not export project.');
+        } finally {
+            setIsBusy(false);
+        }
+    };
+
+    const canExport = selectedProjectId !== null
+        && selectedProjectId !== 'new'
+        && !selectedProjectId.startsWith('demo-');
+
     return (
+    <>
+        <TopBar
+            onImportProject={() => fileInputRef.current?.click()}
+            onExportProject={() => void handleExport()}
+            canExportProject={canExport}
+            projectActionBusy={isBusy}
+            projectActionMessage={message}
+        />
+
+        <input 
+            ref={fileInputRef}
+            className="project-file-input"
+            type='file'
+            accept="application/json,.json"
+            onChange={(event) => {
+                const file = event.target.files?.[0];
+                if (file) void handleImport(file);
+            }}
+        />
     <main className="project-screen">
 
         <section className="content-shell content-shell--wide">
@@ -112,7 +207,7 @@ export function ProjectView({
                     </button>
                 ))}
 
-                {projects.map((project) => (
+                {availableProjects.map((project) => (
                     <button
                         key={project.id}
                         type='button'
@@ -133,7 +228,9 @@ export function ProjectView({
                     </button>
                 ))}
             </div>
+
         </section>
     </main>
+    </>
     );
 }

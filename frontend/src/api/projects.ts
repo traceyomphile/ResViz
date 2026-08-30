@@ -10,6 +10,14 @@ export interface ProjectSummary {
     description: string;
 }
 
+/**Handle importing Error */
+export class ProjectImportConflictError extends Error {
+    constructor() {
+        super('A project with this ID already exists');
+        this.name = 'ProjectImportConflictError'; 
+    }
+}
+
 type RawProject = 
     | string
     | {
@@ -70,5 +78,102 @@ export async function getProjects(): Promise<ProjectSummary[]> {
             description: project.description ?? '',
         };
     });
+}
+
+function projectHeaders(): Record<string, string> {
+    const sessionId = getSessionId();
+
+    if (!sessionId) {
+        throw new Error('Cannot access projects without an active session');
+    }
+
+    return {
+        'X-Session-ID': sessionId,
+        'X-Tab-ID': getTabId(),
+    };
+}
+
+function toProjectSummary(project: RawProject): ProjectSummary {
+    if (typeof project === 'string') {
+        return {id: project, name: project, description: ''};
+    }
+
+    const id = project.project_id ?? project.id;
+
+    if (!id) {
+        throw new Error('The server returned a project without an ID');
+    }
+
+    return {
+        id,
+        name: project.name ?? id,
+        description: project.description ?? '',
+    };
+}
+
+async function responseError(response: Response, fallback: string): Promise<Error> {
+    const body = await response.json().catch(() => null) as {
+        detail?: string | { message?: string };
+    } | null;
+    const detail = body?.detail;
+    const message = typeof detail === 'string'
+        ? detail
+        : detail?.message ?? fallback;
+
+    return new Error(message);
+}
+
+export async function importProject(file: File, overwrite = false): Promise<ProjectSummary> {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await fetch(
+        `${API_URL}/api/projects/import?overwrite=${overwrite}`,
+        {
+            method: 'POST',
+            headers: projectHeaders(),
+            body: formData,
+        },
+    );
+
+    if (response.status === 409) {
+        throw new ProjectImportConflictError();
+    }
+
+    if (!response.ok) {
+        throw await responseError(response, `Could not import project
+            (${response.status})`);
+    }
+
+    return toProjectSummary(await response.json() as RawProject);
+}
+
+export async function exportProject(projectId: string): Promise<void> {
+    const response = await fetch(
+        `${API_URL}/api/projects/${encodeURIComponent(projectId)}/export`,
+        {
+            method: 'GET',
+            headers: projectHeaders(),
+        },
+    );
+
+    if (!response.ok) {
+        throw await responseError(response, `Could not export project
+            (${response.status})`);
+    }
+
+    const blob = await response.blob();
+    const disposition = response.headers.get('Content-Disposition') ?? '';
+    const filenameMatch = disposition.match(/filename="?([^";]+)"?/i);
+    const filename = filenameMatch?.[1] ?? `${projectId}.json`;
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+
+    anchor.href = url;
+    anchor.download = filename;
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    URL.revokeObjectURL(url);
 }
 
