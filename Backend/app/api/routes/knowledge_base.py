@@ -16,7 +16,7 @@ from app.schemas.knowledge_base import (
 from app.services.ProjectManager import project_manager
 from app.src.parser import Node
 
-knowledge_base_router = APIRouter(tags='Knowledge Base')
+knowledge_base_router = APIRouter(tags=['Knowledge Base'])
 node_adapter = TypeAdapter(Node)
 MAX_UPLOAD_BYTES = 1024 * 1024
 

@@ -56,7 +56,7 @@ export function KBInputView({
             <section className="content-shell content-shell--input">
                 <header className="page-heading page-heading--input">
                     <p className="eyebrow">Project Input</p>
-                    <h1>{'New Project'}</h1>
+                    <h1>{projectName ?? 'New Project'}</h1>
                 </header>
 
                 <div className="input-layout input-layout--single">
@@ -73,7 +73,7 @@ export function KBInputView({
                                 ref={fileInputRef}
                                 className="visually-hidden"
                                 type="file"
-                                accept=".json, .txt, .kb, application/json, text/plain"
+                                accept=".json, application/json"
                                 onChange={(event) => void selectedFile(event.target.files?.[0])}
                             />
                             <button
@@ -84,7 +84,7 @@ export function KBInputView({
                             >
                                 <span className="upload-icon" aria-hidden="true"></span>
                                 <strong>{isUploading ? "uploadin..." : "Choose knowledge-base file"}</strong>
-                                <small>Maximum 1 MB · `.json`, `.txt`, `.kb`</small>
+                                <small>Maximum 1 MB · `.json`</small>
                             </button>
 
                             {uploadError && <p className="status-message status-message--error">{uploadError}</p>}
@@ -96,6 +96,7 @@ export function KBInputView({
                                     </div>
                                     <div>
                                         <span>Formulas loaded</span>
+                                        <strong>{upload.formulas.length}</strong>
                                     </div>
                                     <p>Knowledge base uploaded successfully.</p>
                                 </div>
@@ -164,7 +165,7 @@ export function KBInputView({
                                             id="formula"
                                             type="text"
                                             value={formulaDraft}
-                                            placeholder="Enter formula, e.g. M → A"
+                                            placeholder="Enter formula, e.g. (M → A)"
                                             onChange={(event) => setFormulaDraft(event.target.value)}
                                             onKeyDown={(event) => {
                                                 if (event.key === "Enter") {
