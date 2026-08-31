@@ -1,6 +1,6 @@
 # app/schemas/knowledge_base.py
 import uuid
-from datetime import datetime, timzeone
+from datetime import datetime, timezone
 from pydantic import BaseModel, Field
 from app.src.parser import Node
 
@@ -37,7 +37,7 @@ class KnowledgeBaseEntry(BaseModel):
     id: str = Field(default_factory=lambda: uuid.uuid4().hex)
     name: str
     formulas: list[Node]
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timzeone.utc))
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class KnowledgeBaseEntrySummary(BaseModel):
     """Lightweight representation used to populate the sidebar."""

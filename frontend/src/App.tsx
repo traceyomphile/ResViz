@@ -235,6 +235,7 @@ export default function App() {
 
               {screen === 'kb-choice' && (
                 <KBChoiceView
+                  projectId={activeProjectId ?? ''}
                   onChoose={(selectedMethod) => {
                     setMethod(selectedMethod);
                     setScreen('kb-input');

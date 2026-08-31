@@ -108,7 +108,7 @@ class ProjectManager:
         return await self.save(session_id, project)
 
     async def list_knowledge_base_entries(self, session_id: str, project_id: str) -> list[KnowledgeBaseEntry] | None:
-        project = await self.get(session_id, project)
+        project = await self.get(session_id, project_id)
 
         if project is None: return None
 

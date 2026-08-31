@@ -35,6 +35,18 @@ export interface CNFConversionResponse {
     status: string;
 }
 
+export interface KnowledgeBaseEntrySummary {
+    id: string;
+    name: string;
+    formula_count: number;
+    created_at: string;
+}
+
+export interface KnowledgeBaseListResponse {
+    project_id: string;
+    knowledge_bases: KnowledgeBaseEntrySummary[];
+}
+
 function sessionHeaders(): Record<string, string> {
     const sessionId = getSessionId();
 
@@ -150,4 +162,75 @@ export async function convertProjectToCnf(projectId: string): Promise<CNFConvers
     }
 
     return response.json() as Promise<CNFConversionResponse>;
+}
+
+export async function listKnowledgeBases(projectId: string): Promise<KnowledgeBaseListResponse> {
+    const response = await fetch(
+        `${API_URL}/api/projects/${encodeURIComponent(projectId)}/knowledge-bases`,
+        {
+            headers: sessionHeaders(),
+        },
+    );
+ 
+    if (!response.ok) {
+        throw await responseError(response, 'Could not load the saved knowledge bases');
+    }
+ 
+    return response.json() as Promise<KnowledgeBaseListResponse>;
+}
+ 
+/** Called by KBInputView's SAVE KB button. Adds a named entry to the project's sidebar library. */
+export async function saveNamedKnowledgeBase(
+    projectId: string,
+    name: string,
+    formulas: string[],
+): Promise<KnowledgeBaseEntrySummary> {
+    const response = await fetch(
+        `${API_URL}/api/projects/${encodeURIComponent(projectId)}/knowledge-bases`,
+        {
+            method: 'POST',
+            headers: {
+                ...sessionHeaders(),
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({name, formulas}),
+        },
+    );
+ 
+    if (!response.ok) {
+        throw await responseError(response, 'Could not save the knowledge base');
+    }
+ 
+    return response.json() as Promise<KnowledgeBaseEntrySummary>;
+}
+ 
+/** Loads a previously saved named KB from the sidebar back into the project's active working set. */
+export async function activateKnowledgeBase(projectId: string, kbId: string): Promise<KnowledgeBaseResponse> {
+    const response = await fetch(
+        `${API_URL}/api/projects/${encodeURIComponent(projectId)}/knowledge-bases/${encodeURIComponent(kbId)}/activate`,
+        {
+            method: 'PUT',
+            headers: sessionHeaders(),
+        },
+    );
+ 
+    if (!response.ok) {
+        throw await responseError(response, 'Could not load the selected knowledge base');
+    }
+ 
+    return response.json() as Promise<KnowledgeBaseResponse>;
+}
+ 
+export async function deleteSavedKnowledgeBase(projectId: string, kbId: string): Promise<void> {
+    const response = await fetch(
+        `${API_URL}/api/projects/${encodeURIComponent(projectId)}/knowledge-bases/${encodeURIComponent(kbId)}`,
+        {
+            method: 'DELETE',
+            headers: sessionHeaders(),
+        },
+    );
+ 
+    if (!response.ok && response.status !== 204) {
+        throw await responseError(response, 'Could not delete the knowledge base');
+    }
 }
