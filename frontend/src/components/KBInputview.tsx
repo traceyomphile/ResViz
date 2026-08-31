@@ -56,7 +56,7 @@ export function KBInputView({
             <section className="content-shell content-shell--input">
                 <header className="page-heading page-heading--input">
                     <p className="eyebrow">Project Input</p>
-                    <h1>{projectName ?? 'New Project'}</h1>
+                    <h1>{'New Project'}</h1>
                 </header>
 
                 <div className="input-layout input-layout--single">

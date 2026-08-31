@@ -10,7 +10,7 @@ import { KBChoiceView } from './components/KBChoiceView.tsx';
 import { KBInputView } from './components/KBInputView.tsx';
 import { TopBar } from './components/TopBar.tsx';
 
-const SPLASH_DURATION_MS =6400;
+const SPLASH_DURATION_MS =6000;
 
 type Screen = 'projects' | 'kb-choice' | 'kb-input';
 
@@ -100,37 +100,39 @@ export default function App() {
               {screen === 'projects' && (
                 <ProjectView
                   projects={projects}
-                  onNewProject={() => {
-                    console.log('New project selected');
-
-                    setProjectName(null);
-                    setFormulas([]);
-                    setGoal('');
-
-                    setScreen('kb-choice');
+                  onProjectCreated={(project) => {
+                    setProjects((current) => [
+                      ...current.filter((item) => item.id !== project.id),
+                      project,
+                    ]);
                   }}
-
                   onContinue={(project) => {
                     console.log('Selected project:', project);
 
                     setProjectName(project.name);
 
-                    /**
-                     * Demo projects contain formuals and a goal
-                     */
-                    const projectFormulas = 'formulas' in project &&
+                    /** Demo projects contain formulas and a goal */
+                    const projectFormulas = 'formulas' in project && 
                       Array.isArray(project.formulas) ? project.formulas.filter(
                         (formula): formula is string => typeof formula === 'string',
                       )
                       : [];
 
-                    const projectGoal = 'goal' in project && 
-                      typeof project.goal === 'string' ? project.goal : '';
+                    const projectGoal = 'goal' in project && typeof project.goal === 'string'
+                      ? project.goal : '';
 
+                    
                     setFormulas(projectFormulas);
                     setGoal(projectGoal);
 
                     setScreen('kb-choice');
+                  }}
+
+                  onProjectImported={(project) => {
+                    setProjects((current) => [
+                      ...current.filter((item) => item.id !== project.id),
+                      project,
+                    ]);
                   }}
                 />
               )}

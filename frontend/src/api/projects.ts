@@ -2,12 +2,23 @@ import {getSessionId, getTabId} from './session'
 
 const API_URL = (import.meta as ImportMeta & {
     env?: {VITE_API_URL?: string };
-}).env?.VITE_API_URL ?? '';
+}).env?.VITE_API_URL ?? 'http://localhost:8000';
 
 export interface ProjectSummary {
     id: string;
     name: string;
     description: string;
+    formulas?: string[];
+    goal?: string;
+    status?: string;
+}
+
+export interface CreateProjectInput {
+    id?: string;
+    name: string;
+    description?: string;
+    formulas?: string[];
+    goal?: string;
 }
 
 /**Handle importing Error */
@@ -18,6 +29,7 @@ export class ProjectImportConflictError extends Error {
     }
 }
 
+
 type RawProject = 
     | string
     | {
@@ -25,6 +37,10 @@ type RawProject =
         project_id?: string;
         name?: string;
         description?: string;
+        knowledge_base?: unknown[];
+        formulas?: unknown[];
+        goal?: unknown;
+        status?: string;
     };
 
 export async function getProjects(): Promise<ProjectSummary[]> {
@@ -108,9 +124,80 @@ function toProjectSummary(project: RawProject): ProjectSummary {
         id,
         name: project.name ?? id,
         description: project.description ?? '',
+        formulas: (project.knowledge_base ?? project.formulas ?? [])
+            .filter((formula): formula is string => typeof formula === 'string'),
+        goal: typeof project.goal === 'string' ? project.goal : '',
+        status: project.status,
     };
 }
 
+export async function getProject(projectId: string): Promise<ProjectSummary> {
+    const response = await fetch(
+        `${API_URL}/api/projects/${encodeURIComponent(projectId)}`,
+        {
+            method: 'GET',
+            headers: projectHeaders(),
+        }
+    );
+
+    if (!response.ok) {
+        throw await responseError(
+            response,
+            `Could not load project (${response.status})`,
+        );
+    }
+    return toProjectSummary(await response.json() as RawProject);
+}
+
+function generateProjectId(): string {
+    if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+        return crypto.randomUUID();
+    }
+
+    const bytes = new Uint8Array(16);
+    crypto.getRandomValues(bytes);
+
+    bytes[6] = (bytes[6] & 0x0f) | 0x40;    // version 4
+    bytes[8] = (bytes[8] & 0x3f) | 0x80;     // variant 10
+
+    const hex = Array.from(bytes).map((byte) => byte.toString(16).padStart(2, '0'));
+
+    return [
+        hex.slice(0, 4).join(''),
+        hex.slice(4, 6).join(''),
+        hex.slice(6, 8).join(''),
+        hex.slice(8, 10).join(''),
+        hex.slice(10, 16).join(''),
+    ].join('-');
+}
+export async function createProject(input: CreateProjectInput): Promise<ProjectSummary> {
+    const response = await fetch(`${API_URL}/api/projects`, {
+        method: 'POST',
+        headers: {
+            ...projectHeaders(),
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            project_id: input.id ?? generateProjectId(),
+            name: input.name,
+            description: input.description ?? '',
+            knowledge_base: input.formulas ?? [],
+            cnf_kb: null,
+            goal: input.goal || null,
+            status: 'draft',
+            resolution_result: '',
+        }),
+    });
+
+    if (!response.ok) {
+        throw await responseError(
+            response,
+            `Could not create project (${response.status})`,
+        );
+    }
+
+    return toProjectSummary(await response.json() as RawProject);
+}
 async function responseError(response: Response, fallback: string): Promise<Error> {
     const body = await response.json().catch(() => null) as {
         detail?: string | { message?: string };

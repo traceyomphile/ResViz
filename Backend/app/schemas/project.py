@@ -9,6 +9,6 @@ class Project(BaseModel):
     project_id: str
     knowledge_base: list[Node]
     cnf_kb: list[Node] | None
-    goal: Node
+    goal: Node | None
     status: str
     resolution_result: str

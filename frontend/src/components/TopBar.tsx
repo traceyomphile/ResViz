@@ -3,7 +3,7 @@ import { useTheme } from '../context/ThemeContext';
 import './TopBar.css';
 
 interface TopBarProps {
-    onImportProject(): void;
+    onImportProject?(): void;
     onExportProject?(): void;
     canExportProject?: boolean;
     projectActionBusy?: boolean;
@@ -95,16 +95,15 @@ export function TopBar({
                                 <span aria-hidden='true'>⇩</span>
                                 Export Project
                             </button>
-
-                            {projectActionMessage && (
-                                <p className='app-menu-message' role='status'>
-                                    {projectActionMessage}
-                                </p>
-                            )}
                         </div>
                     )}
                 </div>     
             </div>
+            {projectActionMessage && (
+                <p className='app-menu-message' role='status'>
+                    {projectActionMessage}
+                </p>
+            )}
         </nav>
     );
 }

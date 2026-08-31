@@ -96,3 +96,14 @@ clean:
 		$(BACKEND_DIR)/data \
 		$(FRONTEND_DIR)/node_modules \
 		$(FRONTEND_DIR)/dist
+
+clean-backend:
+	rm -rf \
+		$(VENV) \
+		$(BACKEND_DIR)/.pytest_cache \
+		$(BACKEND_DIR)/data
+
+clean-frontend:
+	rm -rf \
+		$(FRONTEND_DIR)/node_modules \
+		$(FRONTEND_DIR)/dist

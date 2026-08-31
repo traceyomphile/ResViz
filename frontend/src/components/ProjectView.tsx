@@ -1,7 +1,9 @@
 import { useRef, useState } from "react";
 import {
+    createProject,
     exportProject,
     importProject,
+    getProject,
     ProjectImportConflictError,
 } from '../api/projects';
 import type { ProjectSummary } from "../api/projects";
@@ -15,12 +17,10 @@ interface DemoProject {
     formulas: string[];
     goal: string;
 }
-
-type SelectableProject = ProjectSummary | DemoProject;
 interface ProjectViewProps{
     projects: ProjectSummary[];
-    onContinue(project: SelectableProject): void;
-    onNewProject(): void;
+    onContinue(project: ProjectSummary): void;
+    onProjectCreated(project: ProjectSummary): void;
     onProjectImported?(project: ProjectSummary): void;
 } 
 
@@ -29,14 +29,14 @@ const DEMO_PROJECTS: DemoProject[] = [
         id: "demo-a",
         name: "DEMO A",
         description: "Sample project with two formulas",
-        formulas: ["P -> Q", "P"],
+        formulas: ["(P -> Q)", "P"],
         goal: "Q",
     },
     {
         id: "demo-b",
         name: "DEMO B",
         description: "Sample project with four formulas",
-        formulas: ["M -> A", "D -> A", "A -> S", "M"],
+        formulas: ["(M -> A)", "(D -> A)", "(A -> S)", "M"],
         goal: "S",
     },
 ]
@@ -44,7 +44,7 @@ const DEMO_PROJECTS: DemoProject[] = [
 export function ProjectView({
     projects,
     onContinue,
-    onNewProject,
+    onProjectCreated,
     onProjectImported,
 }: ProjectViewProps){
     const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
@@ -61,27 +61,49 @@ export function ProjectView({
         else availableProjects.push(imported);
     });
 
-    const handleOpen = (id: string) => {
-        if (id === 'new') {
-            onNewProject();
-            return;
-        }
+    const handleOpen = async (id: string) => {
+        if (isBusy) return;
 
-        const selectedDemoProject = DEMO_PROJECTS.find(
-            (project) => project.id == id,
-        );
+        setIsBusy(true);
+        setMessage(null);
 
-        if (selectedDemoProject) {
-            onContinue(selectedDemoProject);
-            return;
-        }
+        try {
+            if (id === 'new') {
+                const created = await createProject({
+                    name: `Project ${availableProjects.length + 1}`,
+                    description: 'New ResViz project',
+                })
+                onProjectCreated(created);
+                onContinue(created)
+                return;
+            }
 
-        const selectedProject = availableProjects.find(
-            (project) => project.id === id,
-        );
+            const selectedDemoProject = DEMO_PROJECTS.find(
+                (project) => project.id == id,
+            );
 
-        if (selectedProject) {
-            onContinue(selectedProject);
+            if (selectedDemoProject) {
+                const created = await createProject({
+                    name: selectedDemoProject.name,
+                    description: selectedDemoProject.description,
+                    formulas: selectedDemoProject.formulas,
+                    goal: selectedDemoProject.goal,
+                });
+                onProjectCreated(created);
+                onContinue(created);
+                return;
+            }
+            const selectedProject = availableProjects.find(
+                (project) => project.id === id,
+            );
+
+            if (selectedProject) {
+                onContinue(await getProject(selectedProject.id));
+            }
+        } catch (error) {
+            setMessage(error instanceof Error ? error.message : 'Could not open project.');
+        } finally {
+            setIsBusy(false);
         }
     };
 
@@ -180,6 +202,7 @@ export function ProjectView({
                     }`}
                     onClick={() => setSelectedProjectId('new')}
                     onDoubleClick={() => handleOpen('new')}
+                    aria-busy={isBusy && selectedProjectId === 'new'}
                 >
                     <span>+ NEW PROJECT</span>
 
@@ -200,6 +223,7 @@ export function ProjectView({
                         }`}
                         onClick={() => setSelectedProjectId(project.id)}
                         onDoubleClick={() => handleOpen(project.id)}
+                        aria-busy={isBusy && selectedProjectId === project.id}
                     >
                         <span>{project.name}</span>
                         
@@ -219,6 +243,7 @@ export function ProjectView({
                         }`}
                         onClick={() => setSelectedProjectId(project.id)}
                         onDoubleClick={() => handleOpen(project.id)}
+                        aria-busty={isBusy && selectedProjectId === project.id}
                     >
                         <span>{project.name}</span>
 
