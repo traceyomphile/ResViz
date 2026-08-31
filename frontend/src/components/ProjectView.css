@@ -164,3 +164,8 @@
         padding-top: 50px;
     }
 }
+
+.project-file-input {
+    display: none;
+}
+

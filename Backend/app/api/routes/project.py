@@ -109,8 +109,8 @@ async def export_project(project_id: str, session_id: str = Depends(require_sess
             detail='Project not found'
         )
 
-    # Prevvent weird project IDs from becoming weird filenames.
-    sane_project_id = ''.join(c if c.isalum() or c in ('-', '_') else '_' for c in project_id)
+    # Prevent weird project IDs from becoming weird filenames.
+    sane_project_id = ''.join(c if c.isalnum() or c in ('-', '_') else '_' for c in project_id)
 
     return Response(
         content=raw_json,

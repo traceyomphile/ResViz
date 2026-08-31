@@ -176,11 +176,11 @@
 
     border:
         2px solid
-        #58a83f;
+        #0f2ab5;
 
     border-radius: 8px;
 
-    background-color: #a8d79c;
+    background-color: #5c77add1;
 
     color: #000;
 
@@ -195,7 +195,7 @@
 }
 
 .kb-choice-screen .nav-button:hover {
-    background-color: #b9e5ad;
+    background-color: #adc3e5;
 
     transform: translateY(-2px);
 }

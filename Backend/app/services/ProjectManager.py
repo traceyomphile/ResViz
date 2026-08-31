@@ -44,6 +44,56 @@ class ProjectManager:
 
         return Project.model_validate_json(raw)
 
+    async def save(self, session_id: str, project: Project) -> Project | None:
+        """Persist changes to an exisiting project and refresh its TTL."""
+        existing = await self.get(session_id, project.project_id)
+
+        if existing is None:
+            return None
+
+        await self._redis.set(
+            self._key(session_id, project.project_id),
+            project.model_dump_json(),
+            ex-int(self._duration.total_seconds()),
+        )
+
+        return project
+
+    async def set_knowledge_base(self, session_id: str, project_id: str, formulas: list) -> Project | None:
+        project = await self.get(session_id, project_id)
+
+        if project is None:
+            return None
+
+        project.knowledge_base = formulas
+        project.status = 'draft'
+
+        return await self.save(session_id, project)
+
+    async def clear_knowledge_base(self, session_id: str, project_id: str) -> Project | None:
+        return await self.set_knowledge_base(session_id, project_id, [])
+
+    async def set_goal(self, session_id: str, project_id: str, goal) -> Project | None:
+        project = await self.get(session_id, project_id)
+
+        if project is None: return None
+
+        project.goal = goal
+        project.status = 'draft'
+
+        return await self.save(session_id, project)
+
+    async def set_cnf_result(self, session_id: str, project_id: str, clauses: list, steps: list[dict[str, str | int]]) -> Project | None:
+        project = await self.get(session_id, project_id)
+
+        if project is None: return None
+
+        project.cnf_kb = clauses
+        project.cnf_steps = steps
+        project.status = 'cnf-complete'
+
+        return await self.save(session_id, project)
+
     async def delete(self, session_id: str, project_id: str) -> bool:
         deleted_count = await self._redis.delete(self._key(session_id, project_id))
 
