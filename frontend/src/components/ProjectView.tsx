@@ -10,6 +10,41 @@ import type { ProjectSummary } from "../api/projects";
 import "./ProjectView.css";
 import { TopBar } from "./TopBar";
 
+const PROJECT_RECENCY_STORAGE_KEY = 'resviz_project_last_used';
+type ProjectRecency = Record<string, number>;
+
+function loadProjectRecency(): ProjectRecency {
+    try {
+        const stored = localStorage.getItem(PROJECT_RECENCY_STORAGE_KEY);
+        if (!stored) return {};
+
+        const parsed: unknown = JSON.parse(stored);
+        if (!parsed || typeof parsed != 'object' || Array.isArray(parsed)) {
+            return {};
+        }
+
+        return Object.fromEntries(
+            Object.entries(parsed).filter(
+                (entry): entry is [string, number] => 
+                    typeof entry[1] === 'number' && Number.isFinite(entry[1]),
+            ),
+        );
+    } catch {
+        return {};
+    }
+}
+
+function saveProjectRecency(recency: ProjectRecency): void {
+    try {
+        localStorage.setItem(
+            PROJECT_RECENCY_STORAGE_KEY,
+            JSON.stringify(recency),
+        );
+    } catch {
+        // Project opening must still work if browser storage is unavailable
+    }
+}
+
 interface DemoProject {
     id: string;
     name: string;
@@ -49,6 +84,7 @@ export function ProjectView({
 }: ProjectViewProps){
     const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
     const [importedProjects, setImportedProjects] = useState<ProjectSummary[]>([]);
+    const [projectRecency, setProjectRecency] = useState<ProjectRecency>(loadProjectRecency);
     const [isBusy, setIsBusy] = useState(false);
     const [message, setMessage] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -60,6 +96,24 @@ export function ProjectView({
         if (index >= 0) availableProjects[index] = imported;
         else availableProjects.push(imported);
     });
+
+    availableProjects.sort(
+        (first, second) => 
+        (projectRecency[second.id] ?? 0)
+        - (projectRecency[first.id] ?? 0),
+    );
+
+    const markProjectAsUsed = (projectId: string) => {
+        setProjectRecency((current) => {
+            const updated = {
+                ...current,
+                [projectId]: Date.now(),
+            };
+
+            saveProjectRecency(updated);
+            return updated;
+        });
+    };
 
     const handleOpen = async (id: string) => {
         if (isBusy) return;
@@ -73,6 +127,7 @@ export function ProjectView({
                     name: `Project ${availableProjects.length + 1}`,
                     description: 'New ResViz project',
                 })
+                markProjectAsUsed(created.id);
                 onProjectCreated(created);
                 onContinue(created)
                 return;
@@ -89,6 +144,7 @@ export function ProjectView({
                     formulas: selectedDemoProject.formulas,
                     goal: selectedDemoProject.goal,
                 });
+                markProjectAsUsed(created.id);
                 onProjectCreated(created);
                 onContinue(created);
                 return;
@@ -98,7 +154,9 @@ export function ProjectView({
             );
 
             if (selectedProject) {
-                onContinue(await getProject(selectedProject.id));
+                const openedProject = await getProject(selectedProject.id);
+                markProjectAsUsed(openedProject.id);
+                onContinue(openedProject);
             }
         } catch (error) {
             setMessage(error instanceof Error ? error.message : 'Could not open project.');
@@ -134,6 +192,7 @@ export function ProjectView({
                 imported,
             ]);
             setSelectedProjectId(imported.id);
+            markProjectAsUsed(imported.id);
             setMessage(`Imported ${imported.name} successfully.`);
             onProjectImported?.(imported);
         } catch (error) {
