@@ -393,14 +393,10 @@
 
 .input-screen .formula-entry label {
     display: block;
-
     margin-bottom: 12px;
-
     color: var(--text-primary);
-
     font-size: 1rem;
     font-weight: 600;
-
     text-align: left;
 }
 
@@ -408,7 +404,6 @@
 .input-screen .formula-input-list {
     display: flex;
     flex-direction: column;
-
     gap: 10px;
 }
 
@@ -416,37 +411,28 @@
 .input-screen .formula-input-row {
     display: flex;
     align-items: center;
-
     gap: 12px;
 }
 
 .input-screen .formula-number {
     flex: 0 0 30px;
-
     color: var(--text-muted);
-
     font-family:
         "Courier New",
         Courier,
         monospace;
-
     font-size: 0.9rem;
-
     text-align: center;
 }
 
 .input-screen .formula-input-row input {
     flex: 1;
-
     min-width: 0;
     min-height: 48px;
-
     padding:
         12px
         16px;
-
     box-sizing: border-box;
-
     background:
         color-mix(
             in srgb,
