@@ -47,8 +47,14 @@ export function KBInputView({
 
     const canFinish = formulas.length > 0;
 
-    async function selectedFile(file: File | undefined) {
-        if (file) await onUpload(file);
+    async function selectedFile(file: File) {
+        try {
+            await onUpload(file);
+        } finally {
+            if (fileInputRef.current) {
+                fileInputRef.current.value = '';
+            }
+        }
     }
 
     return (
@@ -74,7 +80,17 @@ export function KBInputView({
                                 className="visually-hidden"
                                 type="file"
                                 accept=".json, application/json"
-                                onChange={(event) => void selectedFile(event.target.files?.[0])}
+                                onClick={(event) => {
+                                    //Allow selecting the same file again.
+                                    event.currentTarget.value = '';
+                                }}
+                                onChange={(event) => {
+                                    const file = event.target.files?.[0];
+
+                                    if (file) {
+                                        void selectedFile(file)
+                                    }
+                                }}
                             />
                             <button
                                 className="upload-zone"
@@ -83,7 +99,7 @@ export function KBInputView({
                                 disabled={isUploading}
                             >
                                 <span className="upload-icon" aria-hidden="true"></span>
-                                <strong>{isUploading ? "uploadin..." : "Choose knowledge-base file"}</strong>
+                                <strong>{isUploading ? "uploading..." : "Choose knowledge-base file"}</strong>
                                 <small>Maximum 1 MB · `.json`</small>
                             </button>
 

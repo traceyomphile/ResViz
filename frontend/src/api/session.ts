@@ -30,21 +30,13 @@ export function getSessionId(): string | null {
     return sessionStorage.getItem(SESSION_ID_KEY)
 }
 export async function restoreSession(): Promise<Session> {
-    const existingSessionId = getSessionId();
-
-    const headers: HeadersInit = {
-        'X-Tab-ID': getTabId(),
-    };
-
-    if (existingSessionId) {
-        headers['X-Session-ID'] = existingSessionId;
-    }
-
     let response: Response;
     try {
         response = await fetch(`${API_URL}/api/session`, {
             method: 'GET',
-            headers,
+            headers: {
+                'X-Tab-ID': getTabId(),
+            }
         });
     } catch (err) {
         console.error('restoreSession: network/CORS error', err);
@@ -68,7 +60,8 @@ export async function deleteSession(): Promise<void> {
     const sessionId = getSessionId();
 
     if (!sessionId) {
-        sessionStorage.clear();
+        sessionStorage.removeItem(SESSION_ID_KEY);
+        sessionStorage.removeItem(TAB_ID_KEY);
         return;
     }
 

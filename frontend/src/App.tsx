@@ -18,8 +18,7 @@ import { KBChoiceView } from './components/KBChoiceView.tsx';
 import { KBInputView } from './components/KBInputView.tsx';
 import { TopBar } from './components/TopBar.tsx';
 
-const SPLASH_DURATION_MS =5000;
-
+const SPLASH_DURATION_MS =6000;
 type Screen = 'projects' | 'kb-choice' | 'kb-input';
 
 export default function App() {
@@ -94,6 +93,11 @@ export default function App() {
      * Call backend to upload KB file
      */
     async function uploadKBFile(file: File) {
+      console.log('uploadKBFile called:', {
+        fileName: file.name,
+        activeProjectId,
+      });
+
       if (!activeProjectId) {
         setKbError("No active project was selected.");
         return;

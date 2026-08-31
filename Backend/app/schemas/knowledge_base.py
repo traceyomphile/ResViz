@@ -24,7 +24,7 @@ class ValidationPayload(BaseModel):
 class FormulaValidationResult(BaseModel):
     formula: str
     valid: bool
-    error: str | None
+    error: str | None = None
 
 class ValidationResponse(BaseModel):
     valid: bool
