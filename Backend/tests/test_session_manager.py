@@ -1,79 +1,70 @@
+import json
+import unittest
 from datetime import datetime, timedelta, timezone
-
-import pytest
+from unittest.mock import AsyncMock
 
 from app.services.SessionManager import SessionManager
 
 
-class FakeRedis:
-    def __init__(self):
-        self.values = {}
-        self.expiries = {}
+class SessionManagerTests(unittest.IsolatedAsyncioTestCase):
+    def setUp(self):
+        self.duration = timedelta(minutes=20)
+        self.manager = SessionManager(duration=self.duration)
+        self.manager._redis = AsyncMock()
+        self.now = datetime(2026, 9, 1, tzinfo=timezone.utc)
 
-    async def set(self, key, value, ex=None):
-        self.values[key] = value
-        self.expiries[key] = ex
-        return True
+    def test_same_tab_produces_same_session_identifier(self):
+        self.assertEqual(self.manager._session_id("tab-a"), self.manager._session_id("tab-a"))
 
-    async def getex(self, key, ex=None):
-        self.expiries[key] = ex
-        return self.values.get(key)
+    def test_different_tabs_produce_different_session_identifiers(self):
+        self.assertNotEqual(self.manager._session_id("tab-a"), self.manager._session_id("tab-b"))
 
-    async def delete(self, key):
-        existed = key in self.values
-        self.values.pop(key, None)
-        return int(existed)
+    def test_session_identifier_does_not_expose_tab_identifier(self):
+        self.assertNotEqual(self.manager._session_id("tab-a"), "tab-a")
 
+    async def test_create_stores_initial_session_with_twenty_minute_ttl(self):
+        session = await self.manager.create("session-1", self.now)
+        self.assertIsNone(session.active_project_id)
+        self.assertEqual(session.project_ids, [])
+        self.assertEqual(session.expires_at, self.now + self.duration)
+        self.manager._redis.set.assert_awaited_once()
+        self.assertEqual(self.manager._redis.set.await_args.kwargs["ex"], 1200)
 
-def manager_with_fake_redis():
-    manager = SessionManager.__new__(SessionManager)
-    manager._redis = FakeRedis()
-    manager._duration = timedelta(minutes=20)
-    return manager
+    async def test_get_refreshes_ttl_and_expiry(self):
+        raw = json.dumps({
+            "session_id": "session-1",
+            "active_project_id": None,
+            "project_ids": [],
+            "created_at": self.now.isoformat(),
+            "expires_at": (self.now + self.duration).isoformat(),
+        })
+        self.manager._redis.getex.return_value = raw
+        later = self.now + timedelta(minutes=5)
+        session = await self.manager.get("session-1", later)
+        self.assertEqual(session.expires_at, later + self.duration)
+        self.manager._redis.getex.assert_awaited_once_with("session:session-1", ex=1200)
+        self.manager._redis.set.assert_awaited_once()
 
+    async def test_get_or_create_restores_existing_session(self):
+        expected = object()
+        self.manager.get = AsyncMock(return_value=expected)
+        self.manager.create = AsyncMock()
+        actual = await self.manager.get_or_create("tab-a", self.now)
+        self.assertIs(actual, expected)
+        self.manager.create.assert_not_awaited()
 
-def test_session_id_is_deterministic_and_tab_specific():
-    manager = manager_with_fake_redis()
-    assert manager._session_id("tab-a") == manager._session_id("tab-a")
-    assert manager._session_id("tab-a") != manager._session_id("tab-b")
-    assert len(manager._session_id("tab-a")) == 64
+    async def test_get_or_create_replaces_expired_session(self):
+        self.manager.get = AsyncMock(return_value=None)
+        self.manager.create = AsyncMock(return_value="new-session")
+        actual = await self.manager.get_or_create("tab-a", self.now)
+        self.assertEqual(actual, "new-session")
+        self.manager.create.assert_awaited_once()
 
-
-@pytest.mark.asyncio
-async def test_create_persists_session_with_ttl():
-    manager = manager_with_fake_redis()
-    now = datetime.now(timezone.utc)
-    session = await manager.create("session-1", now)
-    key = "session:session-1"
-    assert session.session_id == "session-1"
-    assert key in manager._redis.values
-    assert manager._redis.expiries[key] == 1200
-
-
-@pytest.mark.asyncio
-async def test_get_refreshes_expiry_timestamp_and_ttl():
-    manager = manager_with_fake_redis()
-    original = datetime(2026, 1, 1, tzinfo=timezone.utc)
-    await manager.create("session-1", original)
-    later = original + timedelta(minutes=5)
-    restored = await manager.get("session-1", later)
-    assert restored.expires_at == later + timedelta(minutes=20)
-    assert manager._redis.expiries["session:session-1"] == 1200
-
-
-@pytest.mark.asyncio
-async def test_get_or_create_restores_same_tab_session():
-    manager = manager_with_fake_redis()
-    now = datetime.now(timezone.utc)
-    first = await manager.get_or_create("tab-a", now)
-    second = await manager.get_or_create("tab-a", now + timedelta(minutes=1))
-    assert first.session_id == second.session_id
+    async def test_delete_reports_whether_session_existed(self):
+        self.manager._redis.delete.side_effect = [1, 0]
+        self.assertTrue(await self.manager.delete("session-1"))
+        self.assertFalse(await self.manager.delete("session-1"))
 
 
-@pytest.mark.asyncio
-async def test_delete_reports_whether_session_existed():
-    manager = manager_with_fake_redis()
-    await manager.create("session-1", datetime.now(timezone.utc))
-    assert await manager.delete("session-1") is True
-    assert await manager.delete("session-1") is False
-
+if __name__ == "__main__":
+    unittest.main()
