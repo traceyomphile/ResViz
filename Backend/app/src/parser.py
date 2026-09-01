@@ -19,6 +19,10 @@ class Node:
     def is_true(self):
         return self.truth
 
+    def is_leaf(self):
+        """Return whether this node is an atomic proposition."""
+        return self.left is None and self.right is None
+
     def get_max_depth(self):
         left_max_depth = 0
         right_max_depth = 0
@@ -132,7 +136,7 @@ def p_negation(p):
 
 def p_paranthesised_formula(p):
     "formula : LPAREN atom RPAREN"
-    p[0] = [2]
+    p[0] = p[2]
 
 def p_formula_atom(p):
     "formula : atom"
