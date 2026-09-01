@@ -14,6 +14,14 @@ class ProjectManager:
     def _key(self, session_id: str, project_id: str) -> str:
         return f"project:{session_id}:{project_id}"
 
+    @staticmethod
+    def _invalidate_reasoning(project: Project) -> None:
+        """Discard derived state whenever source formulas or the goal change."""
+        project.cnf_kb = None
+        project.cnf_steps = []
+        project.resolution_result = ''
+        project.status = 'draft'
+
     async def create(self, session_id: str, project: Project) -> Project | None:
         now = datetime.now(timezone.utc)
         session = await session_manager.get(session_id, now)
@@ -67,7 +75,7 @@ class ProjectManager:
             return None
 
         project.knowledge_base = formulas
-        project.status = 'draft'
+        self._invalidate_reasoning(project)
 
         return await self.save(session_id, project)
 
@@ -80,7 +88,18 @@ class ProjectManager:
         if project is None: return None
 
         project.goal = goal
-        project.status = 'draft'
+        self._invalidate_reasoning(project)
+
+        return await self.save(session_id, project)
+
+    async def set_resolution_result(self, session_id: str, project_id: str, result: str) -> Project | None:
+        project = await self.get(session_id, project_id)
+
+        if project is None:
+            return None
+
+        project.resolution_result = result
+        project.status = 'resolution-complete'
 
         return await self.save(session_id, project)
 
@@ -101,9 +120,9 @@ class ProjectManager:
 
         if project is None: return None
 
-        project.knowledge_base.append(entry)
+        project.knowledge_bases.append(entry)
         project.knowledge_base = entry.formulas
-        project.status = 'draft'
+        self._invalidate_reasoning(project)
 
         return await self.save(session_id, project)
 
@@ -130,7 +149,6 @@ class ProjectManager:
         if entry is None: return None
 
         project.knowledge_base = entry.formulas
-        project.status = 'draft'
 
         return await self.save(session_id, project)
     
@@ -140,12 +158,23 @@ class ProjectManager:
 
         if project is None: return None
 
+        deleted = next(
+            (entry for entry in project.knowledge_bases if entry.id == kb_id),
+            None,
+        )
         remaining = [entry for entry in project.knowledge_bases if entry.id != kb_id]
 
         if len(remaining) == len(project.knowledge_bases):
             return None
 
         project.knowledge_bases = remaining
+
+        if deleted is not None and [str(item) for item in project.knowledge_base] == [
+            str(item) for item in deleted.formulas
+        ]:
+            project.knowledge_base = remaining[-1].formulas if remaining else []
+
+        self._invalidate_reasoning(project)
 
         return await self.save(session_id, project)
 
