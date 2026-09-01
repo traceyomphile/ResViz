@@ -35,7 +35,33 @@ def normalise_formula(formula: str) -> str:
     )
 
 def parse_formula(formula: str) -> Node:
-    return node_adapter.validate_python(normalise_formula(formula))
+    normalised = normalise_formula(formula)
+
+    def fully_parenthesised(expression: str) -> bool:
+        if not expression.startswith('(') or not expression.endswith(')'):
+            return False
+
+        depth = 0
+        for index, character in enumerate(expression):
+            if character == '(':
+                depth += 1
+            elif character == ')':
+                depth -= 1
+                if depth == 0 and index != len(expression) - 1:
+                    return False
+
+        return depth == 0
+
+    # The grammar expects binary expressions to be enclosed. Wrapping the
+    # outer expression also prevents PLY from recovering by returning only
+    # the final atom from input such as "(A | T) -> Qualified".
+    has_binary_operator = any(
+        operator in normalised for operator in ('<->', '->', '&', '|')
+    )
+    if has_binary_operator and not fully_parenthesised(normalised):
+        normalised = f'({normalised})'
+
+    return node_adapter.validate_python(normalised)
 
 def project_not_found() -> HTTPException:
     return HTTPException(
@@ -116,10 +142,10 @@ async def save_typed_knowledge_base(project_id: str, payload: KnowledgeBasePaylo
 async def upload_knowledge_base(project_id: str, file: UploadFile = File(...), session_id: str = Depends(require_session)) -> KnowledgeBaseResponse:
     filename = file.filename or "knowledge-base.json"
 
-    if not filename.lower().endswith((".json", ".txt", ".kb")):
+    if not filename.lower().endswith((".json")):
         raise HTTPException(
             status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
-            detail="Knowledge base must be a .json, .txt, or .kb file",
+            detail="Knowledge base must be a .json file",
         )
 
     contents = await file.read(MAX_UPLOAD_BYTES + 1)
