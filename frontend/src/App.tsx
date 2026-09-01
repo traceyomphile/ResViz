@@ -7,8 +7,9 @@ import { getProjects, type ProjectSummary } from './api/projects';
 import SplashScreen from './components/SplashScreen';
 import { ProjectView } from './components/ProjectView';
 import { KBChoiceView } from './components/KBChoiceView.tsx';
-import { KBInputView } from './components/KBInputView.tsx';
+import { KBInputView, type SavedKB } from './components/KBInputview.tsx';
 import { TopBar } from './components/TopBar.tsx';
+import type { KBData } from './types.ts';
 
 const SPLASH_DURATION_MS =6400;
 
@@ -26,8 +27,12 @@ export default function App() {
     const [screen, setScreen] = useState<Screen>('projects')
     const [method, setMethod] = useState<'upload' | 'type'>('upload');
 
+    const [kbName, setKbName] = useState('');
     const [formulas, setFormulas] = useState<string[]>([]);
     const [goal, setGoal] = useState('');
+    const [uploadedKB,setUploadedKB] =useState<KBData | null > (null);
+    const [isUploading, setIsUploading] =useState (false);
+    const [uploadError, setUploadError] = useState("");
 
     const [projectName, setProjectName] = useState<string | null>(null);
     
@@ -81,7 +86,59 @@ export default function App() {
      * Temporary upload handler. To call backend uplaod endpoint later
      */
     async function uploadKBFile(file: File) {
-      console.log('Selected KB file:', file);
+      setIsUploading(true);
+      setUploadError("");
+
+    try {
+        const content = await file.text();
+        let uploadedFormulas: string[];
+
+        if (file.name.toLowerCase().endsWith(".json")) {
+          const parsed = JSON.parse(content) as unknown;
+          let formulaData: unknown;
+
+          if (Array.isArray(parsed)) {
+            formulaData = parsed;
+          } else if (typeof parsed === "object" && parsed !== null) {
+            const object = parsed as Record<string, unknown>;
+            formulaData =
+              object.formulas ?? object.knowledgeBase ?? object.knowledge_base;
+          }
+
+          if (!Array.isArray(formulaData)) {
+            throw new Error('The JSON file must contain a "formulas" array.');
+          }
+
+          uploadedFormulas = formulaData
+            .filter((formula): formula is string => typeof formula === "string")
+            .map((formula) => formula.trim())
+            .filter(Boolean);
+        } else {
+          uploadedFormulas = content
+            .split(/\r?\n/)
+            .map((formula) => formula.trim())
+            .filter(Boolean);
+        }
+
+        const uploadedData: KBData = {
+          fileName: file.name,
+          formulas: uploadedFormulas,
+          goal,
+        };
+
+        setUploadedKB(uploadedData);
+        setFormulas(uploadedFormulas);
+      } catch (uploadFailure) {
+        setUploadedKB(null);
+        setFormulas([]);
+        setUploadError(
+          uploadFailure instanceof Error
+            ? uploadFailure.message
+            : "The knowledge-base file could not be loaded.",
+        );
+      } finally {
+        setIsUploading(false);
+      }
     }
 
     return (
@@ -95,7 +152,7 @@ export default function App() {
         ) : (
             <>
 
-              <TopBar />
+              <TopBar onImportProject={() => {}} />
               
               {screen === 'projects' && (
                 <ProjectView
@@ -106,6 +163,8 @@ export default function App() {
                     setProjectName(null);
                     setFormulas([]);
                     setGoal('');
+                    setUploadedKB(null);
+                    setUploadError("")
 
                     setScreen('kb-choice');
                   }}
@@ -152,13 +211,13 @@ export default function App() {
                 <KBInputView
                   method={method}
                   projectName={projectName}
+                  kbName={kbName}
                   formulas={formulas}
-                  goal={goal}
 
-                  upload={null}
-                  isUploading={false}
-                  isConverting={false}
-                  uploadError=''
+                  upload={uploadedKB}
+                  isUploading={isUploading}
+                  isSaving={false}
+                  uploadError={uploadError}
 
                   onUpload={uploadKBFile}
                   AddFormula={(formula: string) => {
@@ -177,12 +236,18 @@ export default function App() {
                     );
                   }}
 
-                  GoalChange={(newGoal: string) => {
-                    setGoal(newGoal);
+                  KBNameChange={(newName: string) => {
+                    setKbName(newName);
                   }}
 
-                  Convert={() => {
-                    console.log('Convert clicked');
+                  SaveKB={(kb: SavedKB) => {
+                    console.log('Saved KB:', kb);
+
+                    setKbName(kb.name);
+                    setFormulas(kb.formulas);
+                    setUploadedKB(kb.upload);
+
+                    setScreen('kb-choice');
                   }}
 
                   onBack={() => {

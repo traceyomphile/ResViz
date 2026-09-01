@@ -6,7 +6,7 @@ _tabversion = '3.10'
 
 _lr_method = 'LALR'
 
-_lr_signature = 'CONJUCTION DISJUNCTION EQUIV IMPLICATION LETTER LPAREN NEGATION RPARENformula : LPAREN formula CONJUCTION formula RPAREN\nformula : LPAREN formula DISJUNCTION formula RPAREN\nformula : LPAREN formula IMPLICATION formula RPAREN\nformula : LPAREN formula EQUIV formula RPAREN\nformula : LPAREN NEGATION formula RPARENformula : NEGATION formulaformula : atomatom : LETTER'
+_lr_signature = 'CONJUCTION DISJUNCTION EQUIV IMPLICATION LETTER LPAREN NEGATION RPARENformula : LPAREN formula CONJUCTION formula RPAREN\n\tformula : LPAREN formula DISJUNCTION formula RPAREN\n\tformula : LPAREN formula IMPLICATION formula RPAREN\n\tformula : LPAREN formula EQUIV formula RPAREN\n\tformula : LPAREN NEGATION formula RPARENformula : NEGATION formulaformula : atomatom : LETTER'
     
 _lr_action_items = {'LPAREN':([0,2,3,7,9,10,11,12,],[2,2,2,2,2,2,2,2,]),'NEGATION':([0,2,3,7,9,10,11,12,],[3,7,3,3,3,3,3,3,]),'LETTER':([0,2,3,7,9,10,11,12,],[5,5,5,5,5,5,5,5,]),'$end':([1,4,5,8,18,19,20,21,22,],[0,-7,-8,-6,-5,-1,-2,-3,-4,]),'CONJUCTION':([4,5,6,8,13,18,19,20,21,22,],[-7,-8,9,-6,-6,-5,-1,-2,-3,-4,]),'DISJUNCTION':([4,5,6,8,13,18,19,20,21,22,],[-7,-8,10,-6,-6,-5,-1,-2,-3,-4,]),'IMPLICATION':([4,5,6,8,13,18,19,20,21,22,],[-7,-8,11,-6,-6,-5,-1,-2,-3,-4,]),'EQUIV':([4,5,6,8,13,18,19,20,21,22,],[-7,-8,12,-6,-6,-5,-1,-2,-3,-4,]),'RPAREN':([4,5,8,13,14,15,16,17,18,19,20,21,22,],[-7,-8,-6,18,19,20,21,22,-5,-1,-2,-3,-4,]),}
 
@@ -27,12 +27,12 @@ for _k, _v in _lr_goto_items.items():
 del _lr_goto_items
 _lr_productions = [
   ("S' -> formula","S'",1,None,None,None),
-  ('formula -> LPAREN formula CONJUCTION formula RPAREN','formula',5,'p_binary_conju','parser.py',36),
-  ('formula -> LPAREN formula DISJUNCTION formula RPAREN','formula',5,'p_binary_conju','parser.py',37),
-  ('formula -> LPAREN formula IMPLICATION formula RPAREN','formula',5,'p_binary_conju','parser.py',38),
-  ('formula -> LPAREN formula EQUIV formula RPAREN','formula',5,'p_binary_conju','parser.py',39),
-  ('formula -> LPAREN NEGATION formula RPAREN','formula',4,'p_atom_neg0','parser.py',45),
-  ('formula -> NEGATION formula','formula',2,'p_atom_neg1','parser.py',50),
-  ('formula -> atom','formula',1,'p_atom_atom','parser.py',55),
-  ('atom -> LETTER','atom',1,'p_atom','parser.py',60),
+  ('formula -> LPAREN formula CONJUCTION formula RPAREN','formula',5,'p_binary_conju','parser.py',51),
+  ('formula -> LPAREN formula DISJUNCTION formula RPAREN','formula',5,'p_binary_conju','parser.py',52),
+  ('formula -> LPAREN formula IMPLICATION formula RPAREN','formula',5,'p_binary_conju','parser.py',53),
+  ('formula -> LPAREN formula EQUIV formula RPAREN','formula',5,'p_binary_conju','parser.py',54),
+  ('formula -> LPAREN NEGATION formula RPAREN','formula',4,'p_atom_neg0','parser.py',60),
+  ('formula -> NEGATION formula','formula',2,'p_atom_neg1','parser.py',65),
+  ('formula -> atom','formula',1,'p_atom_atom','parser.py',70),
+  ('atom -> LETTER','atom',1,'p_atom','parser.py',75),
 ]
