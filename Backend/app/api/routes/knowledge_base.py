@@ -6,10 +6,14 @@ from pydantic import TypeAdapter, ValidationError
 from app.api.routes.project import require_session
 from app.schemas.knowledge_base import (
     FormulaValidationResult,
+    KnowledgeBaseEntry,
+    KnowledgeBaseEntrySummary,
+    KnowledgeBaseListResponse,
     KnowledgeBasePayload,
     KnowledgeBaseResponse,
     QueryPayload,
     QueryResponse,
+    SaveKnowledgeBasePayload,
     ValidationPayload,
     ValidationResponse,
 )
@@ -18,7 +22,7 @@ from app.src.parser import Node
 
 knowledge_base_router = APIRouter(tags=['Knowledge Base'])
 node_adapter = TypeAdapter(Node)
-MAX_UPLOAD_BYTES = 1024 * 1024
+MAX_UPLOAD_BYTES = 5 * 1024 * 1024
 
 def normalise_formula(formula: str) -> str:
     return (
@@ -37,6 +41,12 @@ def project_not_found() -> HTTPException:
     return HTTPException(
         status_code=status.HTTP_404_NOT_FOUND,
         detail='Project not found'
+    )
+
+def knowledge_base_not_found() -> HTTPException:
+    return HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND,
+        detail='Saved knowledge base not found'
     )
 
 def parse_uploaded_formulas(filename: str, raw_text: str) -> tuple[list[str], str | None]:
@@ -102,25 +112,25 @@ async def save_typed_knowledge_base(project_id: str, payload: KnowledgeBasePaylo
         goal=project.goal,
     )
 
-@knowledge_base_router.post('/projets/{project_id}/knowledge-base/upload', response_model=KnowledgeBaseResponse)
+@knowledge_base_router.post('/projects/{project_id}/knowledge-base/upload', response_model=KnowledgeBaseResponse)
 async def upload_knowledge_base(project_id: str, file: UploadFile = File(...), session_id: str = Depends(require_session)) -> KnowledgeBaseResponse:
-    filename = file.filename or "knowledge-base.txt"
+    filename = file.filename or "knowledge-base.json"
 
-    if not filename.lower().endswith((".json", ".txt", ".kb")):
+    if not filename.lower().endswith((".json")):
         raise HTTPException(
             status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
-            detail="Knowledge base must be a .json, .txt, or .kb file",
+            detail="Knowledge base must be a .json file",
         )
 
     contents = await file.read(MAX_UPLOAD_BYTES + 1)
     if len(contents) > MAX_UPLOAD_BYTES:
         raise HTTPException(
             status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
-            detail="Knowledge-base files may not exceed 1 MB",
+            detail="Knowledge-base files may not exceed 5 MB",
         )
 
     try:
-        raw_text = contents.decode("utf-8")
+        raw_text = contents.decode("utf-8", errors='replace')
     except UnicodeDecodeError as exc:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -169,7 +179,8 @@ async def upload_knowledge_base(project_id: str, file: UploadFile = File(...), s
         formulas=project.knowledge_base,
         goal=project.goal,
     )
-@knowledge_base_router.get('projects/{project_id}/knowledge-base', response_model=KnowledgeBaseResponse)
+
+@knowledge_base_router.get('/projects/{project_id}/knowledge-base', response_model=KnowledgeBaseResponse)
 async def get_knowledge_base(project_id: str, session_id: str = Depends(require_session)) -> KnowledgeBaseResponse:
     project = await project_manager.get(session_id, project_id)
     if project is None:
@@ -191,6 +202,77 @@ async def delete_knowledge_base(project_id: str, session_id: str = Depends(requi
     if project is None:
         raise project_not_found()
 
+@knowledge_base_router.get('/projects/{project_id}/knowledge-bases', response_model=KnowledgeBaseListResponse)
+async def list_saved_knowledge_bases(project_id: str, session_id: str = Depends(require_session)) -> KnowledgeBaseListResponse:
+    entries = await project_manager.list_knowledge_base_entries(session_id, project_id)
+
+    if entries is None:
+        raise project_not_found()
+
+    return KnowledgeBaseListResponse(
+        project_id=project_id,
+        knowledge_bases=[
+            KnowledgeBaseEntrySummary(
+                id=entry.id,
+                name=entry.name,
+                formula_count=len(entry.formulas),
+                created_at=entry.created_at,
+            )
+            for entry in entries
+        ]
+    )
+
+@knowledge_base_router.post(
+    '/projects/{project_id}/knowledge-bases', 
+    response_model=KnowledgeBaseEntrySummary, 
+    status_code=status.HTTP_201_CREATED
+)
+async def save_named_knowledge_base(project_id: str, payload: SaveKnowledgeBasePayload, session_id: str = Depends(require_session)) -> KnowledgeBaseEntrySummary:
+    """Called by KBInputView's SAVE KB button. Adds a named entry to the project's sidebar library."""
+    try:
+        parsed_formulas = [parse_formula(formula) for formula in payload.formulas]
+    except (ValidationError, ValueError, TypeError) as exc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f'Invalid propositional formula: {exc}',
+        ) from exc
+ 
+    entry = KnowledgeBaseEntry(name=payload.name, formulas=parsed_formulas)
+    project = await project_manager.save_knowledge_base_entry(session_id, project_id, entry)
+ 
+    if project is None:
+        raise project_not_found()
+ 
+    return KnowledgeBaseEntrySummary(
+        id=entry.id,
+        name=entry.name,
+        formula_count=len(entry.formulas),
+        created_at=entry.created_at,
+    )
+ 
+@knowledge_base_router.put('/projects/{project_id}/knowledge-bases/{kb_id}/activate', response_model=KnowledgeBaseResponse)
+async def activate_saved_knowledge_base(project_id: str, kb_id: str, session_id: str = Depends(require_session)) -> KnowledgeBaseResponse:
+    """Called when a user clicks a saved KB in the sidebar, to load it as the active working KB."""
+    project = await project_manager.activate_knowledge_base_entry(session_id, project_id, kb_id)
+ 
+    if project is None:
+        existing = await project_manager.get(session_id, project_id)
+        raise project_not_found() if existing is None else knowledge_base_not_found()
+ 
+    return KnowledgeBaseResponse(
+        project_id=project.project_id,
+        formulas=project.knowledge_base,
+        goal=project.goal,
+    )
+ 
+@knowledge_base_router.delete('/projects/{project_id}/knowledge-bases/{kb_id}', status_code=status.HTTP_204_NO_CONTENT)
+async def delete_saved_knowledge_base(project_id: str, kb_id: str, session_id: str = Depends(require_session)) -> None:
+    project = await project_manager.delete_knowledge_base_entry(session_id, project_id, kb_id)
+ 
+    if project is None:
+        existing = await project_manager.get(session_id, project_id)
+        raise project_not_found() if existing is None else knowledge_base_not_found()
+        
 @knowledge_base_router.post('/knowledge-base/validate', response_model=ValidationResponse)
 async def validate_knowledge_base(payload: ValidationPayload, session_id: str = Depends(require_session)) -> ValidationResponse:
     del session_id
@@ -199,7 +281,13 @@ async def validate_knowledge_base(payload: ValidationPayload, session_id: str = 
     for formula in payload.formulas:
         try:
             parse_formula(formula)
-            results.append(FormulaValidationResult(formula=formula, valid=True))
+            results.append(
+                FormulaValidationResult(
+                    formula=formula, 
+                    valid=True,
+                    error=None,
+                )
+            )
         except (ValidationError, ValueError, TypeError) as exc:
             results.append(
                 FormulaValidationResult(

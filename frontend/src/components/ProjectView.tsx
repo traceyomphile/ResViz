@@ -89,16 +89,35 @@ export function ProjectView({
     const [message, setMessage] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    const availableProjects = [...projects];
+    const allSavedProjects = [...projects];
     importedProjects.forEach((imported) => {
-        const index = availableProjects.findIndex((project) => project.id ===
+        const index = allSavedProjects.findIndex((project) => project.id ===
             imported.id);
-        if (index >= 0) availableProjects[index] = imported;
-        else availableProjects.push(imported);
+        if (index >= 0) allSavedProjects[index] = imported;
+        else allSavedProjects.push(imported);
     });
 
-    availableProjects.sort(
-        (first, second) => 
+    const isLegacyDemoCopy = (project: ProjectSummary) => 
+        DEMO_PROJECTS.some(
+            (demo) => 
+                project.id !== demo.id
+                && project.name === demo.name 
+                && project.description === demo.description,
+        );
+
+    const savedProjects = allSavedProjects.filter(
+        (project) => 
+            !DEMO_PROJECTS.some((demo) => demo.id === project.id)
+            && !isLegacyDemoCopy(project),
+    );
+
+    const displayProjects: ProjectSummary[] = [
+        ...DEMO_PROJECTS,
+        ...savedProjects,
+    ];
+
+    displayProjects.sort(
+        (first, second) =>
         (projectRecency[second.id] ?? 0)
         - (projectRecency[first.id] ?? 0),
     );
@@ -124,7 +143,7 @@ export function ProjectView({
         try {
             if (id === 'new') {
                 const created = await createProject({
-                    name: `Project ${availableProjects.length + 1}`,
+                    name: `Project ${savedProjects.length + 1}`,
                     description: 'New ResViz project',
                 })
                 markProjectAsUsed(created.id);
@@ -138,7 +157,18 @@ export function ProjectView({
             );
 
             if (selectedDemoProject) {
+                const savedDemoProject = allSavedProjects.find(
+                    (project) => project.id === selectedDemoProject.id,
+                );
+
+                if (savedDemoProject) {
+                    const openedProject = await getProject(savedDemoProject.id);
+                    markProjectAsUsed(selectedDemoProject.id);
+                    onContinue(openedProject);
+                    return;
+                }
                 const created = await createProject({
+                    id: selectedDemoProject.id,
                     name: selectedDemoProject.name,
                     description: selectedDemoProject.description,
                     formulas: selectedDemoProject.formulas,
@@ -149,7 +179,7 @@ export function ProjectView({
                 onContinue(created);
                 return;
             }
-            const selectedProject = availableProjects.find(
+            const selectedProject = savedProjects.find(
                 (project) => project.id === id,
             );
 
@@ -270,7 +300,7 @@ export function ProjectView({
                     </small>
                 </button>
 
-                {DEMO_PROJECTS.map((project) => (
+                {displayProjects.map((project) => (
                     <button 
                         key={project.id}
                         type='button'
@@ -286,26 +316,6 @@ export function ProjectView({
                     >
                         <span>{project.name}</span>
                         
-                        <small>{project.description}</small>
-                    </button>
-                ))}
-
-                {availableProjects.map((project) => (
-                    <button
-                        key={project.id}
-                        type='button'
-                        role='listitem'
-                        className={`project-card ${
-                            selectedProjectId === project.id
-                                ? 'project-card--selected'
-                                : ''
-                        }`}
-                        onClick={() => setSelectedProjectId(project.id)}
-                        onDoubleClick={() => handleOpen(project.id)}
-                        aria-busty={isBusy && selectedProjectId === project.id}
-                    >
-                        <span>{project.name}</span>
-
                         {project.description && (
                             <small>{project.description}</small>
                         )}
