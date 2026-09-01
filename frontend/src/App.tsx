@@ -7,10 +7,12 @@ import { getProjects, type ProjectSummary } from './api/projects';
 import {
   activateKnowledgeBase,
   convertProjectToCnf,
+  deleteSavedKnowledgeBase,
   saveNamedKnowledgeBase,
   saveTypedKnowledgeBase,
   uploadKnowledgeBase,
   validateKnowledgeBase,
+  saveQuery,
   type KnowledgeBaseEntrySummary,
 } from './api/knowledgeBase';
 import type { KBData } from './types';
@@ -36,7 +38,9 @@ export default function App() {
     const [method, setMethod] = useState<'upload' | 'type'>('upload');
 
     const [formulas, setFormulas] = useState<string[]>([]);
-    //const [goal, setGoal] = useState('');
+    const [query, setQuery] = useState('');
+    const [activeKnowledgeBaseId, setActiveKnowledgeBaseId] = useState<string | null>(null);
+    const [knowledgeBaseRefreshKey, setKnowledgeBaseRefreshKey] = useState(0);
 
     const [projectName, setProjectName] = useState<string | null>(null);
     const [activeProjectId, setActiveProjectId] = useState<string | null>(null);
@@ -94,6 +98,8 @@ export default function App() {
       setActiveProjectId(project.id);
       setProjectName(project.name);
       setKbName("");
+      setActiveKnowledgeBaseId(null);
+      setQuery(typeof project.goal === 'string' ? project.goal : '');
       setUploadedKB(null);
       setKbError("");
       setFormulas(Array.isArray(project.formulas)
@@ -138,11 +144,14 @@ export default function App() {
 
         // Typed mode.
         if (kb.method === 'type') await saveTypedKnowledgeBase(projectId, kb.formulas);
-        await saveNamedKnowledgeBase(projectId, kb.name, kb.formulas);
-
+        const saved = await saveNamedKnowledgeBase(projectId, kb.name, kb.formulas);
+        
+        if (kb.id) await deleteSavedKnowledgeBase(projectId, kb.id);
         setKbName(kb.name);
+        setActiveKnowledgeBaseId(saved.id)
         setFormulas(kb.formulas);
         setUploadedKB(kb.upload);
+        setKnowledgeBaseRefreshKey((current) => current + 1);
         setScreen('kb-choice');
       } catch (failure) {
         setKbError(failure instanceof Error ? failure.message : 'Could not save the knowledge base.');
@@ -156,8 +165,11 @@ export default function App() {
       try {
         const result = await activateKnowledgeBase(requireProject(), kb.id);
         setKbName(kb.name);
+        setActiveKnowledgeBaseId(kb.id);
         setFormulas(result.formulas);
         setUploadedKB(null);
+        setMethod('type');
+        setScreen('kb-input');
       } catch (failure) {
         setKbError(failure instanceof Error ? failure.message : 'Could not load the selected knowledge base.');
       }
@@ -168,6 +180,7 @@ export default function App() {
       setKbError('');
 
       try {
+        await saveQuery(requireProject(), query.trim());
         const conversion = await convertProjectToCnf(requireProject());
         console.log('CNF conversion completed:', conversion);
         //const invalid = conversion.results.find((result) => !result.valid);
@@ -217,11 +230,18 @@ export default function App() {
               {screen === 'kb-choice' && (
                 <KBChoiceView
                   projectId={activeProjectId ?? ''}
+                  refreshKey={knowledgeBaseRefreshKey}
                   isConverting={isConverting}
                   error={kbError}
+                  query={query}
+                  activeKnowledgeBaseId={activeKnowledgeBaseId}
+                  onQueryChange={setQuery}
                   onChoose={(selectedMethod) => {
                     setMethod(selectedMethod);
                     setKbName('');
+                    setActiveKnowledgeBaseId(null);
+                    setFormulas([]);
+                    setUploadedKB(null);
                     setKbError('');
                     setScreen('kb-input'); 
                   }}
@@ -235,6 +255,7 @@ export default function App() {
                   method={method}
                   projectName={projectName}
                   kbName={kbName}
+                  editingKnowledgeBaseId={activeKnowledgeBaseId}
                   formulas={formulas}
                   //goal={goal}
 
@@ -261,11 +282,6 @@ export default function App() {
                     );
                   }}
 
-                  /*
-                  GoalChange={(newGoal: string) => {
-                    setGoal(newGoal);
-                  }}
-                  */
                  KBNameChange={setKbName}
                  SaveKB={saveKnowledgeBase}
                   onBack={() => {

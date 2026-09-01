@@ -1,23 +1,51 @@
 import "./KBChoiceView.css";
 import { useEffect, useState } from "react";
 import type {InputMethod} from "../types"
-import { listKnowledgeBases, type KnowledgeBaseEntrySummary } from "../api/knowledgeBase";
-
+import { validateFormula } from "../types/validator";
+import { 
+    deleteSavedKnowledgeBase,
+    listKnowledgeBases, 
+    type KnowledgeBaseEntrySummary 
+} from "../api/knowledgeBase";
 
 interface KBChoiceViewProps{
     projectId: string;
+    refreshKey?: number;
     isConverting: boolean;
     error?: string;
+    query: string;
+    activeKnowledgeBaseId: string | null;
     onChoose(method:InputMethod):void;
+    onQueryChange(query: string): void;
     onBack():void;
     onConvert():void;
     onSelectKnowledgeBase?(kb: KnowledgeBaseEntrySummary): void
 }
 
-export function KBChoiceView({ projectId, isConverting, error, onChoose, onBack, onConvert, onSelectKnowledgeBase }:KBChoiceViewProps){
+export function KBChoiceView({ projectId, refreshKey = 0, isConverting, error, query, activeKnowledgeBaseId, onChoose, onQueryChange, onBack, onConvert, onSelectKnowledgeBase }:KBChoiceViewProps){
     const [savedKbs, setSavedKbs] = useState<KnowledgeBaseEntrySummary[]>([]);
     const [kbsLoading, setKbsLoading] = useState(true);
     const [kbsError, setKbsError] = useState<string | null>(null);
+    const [deletingId, setDeletingId] = useState<string | null>(null);
+    const trimmedQuery = query.trim();
+    const queryResult = trimmedQuery ? validateFormula(trimmedQuery) : null;
+    const queryError = queryResult && !queryResult.valid
+        ? queryResult.error ?? "Invalid query formula."
+        : null;
+    const canConvert = savedKbs.length > 0 && Boolean(trimmedQuery) && !queryError;
+
+    async function removeKnowledgeBase(kb: KnowledgeBaseEntrySummary) {
+        setDeletingId(kb.id);
+        setKbsError(null);
+        try {
+            await deleteSavedKnowledgeBase(projectId, kb.id);
+            setSavedKbs((current) => current.filter((item) => item.id !== kb.id));
+        } catch (err: unknown) {
+            setKbsError(err instanceof Error ? err.message : "Could not remove the knowledge base");
+        } finally {
+            setDeletingId(null);
+        }
+    }
 
     useEffect(() => {
         let cancelled = false;
@@ -47,7 +75,7 @@ export function KBChoiceView({ projectId, isConverting, error, onChoose, onBack,
         return () => {
             cancelled = true;
         };
-    }, [projectId]);
+    }, [projectId, refreshKey]);
 
     return(
         <main className="kb-choice-screen">
@@ -71,16 +99,28 @@ export function KBChoiceView({ projectId, isConverting, error, onChoose, onBack,
                         <ul className="kb-sidebar__list">
                             {savedKbs.map((kb) => (
                                 <li key={kb.id}>
-                                    <button
-                                        type="button"
-                                        className="kb-sidebar__item"
-                                        onClick={() => onSelectKnowledgeBase?.(kb)}
+                                    <div className={`kb-sidebar__row${activeKnowledgeBaseId === kb.id ? ' kb-sidebar__row--active' : ''}`}
                                     >
-                                        <strong>{kb.name}</strong>
-                                        <span>
-                                            {kb.formula_count} formula{kb.formula_count === 1 ? "" : "s"}
-                                        </span>
-                                    </button>
+                                        <button
+                                            type="button"
+                                            className="kb-sidebar__item"
+                                            onClick={() => onSelectKnowledgeBase?.(kb)}
+                                        >
+                                            <strong>{kb.name}</strong>
+                                            <span>
+                                                {kb.formula_count} formula{kb.formula_count === 1 ? "" : "s"}
+                                            </span>
+                                        </button>
+
+                                        <button
+                                            type='button' className="kb-sidebar__remove"
+                                            aria-label={`Remove ${kb.name}`}
+                                            disabled={deletingId === kb.id}
+                                            onClick={() => void removeKnowledgeBase(kb)}
+                                        >
+                                            {deletingId === kb.id ? '...' : 'x'}
+                                        </button>
+                                    </div>
                                 </li>
                             ))}
                         </ul>
@@ -112,6 +152,21 @@ export function KBChoiceView({ projectId, isConverting, error, onChoose, onBack,
                         </button>
                     </div>
 
+                    <div className="query-field">
+                        <label htmlFor="resolution-query">Resolution query</label>
+                        <input id="resolution-query" type="text" value={query}
+                            placeholder="Enter query, e.g. Q"
+                            aria-invalid={Boolean(queryError)}
+                            onChange={(event) => onQueryChange(event.target.value)} />
+                        {queryError ? (
+                            <p className="query-message query-message--error" role="alert">{queryError}</p>
+                        ) : trimmedQuery ? (
+                            <p className="query-message query-message--valid">Query is valid.</p>
+                        ) : (
+                            <p className="query-message">Add a valid query and at least one saved KB to continue.</p>
+                        )}
+                    </div>
+
                     <div className="screen-actions screen-actions--choice">
                         <button className="nav-button nav-button--back" type="button" onClick={onBack}>
                             Back
@@ -120,7 +175,7 @@ export function KBChoiceView({ projectId, isConverting, error, onChoose, onBack,
                         <button
                             className="nav-button nav-button--convert"
                             type='button'
-                            disabled={isConverting || savedKbs.length === 0}
+                            disabled={isConverting || !canConvert}
                             onClick={onConvert}
                         >
                             {isConverting ? 'Converting...' : 'Convert to CNF'}
