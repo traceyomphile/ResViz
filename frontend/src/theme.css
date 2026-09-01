@@ -34,6 +34,19 @@
     --btn-text: #fff;
     --btn-glow: rgba(111, 227, 255, 0.12);
     --btn-glow-hover: rgba(111, 227, 255, 0.3);
+
+    --logic-panel: #141414;
+    --logic-panel-alt: #292929;
+    --logic-border: #38b8da;
+    --logic-code-bg: #1f2028;
+    --logic-code-text: #fff;
+    --logic-copy: #c8c8dc;
+    --logic-support-bg: #e7fbf7;
+    --logic-support-text: #173537;
+    --logic-pill-bg: #d6d6d6;
+    --logic-pill-text: #080808;
+    --logic-goal: #0d4169;
+    --logic-success: #9ddd7e;
 }
 
 :root[data-theme="light"] {
@@ -69,4 +82,17 @@
     --btn-text: #fff;
     --btn-glow: rgba(12, 122, 168, 0.1);
     --btn-glow-hover: rgba(12, 122, 168, 0.25);
+
+    --logic-panel: #fff;
+    --logic-panel-alt: #e7e9ed;
+    --logic-border: #0c7aa8;
+    --logic-code-bg: #eef0f3;
+    --logic-code-text: #14161a;
+    --logic-copy: #3f4650;
+    --logic-support-bg: #dff5ef;
+    --logic-support-text: #17433e;
+    --logic-pill-bg: #dce6eb;
+    --logic-pill-text: #14161a;
+    --logic-goal: #0c6d9b;
+    --logic-success: #337a28;
 }
