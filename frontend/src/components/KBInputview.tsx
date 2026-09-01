@@ -5,6 +5,7 @@ import type { UploadedFormulaError } from "../types/validator";
 import "./KBInputView.css";
 
 export interface SavedKB{
+    id?: string;
     name: string;
     method: InputMethod;
     formulas: string[];
@@ -15,20 +16,17 @@ interface KBInputViewProps {
     method: InputMethod;
     projectName: string | null;
     kbName: string;
+    editingKnowledgeBaseId: string | null;
     formulas: string[];
-    goal: string;
     upload: KBData | null;
     isUploading: boolean;
     isSaving: boolean;
-    isConverting: boolean;
     uploadError: string;
     onUpload(file: File): Promise<void>;
     AddFormula(formula: string): void;
     RemoveFormula(index: number): void;
     KBNameChange(name: string): void;
-    GoalChange(goal: string): void;
     SaveKB(kb: SavedKB): void;
-    Convert(): void;
     onBack(): void;
 }
 
@@ -36,20 +34,17 @@ export function KBInputView({
     method,
     projectName,
     kbName,
+    editingKnowledgeBaseId,
     formulas,
-    goal,
     upload,
     isUploading,
     isSaving,
-    isConverting,
     uploadError,
     onUpload,
     AddFormula,
     RemoveFormula,
     KBNameChange,
-    GoalChange,
     SaveKB,
-    Convert,
     onBack,
 }: KBInputViewProps) {
     const [formulaDraft, setFormulaDraft] = useState("");
@@ -105,25 +100,32 @@ export function KBInputView({
 
         await onUpload(file);
     }
-    const hasKB= method === "upload" ? Boolean(upload) : formulas.length >0;
+    const trimmedDraft = formulaDraft.trim();
+    const draftValidation = trimmedDraft ? validateFormula(trimmedDraft) : null;
+    const hasValidDraft = Boolean(trimmedDraft) && Boolean(draftValidation?.valid);
+    const hasKB = method === "upload" ? Boolean(upload) : formulas.length > 0 || hasValidDraft;
     const canSave =hasKB && uploadValidationErrors.length === 0 && Boolean (trimmedName);
-    const canConvert = hasKB && uploadValidationErrors.length === 0 && Boolean(goal.trim());
 
     function handleSaveClick(){
         setKbNameTouched(true);
         if (!canSave) return;
 
+        const formulasToSave = method === "type" && hasValidDraft
+            ? [...formulas, trimmedDraft]
+            : formulas;
+
         void SaveKB({
+            id: editingKnowledgeBaseId ?? undefined,
             name: trimmedName,
             method,
-            formulas,
+            formulas: formulasToSave,
             upload,
         });
     }
 
   return (
     <main className="input-screen">
-      <section className="content-shell content-shell-input">
+      <section className="content-shell content-shell--input">
         <header className="page-heading page-heading page-heading--input">
           <p className="eyebrow">Project input</p>
 
@@ -172,7 +174,7 @@ export function KBInputView({
                 >
                   <span className="upload-icon" aria-hidden="true" />
                   <strong>{isUploading ? "Uploading..." : "Choose knowledge-base file"}</strong>
-                  <small>Maximum 1 MB · `.json`</small>
+                  <small>Maximum 5 MB · `.json`</small>
                 </button>
 
                 {uploadValidationErrors.length > 0 && 
@@ -219,17 +221,6 @@ export function KBInputView({
                 </div>
               </>
             )}
-            <div className="kb-name-field goal-field">
-              <label htmlFor="goal-formula">Goal formula</label>
-              <input
-                id="goal-formula"
-                type="text"
-                value={goal}
-                placeholder="Example: Admitted"
-                onChange={(event) => GoalChange(event.target.value)}
-              />
-              <p className="operator-help">Resolution proves whether all saved project KBs entail this goal.</p>
-            </div>
             {uploadError && <p className="status-message status-message--error" role="alert">{uploadError}</p>}
           </section>
         </div>
@@ -237,9 +228,7 @@ export function KBInputView({
         <div className="screen-actions">
           <button className="nav-button nav-button--back" type="button" onClick={onBack}>Back</button>
           <button className="nav-button" type="button" disabled={!canSave || isUploading || isSaving}
-            onClick={handleSaveClick}>{isSaving ? "Saving..." : "Save KB"}</button>
-          <button className="nav-button" type="button" disabled={!canConvert || isUploading || isSaving || isConverting}
-            onClick={Convert}>{isConverting ? "Converting..." : "Convert to CNF"}</button>
+            onClick={handleSaveClick}>{isSaving ? "Saving..." : editingKnowledgeBaseId ? "Save changes" : "Save KB"}</button>
         </div>
       </section>
     </main>

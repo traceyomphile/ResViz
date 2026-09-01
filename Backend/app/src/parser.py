@@ -99,7 +99,7 @@ class Node:
         if isinstance(value, str):
             result = parser.parse(value, lexer=lexer)
 
-            if result is None:
+            if result is None or not isinstance(result, cls):
                 raise ValueError(
                     f"Could not parse formula: {value!r}"
                 )

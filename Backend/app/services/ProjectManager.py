@@ -1,10 +1,14 @@
 # app.services.ProjectManager
 import redis.asyncio as redis
+import logging
 from datetime import timedelta, datetime, timezone
+from pydantic import ValidationError
 from app.config import _REDIS_URL, SESSION_DURATION
 from app.schemas.project import Project
 from app.schemas.knowledge_base import KnowledgeBaseEntry
 from app.services.SessionManager import session_manager
+
+logger = logging.getLogger(__name__)
 
 class ProjectManager:
     def __init__(self, redis_url: str = _REDIS_URL, duration: timedelta = SESSION_DURATION):
@@ -51,7 +55,17 @@ class ProjectManager:
         if not raw:
             return None
 
-        return Project.model_validate_json(raw)
+        try:
+            return Project.model_validate_json(raw)
+        except ValidationError:
+            # A bad merge previously stored values such as "[2]" instead of
+            # parser Nodes. Do not let one corrupt project break GET /projects.
+            logger.exception(
+                "Skipping corrupt Redis project %s for session %s",
+                project_id,
+                session_id,
+            )
+            return None
 
     async def save(self, session_id: str, project: Project) -> Project | None:
         """Persist changes to an exisiting project and refresh its TTL."""
@@ -149,6 +163,7 @@ class ProjectManager:
         if entry is None: return None
 
         project.knowledge_base = entry.formulas
+        self._invalidate_reasoning(project)
 
         return await self.save(session_id, project)
     
