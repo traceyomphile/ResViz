@@ -10,10 +10,12 @@ class Project(BaseModel):
     project_id: str
     name: str = 'Untitled Project'
     description: str = ''
-    knowledge_base: list[Node]
+    knowledge_base: list[Node] = Field(default_factory=list)
     knowledge_bases: list[KnowledgeBaseEntry] = Field(default_factory=list)
-    cnf_kb: list[Node] | None
+    # CNF clauses are stored in displayable clause form, for example
+    # "~Applicant | Qualified". A clause is not necessarily a parser node.
+    cnf_kb: list[str] | None = None
     cnf_steps: list[dict[str, str | int]] = Field(default_factory=list)
-    goal: Node | None
-    status: str
-    resolution_result: str
+    goal: Node | None = None
+    status: str = 'draft'
+    resolution_result: str = ''
