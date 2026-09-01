@@ -116,10 +116,10 @@ async def save_typed_knowledge_base(project_id: str, payload: KnowledgeBasePaylo
 async def upload_knowledge_base(project_id: str, file: UploadFile = File(...), session_id: str = Depends(require_session)) -> KnowledgeBaseResponse:
     filename = file.filename or "knowledge-base.json"
 
-    if not filename.lower().endswith((".json")):
+    if not filename.lower().endswith((".json", ".txt", ".kb")):
         raise HTTPException(
             status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
-            detail="Knowledge base must be a .json file",
+            detail="Knowledge base must be a .json, .txt, or .kb file",
         )
 
     contents = await file.read(MAX_UPLOAD_BYTES + 1)

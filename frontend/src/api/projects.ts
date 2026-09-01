@@ -88,11 +88,11 @@ export async function getProjects(): Promise<ProjectSummary[]> {
             };
         }
 
-        return {
-            id: project.project_id ?? project.id ?? `project-${index}`,
-            name: project.name ?? `PROJECT ${index + 1}`,
-            description: project.description ?? '',
-        };
+        const summary = toProjectSummary({
+            ...project,
+            project_id: project.project_id ?? project.id ?? `project-${index}`,
+        });
+        return summary;
     });
 }
 
@@ -263,4 +263,3 @@ export async function exportProject(projectId: string): Promise<void> {
     anchor.remove();
     URL.revokeObjectURL(url);
 }
-

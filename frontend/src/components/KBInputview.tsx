@@ -5,6 +5,7 @@ import type { UploadedFormulaError } from "../types/validator";
 import "./KBInputView.css";
 
 export interface SavedKB{
+    id?: string;
     name: string;
     method: InputMethod;
     formulas: string[];
@@ -15,6 +16,7 @@ interface KBInputViewProps {
     method: InputMethod;
     projectName: string | null;
     kbName: string;
+    editingKnowledgeBaseId: string | null;
     formulas: string[];
     upload: KBData | null;
     isUploading: boolean;
@@ -32,6 +34,7 @@ export function KBInputView({
     method,
     projectName,
     kbName,
+    editingKnowledgeBaseId,
     formulas,
     upload,
     isUploading,
@@ -100,11 +103,12 @@ export function KBInputView({
     const hasKB= method === "upload" ? Boolean(upload) : formulas.length >0;
     const canSave =hasKB && uploadValidationErrors.length === 0 && Boolean (trimmedName);
 
-    function handleSaveClick(){
+    async function handleSaveClick(){
         setKbNameTouched(true);
         if (!canSave) return;
 
-        void SaveKB({
+        await SaveKB({
+            id: editingKnowledgeBaseId ?? undefined,
             name: trimmedName,
             method,
             formulas,
@@ -112,9 +116,9 @@ export function KBInputView({
         });
     }
 
-  return (
+   return (
     <main className="input-screen">
-      <section className="content-shell content-shell-input">
+      <section className="content-shell content-shell--input">
         <header className="page-heading page-heading page-heading--input">
           <p className="eyebrow">Project input</p>
 
@@ -163,7 +167,7 @@ export function KBInputView({
                 >
                   <span className="upload-icon" aria-hidden="true" />
                   <strong>{isUploading ? "Uploading..." : "Choose knowledge-base file"}</strong>
-                  <small>Maximum 1 MB · `.json`</small>
+                  <small>Maximum 5 MB · `.json`</small>
                 </button>
 
                 {uploadValidationErrors.length > 0 && 
@@ -217,7 +221,7 @@ export function KBInputView({
         <div className="screen-actions">
           <button className="nav-button nav-button--back" type="button" onClick={onBack}>Back</button>
           <button className="nav-button" type="button" disabled={!canSave || isUploading || isSaving}
-            onClick={handleSaveClick}>{isSaving ? "Saving..." : "Save KB"}</button>
+            onClick={() => void handleSaveClick()}>{isSaving ? "Saving..." : editingKnowledgeBaseId ? "Save changes" : "Save KB"}</button>
         </div>
       </section>
     </main>

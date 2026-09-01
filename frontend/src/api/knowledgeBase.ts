@@ -84,7 +84,7 @@ export async function validateKnowledgeBase(formulas: string[]): Promise<Validat
     });
 
     if (!response.ok) {
-        throw await responseError(response, 'Coulf not validate the knowledge base');
+        throw await responseError(response, 'Could not validate the knowledge base');
     }
 
     return response.json() as Promise<ValidationResponse>;
@@ -111,7 +111,7 @@ export async function saveTypedKnowledgeBase(projectId: string, formulas: string
 }
 
 export async function uploadKnowledgeBase(projectId: string, file: File): Promise<KnowledgeBaseResponse> {
-    const body = await new FormData();
+    const body = new FormData();
     body.append('file', file);
 
     const response = await fetch(
