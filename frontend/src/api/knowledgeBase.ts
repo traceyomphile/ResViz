@@ -2,7 +2,7 @@ import {getSessionId, getTabId} from './session';
 
 const API_URL = (import.meta as ImportMeta & {
     env?: {VITE_API_URL?: string};
-}).env?.VITE_API_URL ?? 'http://localhost:8000';
+}).env?.VITE_API_URL ?? '';
 
 export interface KnowledgeBaseResponse {
     project_id: string;
@@ -31,8 +31,34 @@ export interface CNFStep {
 export interface CNFConversionResponse {
     project_id: string;
     cnf_clauses: string[];
+    negated_goal: string;
+    support_clauses: string[];
     steps: CNFStep[];
     status: string;
+}
+
+export interface ResolutionStep {
+    step_number: number;
+    parent_1: string;
+    parent_2: string;
+    pivot: string;
+    resolvent_id: string;
+    resolvent: string;
+}
+
+export interface ResolutionClause {
+    id: string;
+    expression: string;
+    source_formula: string | null;
+}
+
+export interface ResolutionResponse {
+    project_id: string;
+    entailed: boolean;
+    status: 'entailed' | 'not_entailed' | 'limit_reached';
+    initial_clauses: ResolutionClause[];
+    clauses: ResolutionClause[];
+    steps: ResolutionStep[];
 }
 
 export interface KnowledgeBaseEntrySummary {
@@ -84,7 +110,7 @@ export async function validateKnowledgeBase(formulas: string[]): Promise<Validat
     });
 
     if (!response.ok) {
-        throw await responseError(response, 'Could not validate the knowledge base');
+        throw await responseError(response, 'Coulf not validate the knowledge base');
     }
 
     return response.json() as Promise<ValidationResponse>;
@@ -111,7 +137,7 @@ export async function saveTypedKnowledgeBase(projectId: string, formulas: string
 }
 
 export async function uploadKnowledgeBase(projectId: string, file: File): Promise<KnowledgeBaseResponse> {
-    const body = new FormData();
+    const body = await new FormData();
     body.append('file', file);
 
     const response = await fetch(
@@ -162,6 +188,19 @@ export async function convertProjectToCnf(projectId: string): Promise<CNFConvers
     }
 
     return response.json() as Promise<CNFConversionResponse>;
+}
+
+export async function resolveProject(projectId: string): Promise<ResolutionResponse> {
+    const response = await fetch(
+        `${API_URL}/api/projects/${encodeURIComponent(projectId)}/resolution`,
+        {method: 'POST', headers: sessionHeaders()},
+    );
+
+    if (!response.ok) {
+        throw await responseError(response, 'Could not run resolution');
+    }
+
+    return response.json() as Promise<ResolutionResponse>;
 }
 
 export async function listKnowledgeBases(projectId: string): Promise<KnowledgeBaseListResponse> {
