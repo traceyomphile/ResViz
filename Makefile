@@ -84,7 +84,7 @@ dev: redis-start
 test: test-backend
 
 test-backend:
-	$(PY) -m pytest -q $(BACKEND_DIR)/tests
+	$(PY) $(BACKEND_DIR)/tests/run_tests.py
 
 build-frontend:
 	cd $(FRONTEND_DIR) && $(NPM) run build
