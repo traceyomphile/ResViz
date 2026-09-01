@@ -18,10 +18,12 @@ from app.schemas.knowledge_base import (
     ValidationResponse,
 )
 from app.services.ProjectManager import project_manager
+from app.src.cnf_converter import CNFConverter
 from app.src.parser import Node
 
 knowledge_base_router = APIRouter(tags=['Knowledge Base'])
 node_adapter = TypeAdapter(Node)
+cnf_converter = CNFConverter()
 MAX_UPLOAD_BYTES = 5 * 1024 * 1024
 
 def normalise_formula(formula: str) -> str:
@@ -325,3 +327,49 @@ async def get_query(project_id: str, session_id: str = Depends(require_session))
         raise project_not_found()
 
     return QueryResponse(project_id=project.project_id, query=project.goal)
+
+@knowledge_base_router.post('/projects/{project_id}/cnf-conversion')
+async def convert_project_to_cnf(project_id: str, session_id: str = Depends(require_session)) -> dict:
+    """Convert the active saved KB to CNF after a query has been supplied."""
+    project = await project_manager.get(session_id, project_id)
+    if project is None:
+        raise project_not_found()
+    if not project.knowledge_base:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail='Select a saved knowledge base before converting to CNF',
+        )
+    if project.goal is None:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail='Enter a query formula before converting to CNF',
+        )
+
+    clauses: list[str] = []
+    steps: list[dict[str, str | int]] = []
+
+    for formula in project.knowledge_base:
+        result = cnf_converter.convert(formula)
+        clauses.extend(str(clause) for clause in result.clauses)
+        steps.extend({
+            'step_number': len(steps) + 1,
+            'source': step.original_expression,
+            'rule': step.rule,
+            'result': step.result_expression,
+        } for step in result.steps)
+
+    saved_project = await project_manager.set_cnf_result(
+        session_id,
+        project_id,
+        clauses,
+        steps,
+    )
+    if saved_project is None:
+        raise project_not_found()
+
+    return {
+        'project_id': project_id,
+        'cnf_clauses': clauses,
+        'steps': steps,
+        'status': 'cnf-complete',
+    }

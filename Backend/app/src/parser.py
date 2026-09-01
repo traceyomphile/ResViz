@@ -95,7 +95,7 @@ class Node:
         if isinstance(value, str):
             result = parser.parse(value, lexer=lexer)
 
-            if result is None:
+            if result is None or not isinstance(result, cls):
                 raise ValueError(
                     f"Could not parse formula: {value!r}"
                 )
@@ -132,7 +132,7 @@ def p_negation(p):
 
 def p_paranthesised_formula(p):
     "formula : LPAREN atom RPAREN"
-    p[0] = [2]
+    p[0] = p[2]
 
 def p_formula_atom(p):
     "formula : atom"

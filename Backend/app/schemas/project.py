@@ -12,7 +12,7 @@ class Project(BaseModel):
     description: str = ''
     knowledge_base: list[Node]
     knowledge_bases: list[KnowledgeBaseEntry] = Field(default_factory=list)
-    cnf_kb: list[Node] | None
+    cnf_kb: list[str] | None
     cnf_steps: list[dict[str, str | int]] = Field(default_factory=list)
     goal: Node | None
     status: str

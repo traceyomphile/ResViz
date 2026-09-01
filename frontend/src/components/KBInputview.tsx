@@ -100,18 +100,25 @@ export function KBInputView({
 
         await onUpload(file);
     }
-    const hasKB= method === "upload" ? Boolean(upload) : formulas.length >0;
+    const trimmedDraft = formulaDraft.trim();
+    const draftValidation = trimmedDraft ? validateFormula(trimmedDraft) : null;
+    const hasValidDraft = Boolean(trimmedDraft) && Boolean(draftValidation?.valid);
+    const hasKB = method === "upload" ? Boolean(upload) : formulas.length > 0 || hasValidDraft;
     const canSave =hasKB && uploadValidationErrors.length === 0 && Boolean (trimmedName);
 
     async function handleSaveClick(){
         setKbNameTouched(true);
         if (!canSave) return;
 
+        const formulasToSave = method === "type" && hasValidDraft
+            ? [...formulas, trimmedDraft]
+            : formulas;
+
         await SaveKB({
             id: editingKnowledgeBaseId ?? undefined,
             name: trimmedName,
             method,
-            formulas,
+            formulas: formulasToSave,
             upload,
         });
     }
