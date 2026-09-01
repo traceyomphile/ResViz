@@ -32,7 +32,7 @@ export function KBChoiceView({ projectId, refreshKey = 0, isConverting, error, q
     const queryError = queryResult && !queryResult.valid
         ? queryResult.error ?? "Invalid query formula."
         : null;
-    const canConvert = Boolean(activeKnowledgeBaseId) && Boolean(trimmedQuery) && !queryError;
+    const canConvert = savedKbs.length > 0 && Boolean(trimmedQuery) && !queryError;
 
     async function removeKnowledgeBase(kb: KnowledgeBaseEntrySummary) {
         setDeletingId(kb.id);
@@ -163,7 +163,7 @@ export function KBChoiceView({ projectId, refreshKey = 0, isConverting, error, q
                         ) : trimmedQuery ? (
                             <p className="query-message query-message--valid">Query is valid.</p>
                         ) : (
-                            <p className="query-message">Select a saved KB and add a valid query to continue.</p>
+                            <p className="query-message">Add a valid query and at least one saved KB to continue.</p>
                         )}
                     </div>
 

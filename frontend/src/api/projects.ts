@@ -2,7 +2,7 @@ import {getSessionId, getTabId} from './session'
 
 const API_URL = (import.meta as ImportMeta & {
     env?: {VITE_API_URL?: string };
-}).env?.VITE_API_URL ?? 'http://localhost:8000';
+}).env?.VITE_API_URL ?? '';
 
 export interface ProjectSummary {
     id: string;
@@ -88,11 +88,7 @@ export async function getProjects(): Promise<ProjectSummary[]> {
             };
         }
 
-        const summary = toProjectSummary({
-            ...project,
-            project_id: project.project_id ?? project.id ?? `project-${index}`,
-        });
-        return summary;
+        return toProjectSummary(project);
     });
 }
 

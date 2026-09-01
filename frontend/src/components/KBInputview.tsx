@@ -106,7 +106,7 @@ export function KBInputView({
     const hasKB = method === "upload" ? Boolean(upload) : formulas.length > 0 || hasValidDraft;
     const canSave =hasKB && uploadValidationErrors.length === 0 && Boolean (trimmedName);
 
-    async function handleSaveClick(){
+    function handleSaveClick(){
         setKbNameTouched(true);
         if (!canSave) return;
 
@@ -114,7 +114,7 @@ export function KBInputView({
             ? [...formulas, trimmedDraft]
             : formulas;
 
-        await SaveKB({
+        void SaveKB({
             id: editingKnowledgeBaseId ?? undefined,
             name: trimmedName,
             method,
@@ -123,7 +123,7 @@ export function KBInputView({
         });
     }
 
-   return (
+  return (
     <main className="input-screen">
       <section className="content-shell content-shell--input">
         <header className="page-heading page-heading page-heading--input">
@@ -217,7 +217,7 @@ export function KBInputView({
                     </div>
                   </div>
                   {formulaError && <p className="status-message status-message--error">{formulaError}</p>}
-                  <p className="operator-help">Allowed operators: ~ · | · → · ↔</p>
+                  <p className="operator-help">Allowed operators: ~ · &amp; · | · → · ↔</p>
                 </div>
               </>
             )}
@@ -228,7 +228,7 @@ export function KBInputView({
         <div className="screen-actions">
           <button className="nav-button nav-button--back" type="button" onClick={onBack}>Back</button>
           <button className="nav-button" type="button" disabled={!canSave || isUploading || isSaving}
-            onClick={() => void handleSaveClick()}>{isSaving ? "Saving..." : editingKnowledgeBaseId ? "Save changes" : "Save KB"}</button>
+            onClick={handleSaveClick}>{isSaving ? "Saving..." : editingKnowledgeBaseId ? "Save changes" : "Save KB"}</button>
         </div>
       </section>
     </main>
