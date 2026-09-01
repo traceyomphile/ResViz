@@ -55,7 +55,7 @@ class ProjectManager:
         await self._redis.set(
             self._key(session_id, project.project_id),
             project.model_dump_json(),
-            ex-int(self._duration.total_seconds()),
+            ex=int(self._duration.total_seconds()),
         )
 
         return project
@@ -96,7 +96,7 @@ class ProjectManager:
         return await self.save(session_id, project)
 
     """Named, saved knowledge bases"""
-    async def save_knowledge_entry(self, session_id: str, project_id: str, entry: KnowledgeBaseEntry) -> Project | None:
+    async def save_knowledge_base_entry(self, session_id: str, project_id: str, entry: KnowledgeBaseEntry) -> Project | None:
         project = await self.get(session_id, project_id)
 
         if project is None: return None

@@ -112,7 +112,7 @@ async def save_typed_knowledge_base(project_id: str, payload: KnowledgeBasePaylo
         goal=project.goal,
     )
 
-@knowledge_base_router.post('/projets/{project_id}/knowledge-base/upload', response_model=KnowledgeBaseResponse)
+@knowledge_base_router.post('/projects/{project_id}/knowledge-base/upload', response_model=KnowledgeBaseResponse)
 async def upload_knowledge_base(project_id: str, file: UploadFile = File(...), session_id: str = Depends(require_session)) -> KnowledgeBaseResponse:
     filename = file.filename or "knowledge-base.json"
 

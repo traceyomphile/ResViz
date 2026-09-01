@@ -58,6 +58,7 @@ export default function App() {
           .catch((failure: unknown) => {
               console.error('Failed to restore session:', failure);
               setError('Could not restore your session');
+              setSplashFinished(false);
           });
     }, []);
 
@@ -225,6 +226,7 @@ export default function App() {
                     setScreen('kb-input'); 
                   }}
                   onSelectKnowledgeBase={(kb) => void selectSavedKnowledgeBase(kb)}
+                  onConvert={() => void convertKnowledgeBase()}
                   onBack={() => setScreen('projects')}
                 />)}
 

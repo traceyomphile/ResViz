@@ -6,12 +6,15 @@ import { listKnowledgeBases, type KnowledgeBaseEntrySummary } from "../api/knowl
 
 interface KBChoiceViewProps{
     projectId: string;
+    isConverting: boolean;
+    error?: string;
     onChoose(method:InputMethod):void;
     onBack():void;
+    onConvert():void;
     onSelectKnowledgeBase?(kb: KnowledgeBaseEntrySummary): void
 }
 
-export function KBChoiceView({ projectId, onChoose, onBack, onSelectKnowledgeBase }:KBChoiceViewProps){
+export function KBChoiceView({ projectId, isConverting, error, onChoose, onBack, onConvert, onSelectKnowledgeBase }:KBChoiceViewProps){
     const [savedKbs, setSavedKbs] = useState<KnowledgeBaseEntrySummary[]>([]);
     const [kbsLoading, setKbsLoading] = useState(true);
     const [kbsError, setKbsError] = useState<string | null>(null);
@@ -113,7 +116,17 @@ export function KBChoiceView({ projectId, onChoose, onBack, onSelectKnowledgeBas
                         <button className="nav-button nav-button--back" type="button" onClick={onBack}>
                             Back
                         </button>
+
+                        <button
+                            className="nav-button nav-button--convert"
+                            type='button'
+                            disabled={isConverting || savedKbs.length === 0}
+                            onClick={onConvert}
+                        >
+                            {isConverting ? 'Converting...' : 'Convert to CNF'}
+                        </button>
                     </div>
+                    {error && <p className='kb-choice-error' role='alert'>{error}</p>}
                 </section>
             </div>
         </main>
