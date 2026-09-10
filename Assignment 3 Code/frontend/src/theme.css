@@ -1,0 +1,98 @@
+/* AI GENERATED */
+
+:root,
+:root[data-theme="dark"] {
+    --bg-page: #000;
+    --bg-glow: rgba(31, 93, 143, 0.1);
+    --text-primary: #fff;
+    --text-muted: #8a8a8a;
+
+    --brand-grad: linear-gradient(195deg, #6fe3ff 50%, #e916ca 40%, #c20d73 15%);
+    --brand-shadow-1: rgba(24, 58, 153, 0.88);
+    --brand-shadow-2: rgba(111, 227, 255, 0.35);
+    --brand-shadow-3: rgba(111, 227, 255, 0.2);
+
+    --icon-color: #27c8ff;
+    --icon-shadow-1: rgba(39, 200, 255, 0.8);
+    --icon-shadow-2: rgba(39, 200, 255, 0.4);
+
+    --menu-color: #6fe3ff;
+    --menu-shadow-1: rgba(111, 227, 255, 0.6);
+    --menu-shadow-2: rgba(111, 227, 255, 0.3);
+
+    --card-grad: linear-gradient(160deg, #d8d8d8 0%, #898a8d 100%);
+    --card-text: #050505;
+    --card-text-muted: #33363b;
+    --card-shadow-inset: rgba(255, 255, 255, 0.6);
+    --card-shadow-outer: rgba(0, 0, 0, 0.3);
+    --card-hover-glow: rgba(111, 227, 255, 0.16);
+    --card-selected-glow-1: rgba(111, 227, 255, 0.7);
+    --card-selected-glow-2: rgba(233, 22, 202, 0.3);
+
+    --btn-border: rgba(111, 227, 255, 0.35);
+    --btn-grad: linear-gradient(180deg, #2886b3 0%, #06749e 100%);
+    --btn-text: #fff;
+    --btn-glow: rgba(111, 227, 255, 0.12);
+    --btn-glow-hover: rgba(111, 227, 255, 0.3);
+
+    --logic-panel: #141414;
+    --logic-panel-alt: #292929;
+    --logic-border: #38b8da;
+    --logic-code-bg: #1f2028;
+    --logic-code-text: #fff;
+    --logic-copy: #c8c8dc;
+    --logic-support-bg: #e7fbf7;
+    --logic-support-text: #173537;
+    --logic-pill-bg: #d6d6d6;
+    --logic-pill-text: #080808;
+    --logic-goal: #0d4169;
+    --logic-success: #9ddd7e;
+}
+
+:root[data-theme="light"] {
+    --bg-page: #f4f5f7;
+    --bg-glow: rgba(31, 93, 143, 0.06);
+    --text-primary: #14161a;
+    --text-muted: #5b5f66;
+
+    --brand-grad: linear-gradient(195deg, #1596c2 50%, #b30f8f 40%, #8c0a56 15%);
+    --brand-shadow-1: rgba(24, 58, 153, 0.12);
+    --brand-shadow-2: rgba(111, 227, 255, 0.15);
+    --brand-shadow-3: rgba(111, 227, 255, 0.1);
+
+    --icon-color: #0c7aa8;
+    --icon-shadow-1: rgba(39, 200, 255, 0.25);
+    --icon-shadow-2: rgba(39, 200, 255, 0.15);
+
+    --menu-color: #0c7aa8;
+    --menu-shadow-1: rgba(111, 227, 255, 0.2);
+    --menu-shadow-2: rgba(111, 227, 255, 0.12);
+
+    --card-grad: linear-gradient(160deg, #ffffff 0%, #e2e3e6 100%);
+    --card-text: #14161a;
+    --card-text-muted: #52565c;
+    --card-shadow-inset: rgba(255, 255, 255, 0.9);
+    --card-shadow-outer: rgba(0, 0, 0, 0.08);
+    --card-hover-glow: rgba(12, 122, 168, 0.12);
+    --card-selected-glow-1: rgba(12, 122, 168, 0.5);
+    --card-selected-glow-2: rgba(179, 15, 143, 0.2);
+
+    --btn-border: rgba(12, 122, 168, 0.35);
+    --btn-grad: linear-gradient(180deg, #2ba1cf 0%, #0c7aa8 100%);
+    --btn-text: #fff;
+    --btn-glow: rgba(12, 122, 168, 0.1);
+    --btn-glow-hover: rgba(12, 122, 168, 0.25);
+
+    --logic-panel: #fff;
+    --logic-panel-alt: #e7e9ed;
+    --logic-border: #0c7aa8;
+    --logic-code-bg: #eef0f3;
+    --logic-code-text: #14161a;
+    --logic-copy: #3f4650;
+    --logic-support-bg: #dff5ef;
+    --logic-support-text: #17433e;
+    --logic-pill-bg: #dce6eb;
+    --logic-pill-text: #14161a;
+    --logic-goal: #0c6d9b;
+    --logic-success: #337a28;
+}

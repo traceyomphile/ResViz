@@ -1,0 +1,6 @@
+fastapi
+pydantic
+pydantic-settings
+python-multipart
+redis
+ply
