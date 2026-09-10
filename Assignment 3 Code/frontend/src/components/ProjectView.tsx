@@ -323,6 +323,22 @@ export function ProjectView({
                 ))}
             </div>
 
+            <div className="project-actions">
+                <p className="project-selection-hint">
+                    {selectedProjectId
+                        ? 'Ready when you are - open the selected workspace to continue.'
+                        : 'Select a workspace to begin.'}
+                </p>
+                <button
+                    className="nav-button project-continue"
+                    type="button"
+                    disabled={!selectedProjectId || isBusy}
+                    onClick={() => selectedProjectId && void handleOpen(selectedProjectId)}
+                >
+                    {isBusy ? 'Opening workspace...' : 'Open workspace'}
+                </button>
+            </div>
+
         </section>
     </main>
     </>

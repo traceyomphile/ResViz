@@ -21,7 +21,7 @@ import type {KBData} from './types';
 import SplashScreen from './components/SplashScreen';
 import {ProjectView} from './components/ProjectView';
 import {KBChoiceView} from './components/KBChoiceView.tsx';
-import {KBInputView, type SavedKB} from './components/KBInputView.tsx';
+import {KBInputView, type SavedKB} from './components/KBInputview.tsx';
 import {TopBar} from './components/TopBar.tsx';
 import {CnfCompleteView, ProofIntroView, ResolutionView} from './components/ResolutionView.tsx';
 
@@ -209,7 +209,7 @@ export default function App() {
   return (
     <>
       {showSplash ? <SplashScreen /> : error ? <div>{error}</div> : !session ? <div>NO SESSION FOUND</div> : <>
-        <TopBar />
+        {screen !== 'projects' && <TopBar />}
 
         {screen === 'projects' && <ProjectView
           projects={projects}
