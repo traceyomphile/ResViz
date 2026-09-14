@@ -251,6 +251,143 @@
     transform: translateX(-3px);
 }
 
+/* =========================
+   Editable project name
+   ========================= */
+
+.sidebar-project-title-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    width: 100%;
+}
+
+.sidebar-project-name {
+    flex: 1;
+
+    margin: 0;
+
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1.35;
+
+    color: var(--text-primary, #111827);
+
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.sidebar-project-edit-button {
+    width: 30px;
+    height: 30px;
+
+    flex-shrink: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 0;
+
+    border: none;
+    border-radius: 7px;
+
+    background: transparent;
+    color: var(--text-secondary, #6b7280);
+
+    cursor: pointer;
+
+    transition:
+        background 0.2s ease,
+        color 0.2s ease;
+}
+
+.sidebar-project-edit-button:hover {
+    background: var(--surface-secondary, #f3f4f6);
+    color: var(--text-primary, #111827);
+}
+
+.sidebar-project-edit-button svg {
+    display: block;
+}
+
+
+/* Editing mode */
+
+.sidebar-project-edit {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+
+    width: 100%;
+}
+
+.sidebar-project-input {
+    min-width: 0;
+    flex: 1;
+
+    padding: 7px 9px;
+
+    border: 1px solid var(--accent-color, #6366f1);
+    border-radius: 7px;
+
+    background: var(--surface-color, #ffffff);
+    color: var(--text-primary, #111827);
+
+    font: inherit;
+    font-size: 14px;
+    font-weight: 600;
+
+    outline: none;
+}
+
+.sidebar-project-input:focus {
+    box-shadow:
+        0 0 0 3px
+        color-mix(
+            in srgb,
+            var(--accent-color, #6366f1) 15%,
+            transparent
+        );
+}
+
+
+/* Save / cancel buttons */
+
+.sidebar-project-action {
+    width: 30px;
+    height: 30px;
+
+    flex-shrink: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 0;
+
+    border: none;
+    border-radius: 7px;
+
+    background: transparent;
+    color: var(--text-muted, #6b7280);
+
+    font-size: 16px;
+
+    cursor: pointer;
+}
+
+.sidebar-project-action:hover {
+    background: var(--surface-secondary, #f3f4f6);
+    color: var(--text-primary, #111827);
+}
+
+.sidebar-project-save {
+    color: var(--success-color, #16a34a);
+}
+
 /* Smaller screens */
 
 @media (max-width: 900px) {

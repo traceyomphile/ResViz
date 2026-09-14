@@ -259,3 +259,29 @@ export async function exportProject(projectId: string): Promise<void> {
     anchor.remove();
     URL.revokeObjectURL(url);
 }
+
+export async function updateProjectName(projectId: string, name: string): Promise<ProjectSummary> {
+    const response = await fetch(`${API_URL}/api/projects/${encodeURIComponent(projectId)}`,
+        {
+            method: 'PUT',
+            headers: {
+                ...projectHeaders(),
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                name,
+            }),
+        },
+    );
+
+    if (!response.ok) {
+        throw await responseError(
+            response,
+            `Could not update project name (${response.status})`,
+        );
+    }
+
+    return toProjectSummary(
+        await response.json() as RawProject,
+    );
+}

@@ -11,7 +11,7 @@ from fastapi import (
 )
 from fastapi.responses import Response
 from pydantic import ValidationError
-from app.schemas.project import Project
+from app.schemas.project import Project, ProjectUpdate
 from app.services.ProjectManager import project_manager
 from app.services.SessionManager import session_manager
 
@@ -147,6 +147,32 @@ async def create_project(project: Project, session_id: str = Depends(require_ses
         )
 
     return created_project
+
+@project_router.put('/{project_id}',  response_model=Project)
+async def update_project(project_id: str, payload: ProjectUpdate, session_id: str = Depends(require_session)) -> Project:
+    project = await project_manager.get(session_id, project_id)
+    if project is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail='Project not found',
+        )
+
+    new_name = payload.name.strip()
+    if not new_name:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail='Project name cannot be empty',
+        )
+
+    project.name = new_name
+    updated_project = await project_manager.save(session_id, project)
+    if updated_project is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail='Project not found',
+        )
+
+    return updated_project
 
 @project_router.delete('/{project_id}', status_code=status.HTTP_204_NO_CONTENT)
 async def delete_project(project_id: str, session_id: str = Depends(require_session)) -> None:

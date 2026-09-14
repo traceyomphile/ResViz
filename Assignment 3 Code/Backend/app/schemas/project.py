@@ -25,3 +25,9 @@ class Project(BaseModel):
     goal: Node | None = None
     status: str = "draft"
     resolution_result: str = ""
+
+"""
+Separate class for updating to avoid requesting the whole project just to change the name.
+"""
+class ProjectUpdate(BaseModel):
+    name: str = Field(min_length=1, max_length=80)

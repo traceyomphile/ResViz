@@ -186,7 +186,10 @@ export function ProjectView({
             if (selectedProject) {
                 const openedProject = await getProject(selectedProject.id);
                 markProjectAsUsed(openedProject.id);
-                onContinue(openedProject);
+                onContinue({
+                    ...openedProject,
+                    name: selectedProject.name,
+                });
             }
         } catch (error) {
             setMessage(error instanceof Error ? error.message : 'Could not open project.');
