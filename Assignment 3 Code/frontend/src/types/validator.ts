@@ -32,6 +32,51 @@ class FormulaSyntaxError extends Error {
     }
 }
 
+interface AnnotatedFormula {
+    formula: string;
+    annotation: string | null;
+}
+
+function splitAnnotatedFormula(value: string): AnnotatedFormula {
+    const trimmed = value.trim();
+    const separatorIndex = trimmed.indexOf(":");
+
+    // No annotated - normal prop formula
+    if (separatorIndex === -1) {
+        return {
+            formula: trimmed,
+            annotation: null,
+        };
+    }
+
+    const formula = trimmed.slice(0, separatorIndex).trim();
+    const rawAnnotation = trimmed.slice(separatorIndex+1).trim()
+
+    if (!formula) {
+        throw new FormulaSyntaxError("A formula is required before the annotation.");
+    }
+
+    if (!rawAnnotation) {
+        throw new FormulaSyntaxError("An annotation is required after ':'");
+    }
+
+    if (!rawAnnotation.startsWith('"') || !rawAnnotation.endsWith('"')) {
+        throw new FormulaSyntaxError("Annotation must be enclosed in double quotes.");
+    }
+
+    let annotation: string;
+    try {
+        annotation = JSON.parse(rawAnnotation);
+    } catch {
+        throw new FormulaSyntaxError("The annotation contains invalid quotation marks.");
+    }
+
+    return {
+        formula,
+        annotation
+    };
+}
+
 /*convert the formula into tokens that the parse can understand*/
 function  tokenize(formula:string):Token[]{
     const tokens:Token[]=[];
@@ -362,14 +407,16 @@ export function  validateFormula(
     }
 
     try {
-        const tokens =tokenize(value);
-
+        const annotated = splitAnnotatedFormula(value)
+        // Only the prop logic part goes through the parser.
+        const tokens = tokenize(annotated.formula);
         const parser = new FormulaParser(tokens);
+
         parser.parse();
 
         return {
             valid: true,
-        };
+        }
     } catch (error) {
         if (error instanceof FormulaSyntaxError) {
             return {
@@ -390,7 +437,7 @@ export function  validateFormula(
 function validateTextKB (
     content: string
 ): UploadedValidationRes {
-    const lines = content.split (/\r\n/);
+    const lines = content.split (/\r?\n/);
     const errors: UploadedFormulaError[]=[];
 
     lines.forEach((line, index) => {

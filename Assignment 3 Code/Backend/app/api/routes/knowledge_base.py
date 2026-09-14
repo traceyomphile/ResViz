@@ -34,8 +34,46 @@ def normalise_formula(formula: str) -> str:
         .replace("∨", "|")
     )
 
+def split_annotated_formula(value: str) -> tuple[str, str | None]:
+    value = value.strip()
+
+    if ":" not in value:
+        return value, None
+
+    formula_part, annotation_part = value.split(":", 1)
+    formula_part = formula_part.strip()
+    annotation_part = annotation_part.strip()
+
+    # Allow normal and smart quotes
+    normal_quotes = (annotation_part.startswith('"') and annotation_part.endswith('"'))
+    smart_quotes = (annotation_part.startswith('“') and annotation_part.endswith('”'))
+    if not formula_part:
+        raise ValueError("A formula is required before the annotation.")
+
+    if not annotation_part:
+        raise ValueError("An annotation is required after ':'")
+
+    if not (normal_quotes or smart_quotes):
+        raise ValueError("Annotations must be enclosed in double quotes.")
+
+    # Convert smart quotes to ordinary JSON-compatible quotes
+    if smart_quotes:
+        annotation = annotation_part[1:-1]
+    else:
+        try:
+            annotation = json.loads(annotation_part)
+        except json.JSONDecodeError as exc:
+            raise ValueError("Invalid annotation string.") from exc
+
+    if not isinstance(annotation, str):
+        raise ValueError("Annotation must be a string.")
+
+    return formula_part, annotation
+
 def parse_formula(formula: str) -> Node:
-    normalised = normalise_formula(formula)
+    # Split annnotation and formula
+    formula_part, annotation = split_annotated_formula(formula)
+    normalised = normalise_formula(formula_part)
 
     def fully_parenthesised(expression: str) -> bool:
         if not expression.startswith('(') or not expression.endswith(')'):
@@ -61,7 +99,11 @@ def parse_formula(formula: str) -> Node:
     if has_binary_operator and not fully_parenthesised(normalised):
         normalised = f'({normalised})'
 
-    return node_adapter.validate_python(normalised)
+    node =  node_adapter.validate_python(normalised)
+    # Store the description separately from the logical expression
+    node.annotation = annotation
+
+    return node
 
 def project_not_found() -> HTTPException:
     return HTTPException(
