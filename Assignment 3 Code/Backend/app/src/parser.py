@@ -65,7 +65,8 @@ class Node:
         formula = str(self)
         if not self.annotation:
             return formula
-        escaped = self.annotation.replace('\\', '\\\\').replace('"', '\\"')
+        
+        escaped = self.annotation.replace("\\", "\\\\").replace('"', '\\"')
         return f'{formula}: "{escaped}"'
 
     @classmethod

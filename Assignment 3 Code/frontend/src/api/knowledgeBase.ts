@@ -88,15 +88,42 @@ function sessionHeaders(): Record<string, string> {
 
 async function responseError(response: Response, fallback: string): Promise<Error> {
     const body = await response.json().catch(() => null) as {
-        detail?: string | {message?: string};
+        detail?: 
+            | string 
+            | {message?: string}
+            | Array<{
+                msg?: string;
+                loc?: Array<string | number>;
+                type?: string;
+            }>;
     } | null;
     const detail = body?.detail;
 
-    return new Error(
-        typeof detail === 'string'
-            ? detail
-            : detail?.message ?? fallback,
-    );
+    if (typeof detail === 'string') {
+        return new Error(detail);
+    }
+
+    if (Array.isArray(detail)) {
+        const message = detail
+            .map((error) => {
+                const location = error.loc?.join(' -> ');
+                return location
+                    ? `${location}: ${error.msg ?? 'Validattion error'}`
+                    : error.msg ?? 'Validation error';
+            })
+            .join('\n');
+
+        return new Error(message || fallback)
+    }
+
+    if (
+        detail && 
+        typeof detail === 'object' &&
+        'message' in detail
+    ) {
+        return new Error(detail.message ?? fallback);
+    }
+    return new Error(fallback);
 }
 
 export async function validateKnowledgeBase(formulas: string[]): Promise<ValidationResponse> {

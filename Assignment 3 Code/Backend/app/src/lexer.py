@@ -20,11 +20,7 @@ t_EQUIV   = r'<->|↔'
 t_IMPLICATION = r'->|→'
 t_LPAREN  = r'\('
 t_RPAREN  = r'\)'
-
-def t_IDENTIFIER(t):
-	"""Match proposition names such as P, Ad, Student, Student_1."""
-	r'[A-Za-z][A-Za-z0-9_]*'
-	return t
+t_IDENTIFIER = r'[A-Za-z][A-Za-z0-9_]*' 
 
 t_ignore  = ' \t'		# Spaces and tabs have no logical meaning.
 

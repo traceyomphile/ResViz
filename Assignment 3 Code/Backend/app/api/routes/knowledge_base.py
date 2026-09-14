@@ -99,13 +99,13 @@ def parse_uploaded_formulas(filename: str, raw_text: str) -> tuple[list[str], st
             isinstance(formula, str) for formula in formulas
         ):
             raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                 detail="JSON must contain a string array named formulas or knowledge_base",
             )
 
         if query is not None and not isinstance(query, str):
             raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                 detail="The uploaded query or goal must be a string",
             )
 
@@ -124,7 +124,7 @@ async def save_typed_knowledge_base(project_id: str, payload: KnowledgeBasePaylo
         parsed_formulas = [parse_formula(formula) for formula in payload.formulas]
     except (ValidationError, ValueError, TypeError) as exc:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=f'Invalid propositional formula: {exc}',
         ) from exc
 
@@ -167,7 +167,7 @@ async def upload_knowledge_base(project_id: str, file: UploadFile = File(...), s
 
     if not formulas:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail="The uploaded knowledge base contains no formulas",
         )
 
@@ -180,7 +180,7 @@ async def upload_knowledge_base(project_id: str, file: UploadFile = File(...), s
         )
     except (ValidationError, ValueError, TypeError) as exc:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=f"Invalid propositional formula: {exc}",
         ) from exc
 
@@ -259,7 +259,7 @@ async def save_named_knowledge_base(project_id: str, payload: SaveKnowledgeBaseP
         parsed_formulas = [parse_formula(formula) for formula in payload.formulas]
     except (ValidationError, ValueError, TypeError) as exc:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=f'Invalid propositional formula: {exc}',
         ) from exc
  
@@ -334,7 +334,7 @@ async def save_query(project_id: str, payload: QueryPayload, session_id: str = D
         parsed_query = parse_formula(payload.query)
     except (ValidationError, ValueError, TypeError) as exc:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=f'Invalid query formula: {exc}',
         ) from exc
 
