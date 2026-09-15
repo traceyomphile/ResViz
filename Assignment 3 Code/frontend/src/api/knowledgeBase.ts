@@ -1,4 +1,4 @@
-import {getSessionId, getTabId} from './session';
+import {getTabId} from './session';
 
 const API_URL = (import.meta as ImportMeta & {
     env?: {VITE_API_URL?: string};
@@ -74,14 +74,7 @@ export interface KnowledgeBaseListResponse {
 }
 
 function sessionHeaders(): Record<string, string> {
-    const sessionId = getSessionId();
-
-    if (!sessionId) {
-        throw new Error('Cannot access the knowledge base without an active session.');
-    }
-
     return {
-        'X-Session-ID': sessionId,
         'X-Tab-ID': getTabId(),
     };
 }
@@ -132,7 +125,9 @@ export async function validateKnowledgeBase(formulas: string[]): Promise<Validat
         headers: {
             ...sessionHeaders(),
             'Content-Type': 'application/json',
+            
         },
+        credentials: 'include',
         body: JSON.stringify({formulas}),
     });
 
@@ -152,6 +147,7 @@ export async function saveTypedKnowledgeBase(projectId: string, formulas: string
                 ...sessionHeaders(),
                 'Content-Type': 'application/json',
             },
+            credentials: 'include',
             body: JSON.stringify({formulas}),   
         },
     );
@@ -172,6 +168,7 @@ export async function uploadKnowledgeBase(projectId: string, file: File): Promis
         {
             method: 'POST',
             headers: sessionHeaders(),
+            credentials: 'include',
             body,
         },
     );
@@ -192,6 +189,7 @@ export async function saveQuery(projectId: string, query: string): Promise<void>
                 ...sessionHeaders(),
                 'Content-Type': 'application/json',
             },
+            credentials: 'include',
             body: JSON.stringify({query}),
         },
     );
@@ -207,6 +205,7 @@ export async function convertProjectToCnf(projectId: string): Promise<CNFConvers
         {
             method: 'POST',
             headers: sessionHeaders(),
+            credentials: 'include',
         },
     );
 
@@ -220,7 +219,7 @@ export async function convertProjectToCnf(projectId: string): Promise<CNFConvers
 export async function resolveProject(projectId: string): Promise<ResolutionResponse> {
     const response = await fetch(
         `${API_URL}/api/projects/${encodeURIComponent(projectId)}/resolution`,
-        {method: 'POST', headers: sessionHeaders()},
+        {method: 'POST', headers: sessionHeaders(), credentials: 'include'},
     );
 
     if (!response.ok) {
@@ -235,6 +234,7 @@ export async function listKnowledgeBases(projectId: string): Promise<KnowledgeBa
         `${API_URL}/api/projects/${encodeURIComponent(projectId)}/knowledge-bases`,
         {
             headers: sessionHeaders(),
+            credentials: 'include',
         },
     );
  
@@ -259,6 +259,7 @@ export async function saveNamedKnowledgeBase(
                 ...sessionHeaders(),
                 'Content-Type': 'application/json',
             },
+            credentials: 'include',
             body: JSON.stringify({name, formulas}),
         },
     );
@@ -277,6 +278,7 @@ export async function activateKnowledgeBase(projectId: string, kbId: string): Pr
         {
             method: 'PUT',
             headers: sessionHeaders(),
+            credentials: 'include',
         },
     );
  
@@ -293,6 +295,7 @@ export async function deleteSavedKnowledgeBase(projectId: string, kbId: string):
         {
             method: 'DELETE',
             headers: sessionHeaders(),
+            credentials: 'include',
         },
     );
  
