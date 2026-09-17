@@ -2,7 +2,7 @@ import {useEffect, useState} from 'react';
 import './App.css';
 import type {Session} from './types/session';
 import {restoreSession} from './api/session';
-import {getProjects, type ProjectSummary} from './api/projects';
+import {getProjects, updateProjectName, type ProjectSummary} from './api/projects';
 import {
   activateKnowledgeBase,
   convertProjectToCnf,
@@ -24,9 +24,10 @@ import {KBChoiceView} from './components/KBChoiceView.tsx';
 import {KBInputView, type SavedKB} from './components/KBInputview.tsx';
 import {TopBar} from './components/TopBar.tsx';
 import {CnfCompleteView, ProofIntroView, ResolutionView} from './components/ResolutionView.tsx';
-
+import { DashboardLayout } from './components/layout/DashboardLayout.tsx';
+import type { WorkspaceScreen } from './types/navigation.ts';
 const SPLASH_DURATION_MS = 6000;
-type Screen = 'projects' | 'kb-choice' | 'kb-input' | 'cnf-complete' | 'proof-intro' | 'resolution';
+type Screen = 'projects' | WorkspaceScreen;
 
 export default function App() {
   const [splashFinished, setSplashFinished] = useState(false);
@@ -53,6 +54,9 @@ export default function App() {
 
   const showSplash = !splashFinished || (session === null && !error);
 
+  /*
+   * Restore browser/session state.
+  */
   useEffect(() => {
     restoreSession()
       .then(setSession)
@@ -63,11 +67,17 @@ export default function App() {
       });
   }, []);
 
+  /**
+   * Splash Screen timer.
+   */
   useEffect(() => {
     const timer = window.setTimeout(() => setSplashFinished(true), SPLASH_DURATION_MS);
     return () => window.clearTimeout(timer);
   }, []);
 
+  /**
+   * Load available projects once the session is ready.
+   */
   useEffect(() => {
     if (!splashFinished || !session || error) return;
 
@@ -79,11 +89,17 @@ export default function App() {
       });
   }, [splashFinished, session, error]);
 
+  /**
+   * Ensures actions that need a project have one.
+   */
   function requireProject(): string {
     if (!activeProjectId) throw new Error('No active project was selected.');
     return activeProjectId;
   }
 
+  /**
+   * Open an existing project.
+   */
   function openProject(project: ProjectSummary) {
     setActiveProjectId(project.id);
     setProjectName(project.name);
@@ -100,6 +116,43 @@ export default function App() {
     setScreen('kb-choice');
   }
 
+  /**
+   * Return from the dashboard workspace to the projects page.
+   */
+  function backToProjects() {
+    setKbError('');
+    setScreen('projects');
+  }
+
+  /**
+   * Update project name
+   */
+  async function renameCurrentProject(name: string) {
+    console.log('RENAME STARTED:', {activeProjectId, name});
+    if (!activeProjectId) {
+      console.error('RENAME FAILED: no active project ID')
+      return;
+    }
+
+    try {
+      const updatedProject = await updateProjectName(activeProjectId, name);
+      console.log('RENAME RESPONSE:', updatedProject)
+      setProjectName(updatedProject.name);
+      setProjects((currentProjects) => 
+        currentProjects.map((project) => 
+          project.id === activeProjectId
+            ? {...project, name: updatedProject.name }
+            : project
+        )
+      );
+    } catch (error) {
+      console.error('Failed to rename project:', error);
+    }
+  }
+
+  /**
+   * Upload a KB file.
+   */
   async function uploadKBFile(file: File) {
     setIsUploading(true);
     setKbError('');
@@ -117,6 +170,9 @@ export default function App() {
     }
   }
 
+  /**
+   * Save a KB created or edited by the user.
+   */
   async function saveKnowledgeBase(kb: SavedKB) {
     setIsSaving(true);
     setKbError('');
@@ -149,6 +205,9 @@ export default function App() {
     }
   }
 
+  /**
+   * Select one of the previously saved KBs.
+   */
   async function selectSavedKnowledgeBase(kb: KnowledgeBaseEntrySummary) {
     setKbError('');
     try {
@@ -161,6 +220,9 @@ export default function App() {
     }
   }
 
+  /**
+   * Save the goal and convert the project KB into CNF.
+   */
   async function convertKnowledgeBase() {
     setIsConverting(true);
     setKbError('');
@@ -191,6 +253,9 @@ export default function App() {
     }
   }
 
+  /**
+   * Run resolution after the proof introduction.
+   */
   async function beginResolution() {
     setIsResolving(true);
     setKbError('');
@@ -206,22 +271,58 @@ export default function App() {
     }
   }
 
+  /**
+   * Loading / session states
+   */
+  if (showSplash) {
+    return <SplashScreen />
+  }
+
+  if (error) {
+    return <div>{error}</div>;
+  }
+
+  if (!session) {
+    return <div>NO SESSION FOUND</div>;
+  }
+
+  /**
+   * Project selection stays outside the dashboard.
+   */
+  if (screen === 'projects') {
+    return (
+      <ProjectView 
+        projects={projects}
+        onProjectCreated={(project) => 
+          setProjects((current) => [
+            ...current.filter((item) => item.id !== project.id,),
+            project,
+          ])
+        }
+        onProjectImported={(project) => 
+          setProjects((current) => [
+            ...current.filter((item) => item.id !== project.id,),
+            project,
+          ])
+        }
+        onContinue={openProject}
+      />
+    );
+  }
+
+  /**
+   * Everything lives inside the dashboard shell.
+   */
   return (
     <>
-      {showSplash ? <SplashScreen /> : error ? <div>{error}</div> : !session ? <div>NO SESSION FOUND</div> : <>
-        {screen !== 'projects' && <TopBar />}
+      <TopBar />
 
-        {screen === 'projects' && <ProjectView
-          projects={projects}
-          onProjectCreated={(project) => setProjects((current) => [
-            ...current.filter((item) => item.id !== project.id), project,
-          ])}
-          onProjectImported={(project) => setProjects((current) => [
-            ...current.filter((item) => item.id !== project.id), project,
-          ])}
-          onContinue={openProject}
-        />}
-
+      <DashboardLayout
+        projectName={projectName}
+        currentScreen={screen}
+        onBackToProjects={backToProjects}
+        onRenameProject={renameCurrentProject}
+      >
         {screen === 'kb-choice' && <KBChoiceView
           projectId={activeProjectId ?? ''}
           refreshKey={knowledgeBaseRefreshKey}
@@ -291,7 +392,7 @@ export default function App() {
           onBack={() => setScreen('proof-intro')}
           onBackToKnowledgeBase={() => setScreen('kb-choice')}
         />}
-      </>}
+      </DashboardLayout>
     </>
   );
 }

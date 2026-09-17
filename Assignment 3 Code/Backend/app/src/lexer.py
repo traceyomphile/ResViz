@@ -1,7 +1,8 @@
 import ply.lex as lex
 
+# TOken names used by the parser.
 tokens = (
-	'LETTER',
+	'IDENTIFIER',
 	'CONJUCTION',
 	'DISJUNCTION',
 	'EQUIV',
@@ -11,23 +12,23 @@ tokens = (
 	'RPAREN',
 )
 
-t_CONJUCTION    = r'\&'
-t_NEGATION  = r'\~'
-t_DISJUNCTION   = r'\|'
-t_EQUIV   = r'<->'
-t_IMPLICATION = '->'
+# Operators. Both the ASCII forms and the common mathematical symbols. 
+t_CONJUCTION    = r"&|∧"
+t_NEGATION  = r'~|¬'
+t_DISJUNCTION   = r'\||∨'
+t_EQUIV   = r'<->|↔'
+t_IMPLICATION = r'->|→'
 t_LPAREN  = r'\('
 t_RPAREN  = r'\)'
+t_IDENTIFIER = r'[A-Za-z][A-Za-z0-9_]*' 
 
-def t_LETTER(t):
-	r'(\d\-)*[a-zA-Z](\d,\d)*'
-	return t
-
-t_ignore  = ' \t'
+t_ignore  = ' \t'		# Spaces and tabs have no logical meaning.
 
 def t_error(t):
-	print("Illegal character '%s'" % t.value[0])
-	t.lexer.skip(1)
+	"""Raise an error upon invalid characters."""
+	raise ValueError(
+		f'Illegal character {t.value[0]!r} at position {t.lexpos}'
+	)
 
 lexer = lex.lex()
 

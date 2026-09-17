@@ -56,45 +56,78 @@ resviz/
 │       ├── test_resolution_engine.py
 │       └── test_session_manager.py
 ├── frontend/
-│   ├── eslint.config.js
-│   ├── index.html
-│   ├── package.json
 │   ├── public/
-│   ├── tsconfig.app.json
+│   │   ├── ResVizLogo.png
+│   │   ├── favicon.svg
+│   │   └── icons.svg
+│   ├── src/
+│   │   ├── api/
+│   │   │   ├── client.ts
+│   │   │   ├── session.ts
+│   │   │   ├── projects.ts
+│   │   │   └── knowledgeBase.ts
+│   │   ├── assets/
+│   │   │   └── hero.png
+│   │   ├── components/
+│   │   │   ├── layout/
+│   │   │   │   ├── DashboardLayout.tsx
+│   │   │   │   ├── DashboardLayout.css
+│   │   │   │   ├── Sidebar.tsx
+│   │   │   │   ├── Sidebar.css
+│   │   │   │   ├── TopBar.tsx
+│   │   │   │   └── TopBar.css
+│   │   │   ├── common/
+│   │   │   │   ├── PageHeader.tsx
+│   │   │   │   ├── StatusBadge.tsx
+│   │   │   │   ├── ProgressSteps.tsx
+│   │   │   │   ├── EmptyState.tsx
+│   │   │   │   └── FileUpload.tsx
+│   │   │   ├── dashboard/
+│   │   │   │   ├── DashboardHome.tsx
+│   │   │   │   ├── DashboardHome.css
+│   │   │   │   ├── SummaryCard.tsx
+│   │   │   │   └── ReasoningPipeline.tsx
+│   │   │   ├── projects/
+│   │   │   │   ├── ProjectView.tsx
+│   │   │   │   └── ProjectView.css
+│   │   │   ├── knowledge-base/
+│   │   │   │   ├── KBChoiceView.tsx
+│   │   │   │   ├── KBChoiceView.css
+│   │   │   │   ├── KBInputView.tsx
+│   │   │   │   ├── KBInputView.css
+│   │   │   │   └── SavedKnowledgeBases.tsx
+│   │   │   ├── cnf/
+│   │   │   │   ├── CNFView.tsx
+│   │   │   │   ├── CNFView.css
+│   │   │   │   └── ClauseCard.tsx
+│   │   │   └── resolution/
+│   │   │       ├── ProofIntroView.tsx
+│   │   │       ├── ResolutionView.tsx
+│   │   │       ├── ResolutionResult.tsx
+│   │   │       ├── ResolutionView.css
+│   │   │       └── ResolutionStep.tsx
+│   │   ├── context/
+│   │   │   ├── ThemeContext.tsx
+│   │   │   └── ThemeContext.test.tsx
+│   │   ├── types/
+│   │   │   ├── index.ts
+│   │   │   ├── session.ts
+│   │   │   ├── navigation.ts
+│   │   │   ├── knowledgeBase.ts
+│   │   │   └── validator.ts
+│   │   ├── test/
+│   │   │   └── setup.ts
+│   │   ├── styles/
+│   │   │   ├── design-system.css
+│   │   │   ├── theme.css
+│   │   │   └── globals.css
+│   │   ├── App.tsx
+│   │   └── main.tsx
+│   ├── .env
+│   ├── package.json
 │   ├── tsconfig.json
-│   ├── tsconfig.node.json
 │   ├── vite.config.ts
-│   └── src/
-│       ├── App.css
-│       ├── App.tsx
-│       ├── api/
-│       │   ├── client.ts
-│       │   ├── knowledgeBase.ts
-│       │   ├── projects.ts
-│       │   └── session.ts
-│       ├── components/
-│       │   ├── FileUpload.tsx
-│       │   ├── KBChoiceView.css
-│       │   ├── KBChoiceView.tsx
-│       │   ├── KBInputView.css
-│       │   ├── KBInputView.tsx
-│       │   ├── ProjectView.css
-│       │   ├── ProjectView.tsx
-│       │   ├── ResolutionView.css
-│       │   ├── ResolutionView.tsx
-│       │   ├── SplashScreen.css
-│       │   ├── SplashScreen.tsx
-│       │   ├── TopBar.css
-│       │   └── TopBar.tsx
-│       ├── context/
-│       │   └── ThemeContext.tsx
-│       ├── index.css
-│       ├── main.tsx
-│       ├── theme.css
-│       ├── types.ts
-│       └── types/
-│           ├── session.ts
-│           └── validator.ts
+│   └── index.html
 ├── diagrams/
 ├── forms/
 └── ...
@@ -157,20 +190,31 @@ The core reasoning implementation is active and not just placeholder code:
 
 ### Components
 
-- `frontend/src/components/SplashScreen.tsx` — startup splash screen
-- `frontend/src/components/ProjectView.tsx` — create/open/import projects
-- `frontend/src/components/KBChoiceView.tsx` — choose input method and saved KBs
-- `frontend/src/components/KBInputView.tsx` — typed or uploaded formula input and saved-KB workflow
-- `frontend/src/components/ResolutionView.tsx` — CNF completion and proof resolution display
-- `frontend/src/components/TopBar.tsx` — navigation and app shell bar
-- `frontend/src/components/FileUpload.tsx` — upload UI for KB files
+- `frontend/src/components/layout/DashboardLayout.tsx` — top-level dashboard shell with sidebar and content area
+- `frontend/src/components/layout/Sidebar.tsx` — primary navigation for projects, KBs, CNF, and resolution flows
+- `frontend/src/components/layout/TopBar.tsx` — header actions, project context, and global controls
+- `frontend/src/components/common/PageHeader.tsx` — reusable section header for dashboard views
+- `frontend/src/components/common/StatusBadge.tsx` — status indicators for proof and conversion states
+- `frontend/src/components/common/ProgressSteps.tsx` — step tracker for the reasoning workflow
+- `frontend/src/components/common/FileUpload.tsx` — upload UI for KB files and formula imports
+- `frontend/src/components/dashboard/DashboardHome.tsx` — overview landing page for project summaries and pipeline status
+- `frontend/src/components/projects/ProjectView.tsx` — create/open/import projects in the dashboard experience
+- `frontend/src/components/knowledge-base/KBChoiceView.tsx` — choose between typed, uploaded, and saved KB entry methods
+- `frontend/src/components/knowledge-base/KBInputView.tsx` — typed or uploaded formula input and saved-KB workflow
+- `frontend/src/components/cnf/CNFView.tsx` — CNF conversion display and clause visualization
+- `frontend/src/components/resolution/ResolutionView.tsx` — proof execution and resolution-display area
+- `frontend/src/components/resolution/ResolutionResult.tsx` — result summary for entailment checks
+- `frontend/src/components/resolution/ResolutionStep.tsx` — individual proof step rendering
 
 ### Types and context
 
-- `frontend/src/types.ts` — shared frontend types like input method and KB data
+- `frontend/src/types/index.ts` — shared frontend type exports and app-wide conventions
 - `frontend/src/types/session.ts` — session response typing
+- `frontend/src/types/navigation.ts` — navigation and route state typings
+- `frontend/src/types/knowledgeBase.ts` — knowledge-base and formula payload types
 - `frontend/src/types/validator.ts` — validation type definitions
 - `frontend/src/context/ThemeContext.tsx` — theme context provider
+- `frontend/src/styles/design-system.css` — reusable UI tokens and design-system primitives
 
 ---
 

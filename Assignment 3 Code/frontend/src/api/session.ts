@@ -36,7 +36,8 @@ export async function restoreSession(): Promise<Session> {
             method: 'GET',
             headers: {
                 'X-Tab-ID': getTabId(),
-            }
+            },
+            credentials: 'include',
         });
     } catch (err) {
         console.error('restoreSession: network/CORS error', err);
@@ -57,23 +58,26 @@ export async function restoreSession(): Promise<Session> {
 }
 
 export async function deleteSession(): Promise<void> {
-    const sessionId = getSessionId();
+    const tabId = sessionStorage.getItem(TAB_ID_KEY);
 
-    if (!sessionId) {
+    if (!tabId) {
         sessionStorage.removeItem(SESSION_ID_KEY);
-        sessionStorage.removeItem(TAB_ID_KEY);
         return;
     }
 
     try {
-        await fetch(`${API_URL}/api/session`, {
+        const response = await fetch(`${API_URL}/api/session`, {
             method: 'DELETE',
             headers: {
-                'X-Session-ID': sessionId,
-                'X-Tab-ID': getTabId(),
+                'X-Tab-ID': tabId,
             },
+            credentials: 'include',
             keepalive: true,
         });
+
+        if (!response.ok && response.status !== 404) {
+            console.warn(`Could not explicitly delete backend session (${response.status}).`);
+        }
     } catch (err) {
         console.warn('Could not explicitly delete backend session.', err);
     } finally {

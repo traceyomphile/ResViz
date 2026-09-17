@@ -27,5 +27,6 @@ FRONTEND_URLS = [
 ]
 
 SESSION_DURATION = timedelta(minutes=20)
+MAX_ACTIVE_SESSIONS_PER_BROWSER = 10
 SESSION_COOKIE_NAME = 'resviz_session'
 
