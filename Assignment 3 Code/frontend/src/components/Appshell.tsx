@@ -1,19 +1,17 @@
 import {useState, type ReactNode} from 'react';
 import {useTheme} from '../context/ThemeContext';
 import type {SavedProjectKB} from '../api/projects';
-import {Brand, Icon} from './Icons';
+import {Brand, Icon} from './Icons.tsx';
 
-export type Section ='projects' | 'learn' | 'help';
+export type Section = 'projects' | 'learn' | 'help';
 export function ThemeToggle() {
-    const {theme, toggleTheme} = useTheme();
-    return <button className="theme-toggle" type="button" onClick={toggleTheme} aria-label="Toggle light/dark mode" aria-pressed = {theme ==='dark'}>< Icon name={theme ==='light' ? 'sun' : 'moon'} /><span className="theme-switch"><i /></span ></button>;
+  const {theme, toggleTheme} = useTheme();
+  return <button className="theme-toggle" type="button" onClick={toggleTheme} aria-label="Toggle light/dark mode" aria-pressed={theme === 'dark'}><Icon name={theme === 'light' ? 'sun' : 'moon'} /><span className="theme-switch"><i /></span></button>;
 }
-
 export function SessionMenu() {
-    const [open, setOpen] = useState(false);
-    return <div className="session-menu"><button type="button" className="avatar" aria-label="Session information" aria-expanded={open} onClick={() => setOpen(!open)}><Icon name="hint" size={20} /></button>{open && <div className="session-popover"><strong>Hint</strong><p>Your projects belong to this browser tab. Sessions expire after two hours of inactivity. Export your work to keep a copy.</p><button className="text-button" onClick={() => setOpen(false)}>Close</button></div>}</div>;
+  const [open, setOpen] = useState(false);
+  return <div className="session-menu"><button type="button" className="avatar" aria-label="Session information" aria-expanded={open} onClick={() => setOpen(!open)}><Icon name="user" size={20} /></button>{open && <div className="session-popover"><strong>Guest workspace</strong><p>Your projects belong to this browser tab. Sessions expire after two hours of inactivity. Export your work to keep a copy.</p><button className="text-button" onClick={() => setOpen(false)}>Close</button></div>}</div>;
 }
-
 export function AppShell({children, section = 'projects', projectName, stage = 1, onNavigate, onHome, onStage, onRename, busy, knowledgeBases = [], activeKnowledgeBaseId, onKnowledgeBase, onAddKnowledgeBase, onDeleteKnowledgeBase}: {
   knowledgeBases?: SavedProjectKB[]; activeKnowledgeBaseId?: string; onKnowledgeBase?(id: string): void; onAddKnowledgeBase?(): void; onDeleteKnowledgeBase?(id: string): void;
   children: ReactNode; section?: Section; projectName?: string; stage?: number;
@@ -33,11 +31,9 @@ export function AppShell({children, section = 'projects', projectName, stage = 1
     </aside><div className="main-content">{children}</div>
   </div>;
 }
-
-export function WorkspaceHeader({projectName, onProjects}:{projectName: string; onProjects(): void}) {
-    return <header className="workspace-header"><nav aria-label="Breadcrumb"><button onClick={onProjects}>Projects</button><span>/</span><span>{projectName}</span></nav><div className="header-tools"><ThemeToggle/><SessionMenu /></div></header>;
+export function WorkspaceHeader({projectName, onProjects}: {projectName: string; onProjects(): void}) {
+  return <header className="workspace-header"><nav aria-label="Breadcrumb"><button onClick={onProjects}>Projects</button><span>/</span><span>{projectName}</span></nav><div className="header-tools"><ThemeToggle /><SessionMenu /></div></header>;
 }
-
 export function GuideView({section}: {section: 'learn' | 'help'}) {
   return <main className="guide-screen"><h1>{section === 'learn' ? 'Learn resolution' : 'How can we help?'}</h1><p className="page-subtitle">{section === 'learn' ? 'Follow the reasoning from formulas to a proof.' : 'Everything you need to build and explore your workspace.'}</p><ol className="guide-sections">{(section === 'learn' ? [
     ['Build a knowledge base', 'Write the facts and rules you know. For example, P → Q and P state that P implies Q, and that P is true.'],
