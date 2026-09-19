@@ -11,6 +11,28 @@ class ResolutionStatus(str, Enum):
     LIMIT_REACHED = "limit_reached"
 
 
+@dataclass(frozen=True)
+class ResolutionCandidateRecord:
+    rank: int
+    parent_1: str
+    parent_2: str
+    pivot: str
+    resolvent: str
+    resolvent_size: int
+    unit_matches: int
+    partner_size: int
+    enqueue_order: int
+
+
+@dataclass(frozen=True)
+class ResolutionSelectionRecord:
+    reason_code: str
+    explanation: str
+    candidate_count: int
+    omitted_count: int
+    candidates: list[ResolutionCandidateRecord]
+
+
 @dataclass
 class ResolutionStepRecord:
     step_number: int
@@ -18,6 +40,7 @@ class ResolutionStepRecord:
     parent_2: Clause
     pivot: Literal
     resolvent: Clause
+    selection: ResolutionSelectionRecord | None = None
 
 
 @dataclass
@@ -81,7 +104,7 @@ class ResolutionEngine:
             all_clauses
         )
 
-        
+
         # Candidate generation
 
         def add_candidates(
@@ -167,8 +190,10 @@ class ResolutionEngine:
                     )
 
         # Negated goal starts the search.
-        for support_id in support_ids:
-            support_clause = by_id[support_id]
+        # Use source order to make enqueue-order tie breaks reproducible.
+        for support_clause in all_clauses:
+            if support_clause.id not in support_ids:
+                continue
 
             add_candidates(
                 support_clause
@@ -178,6 +203,7 @@ class ResolutionEngine:
 
         while candidate_heap:
 
+            candidate = heapq.heappop(candidate_heap)
             (
                 _,
                 _,
@@ -188,7 +214,7 @@ class ResolutionEngine:
                 pivot,
                 resolvent_literals,
                 pair_key,
-            ) = heapq.heappop(candidate_heap)
+            ) = candidate
 
             if pair_key in processed_pairs:
                 continue
@@ -206,6 +232,11 @@ class ResolutionEngine:
                     steps=steps,
                     clauses=all_clauses,
                 )
+
+            # Capture the real pending queue before the inference changes it.
+            # The current pair was marked processed above, so include it
+            # explicitly; stale and duplicate queued pairs are not alternatives.
+            selection = self._selection_record(candidate, candidate_heap, processed_pairs)
 
             # Does this exact clause already exist?
             existing_clause = by_key.get(
@@ -240,6 +271,7 @@ class ResolutionEngine:
                 parent_2=other_clause,
                 pivot=pivot,
                 resolvent=resolvent,
+                selection=selection,
             )
 
             steps.append(step)
@@ -279,6 +311,53 @@ class ResolutionEngine:
         )
 
     # Helper methods
+
+    @staticmethod
+    def _selection_record(selected, pending, processed_pairs, preview_limit=50):
+        # Heap entries retain the scores assigned when they were enqueued.
+        # Do not recompute scores using clauses derived later in the search.
+        best_by_pair = {selected[8]: selected}
+        for item in pending:
+            pair_key = item[8]
+            if pair_key in processed_pairs:
+                continue
+            previous = best_by_pair.get(pair_key)
+            if previous is None or item[:4] < previous[:4]:
+                best_by_pair[pair_key] = item
+
+        ranked = heapq.nsmallest(preview_limit, best_by_pair.values(), key=lambda item: item[:4])
+        candidates = [ResolutionCandidateRecord(
+            rank=rank, parent_1=item[4], parent_2=item[5], pivot=str(item[6]),
+            resolvent=Clause('', item[7]).expression,
+            resolvent_size=item[0], unit_matches=-item[1],
+            partner_size=item[2], enqueue_order=item[3],
+        ) for rank, item in enumerate(ranked, 1)]
+        winner = candidates[0]
+        runner_up = candidates[1] if len(candidates) > 1 else None
+        if runner_up is None:
+            reason = 'only_candidate'
+            explanation = 'This was the only eligible resolution pair in the queue.'
+        elif winner.resolvent_size < runner_up.resolvent_size:
+            reason = 'smaller_resolvent'
+            if winner.resolvent_size == 0:
+                explanation = 'This pair produces the empty clause (0 literals), which ranks ahead of every non-empty result.'
+            else:
+                explanation = f'This pair produces {winner.resolvent_size} result literals, fewer than the next-ranked pair ({runner_up.resolvent_size}).'
+        elif winner.unit_matches > runner_up.unit_matches:
+            reason = 'more_unit_matches'
+            explanation = f'Result sizes tie. This pair has more complementary unit matches ({winner.unit_matches}) than the next-ranked pair ({runner_up.unit_matches}).'
+        elif winner.partner_size < runner_up.partner_size:
+            reason = 'shorter_partner'
+            explanation = f'Result sizes and unit matches tie. The other parent has fewer literals ({winner.partner_size}) than the next-ranked pair ({runner_up.partner_size}).'
+        else:
+            reason = 'earlier_queued'
+            explanation = 'All three scores tie. This pair entered the queue earlier than the next-ranked pair.'
+        return ResolutionSelectionRecord(
+            reason_code=reason, explanation=explanation,
+            candidate_count=len(best_by_pair),
+            omitted_count=len(best_by_pair) - len(candidates), candidates=candidates,
+        )
+
 
     def _find_complementary_literals(
         self,
