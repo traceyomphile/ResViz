@@ -1,4 +1,4 @@
-import {getTabId} from './session';
+import {getSessionId, getTabId} from './session';
 
 const API_URL = (import.meta as ImportMeta & {
     env?: {VITE_API_URL?: string};
@@ -7,6 +7,7 @@ const API_URL = (import.meta as ImportMeta & {
 export interface KnowledgeBaseResponse {
     project_id: string;
     formulas: string[];
+    annotations?: string[];
     goal: string | null;
 }
 
@@ -37,6 +38,26 @@ export interface CNFConversionResponse {
     status: string;
 }
 
+export interface ResolutionCandidate {
+    rank: number;
+    parent_1: string;
+    parent_2: string;
+    pivot: string;
+    resolvent: string;
+    resolvent_size: number;
+    unit_matches: number;
+    partner_size: number;
+    enqueue_order: number;
+}
+
+export interface ResolutionSelection {
+    reason_code: 'only_candidate' | 'smaller_resolvent' | 'more_unit_matches' | 'shorter_partner' | 'earlier_queued';
+    explanation: string;
+    candidate_count: number;
+    omitted_count: number;
+    candidates: ResolutionCandidate[];
+}
+
 export interface ResolutionStep {
     step_number: number;
     parent_1: string;
@@ -44,14 +65,39 @@ export interface ResolutionStep {
     pivot: string;
     resolvent_id: string;
     resolvent: string;
+    selection?: ResolutionSelection | null;
 }
 
 export interface ResolutionClause {
     id: string;
     expression: string;
     source_formula: string | null;
+    source_knowledge_base?: string | null;
+    is_negated_goal?: boolean;
 }
 
+export interface ResolutionBranch {
+    id: string;
+    parent_1: string;
+    parent_2: string;
+    pivot: string | null;
+    result_id: string | null;
+    expression: string;
+    kind: 'derived' | 'existing' | 'tautology' | 'dead_end';
+    reason: string;
+    depth: number;
+}
+export interface FullResolutionGraph {
+    clauses: ResolutionClause[];
+    branches: ResolutionBranch[];
+    complete: boolean;
+    limit_reason: string | null;
+    pairs_examined: number;
+    pending_pairs: number;
+    shortest_proof: string[];
+    shortest_is_optimal: boolean;
+    entailed: boolean;
+}
 export interface ResolutionResponse {
     project_id: string;
     entailed: boolean;
@@ -59,6 +105,7 @@ export interface ResolutionResponse {
     initial_clauses: ResolutionClause[];
     clauses: ResolutionClause[];
     steps: ResolutionStep[];
+    graph?: FullResolutionGraph | null;
 }
 
 export interface KnowledgeBaseEntrySummary {
@@ -74,49 +121,29 @@ export interface KnowledgeBaseListResponse {
 }
 
 function sessionHeaders(): Record<string, string> {
+    const sessionId = getSessionId();
+
+    if (!sessionId) {
+        throw new Error('Cannot access the knowledge base without an active session.');
+    }
+
     return {
+        'X-Session-ID': sessionId,
         'X-Tab-ID': getTabId(),
     };
 }
 
 async function responseError(response: Response, fallback: string): Promise<Error> {
     const body = await response.json().catch(() => null) as {
-        detail?: 
-            | string 
-            | {message?: string}
-            | Array<{
-                msg?: string;
-                loc?: Array<string | number>;
-                type?: string;
-            }>;
+        detail?: string | {message?: string};
     } | null;
     const detail = body?.detail;
 
-    if (typeof detail === 'string') {
-        return new Error(detail);
-    }
-
-    if (Array.isArray(detail)) {
-        const message = detail
-            .map((error) => {
-                const location = error.loc?.join(' -> ');
-                return location
-                    ? `${location}: ${error.msg ?? 'Validattion error'}`
-                    : error.msg ?? 'Validation error';
-            })
-            .join('\n');
-
-        return new Error(message || fallback)
-    }
-
-    if (
-        detail && 
-        typeof detail === 'object' &&
-        'message' in detail
-    ) {
-        return new Error(detail.message ?? fallback);
-    }
-    return new Error(fallback);
+    return new Error(
+        typeof detail === 'string'
+            ? detail
+            : detail?.message ?? fallback,
+    );
 }
 
 export async function validateKnowledgeBase(formulas: string[]): Promise<ValidationResponse> {
@@ -125,9 +152,7 @@ export async function validateKnowledgeBase(formulas: string[]): Promise<Validat
         headers: {
             ...sessionHeaders(),
             'Content-Type': 'application/json',
-            
         },
-        credentials: 'include',
         body: JSON.stringify({formulas}),
     });
 
@@ -147,7 +172,6 @@ export async function saveTypedKnowledgeBase(projectId: string, formulas: string
                 ...sessionHeaders(),
                 'Content-Type': 'application/json',
             },
-            credentials: 'include',
             body: JSON.stringify({formulas}),   
         },
     );
@@ -168,7 +192,6 @@ export async function uploadKnowledgeBase(projectId: string, file: File): Promis
         {
             method: 'POST',
             headers: sessionHeaders(),
-            credentials: 'include',
             body,
         },
     );
@@ -189,7 +212,6 @@ export async function saveQuery(projectId: string, query: string): Promise<void>
                 ...sessionHeaders(),
                 'Content-Type': 'application/json',
             },
-            credentials: 'include',
             body: JSON.stringify({query}),
         },
     );
@@ -205,7 +227,6 @@ export async function convertProjectToCnf(projectId: string): Promise<CNFConvers
         {
             method: 'POST',
             headers: sessionHeaders(),
-            credentials: 'include',
         },
     );
 
@@ -219,7 +240,7 @@ export async function convertProjectToCnf(projectId: string): Promise<CNFConvers
 export async function resolveProject(projectId: string): Promise<ResolutionResponse> {
     const response = await fetch(
         `${API_URL}/api/projects/${encodeURIComponent(projectId)}/resolution`,
-        {method: 'POST', headers: sessionHeaders(), credentials: 'include'},
+        {method: 'POST', headers: sessionHeaders()},
     );
 
     if (!response.ok) {
@@ -234,7 +255,6 @@ export async function listKnowledgeBases(projectId: string): Promise<KnowledgeBa
         `${API_URL}/api/projects/${encodeURIComponent(projectId)}/knowledge-bases`,
         {
             headers: sessionHeaders(),
-            credentials: 'include',
         },
     );
  
@@ -250,6 +270,8 @@ export async function saveNamedKnowledgeBase(
     projectId: string,
     name: string,
     formulas: string[],
+    goal?: string | null,
+    annotations?: string[],
 ): Promise<KnowledgeBaseEntrySummary> {
     const response = await fetch(
         `${API_URL}/api/projects/${encodeURIComponent(projectId)}/knowledge-bases`,
@@ -259,8 +281,7 @@ export async function saveNamedKnowledgeBase(
                 ...sessionHeaders(),
                 'Content-Type': 'application/json',
             },
-            credentials: 'include',
-            body: JSON.stringify({name, formulas}),
+            body: JSON.stringify({name, formulas, ...(annotations !== undefined ? {annotations} : {}), ...(goal !== undefined ? {goal} : {})}),
         },
     );
  
@@ -278,7 +299,6 @@ export async function activateKnowledgeBase(projectId: string, kbId: string): Pr
         {
             method: 'PUT',
             headers: sessionHeaders(),
-            credentials: 'include',
         },
     );
  
@@ -295,11 +315,19 @@ export async function deleteSavedKnowledgeBase(projectId: string, kbId: string):
         {
             method: 'DELETE',
             headers: sessionHeaders(),
-            credentials: 'include',
         },
     );
  
     if (!response.ok && response.status !== 204) {
         throw await responseError(response, 'Could not delete the knowledge base');
     }
+}
+
+export async function updateNamedKnowledgeBase(projectId: string, kbId: string, name: string, formulas: string[], goal: string | null, annotations?: string[]): Promise<KnowledgeBaseEntrySummary> {
+    const response = await fetch(`${API_URL}/api/projects/${encodeURIComponent(projectId)}/knowledge-bases/${encodeURIComponent(kbId)}`, {
+        method: 'PUT', headers: {...sessionHeaders(), 'Content-Type': 'application/json'},
+        body: JSON.stringify({name, formulas, goal, annotations}),
+    });
+    if (!response.ok) throw await responseError(response, 'Could not update the knowledge base');
+    return response.json() as Promise<KnowledgeBaseEntrySummary>;
 }
