@@ -64,8 +64,15 @@ export function ancestry(tree: ResolutionPaths, key: string): PathNode[] {
   while (node) {path.push(node); node = node.parent ? byKey.get(node.parent) : undefined;}
   return path.reverse();
 }
-export function shortestPath(tree: ResolutionPaths): PathNode[] {
-  const leaf = tree.nodes.filter(n => n.kind === 'empty').sort((a,b) => a.depth - b.depth)[0];
+export function shortestPath(tree: ResolutionPaths, focus: string | null = null): PathNode[] {
+  const byKey = new Map(tree.nodes.map(n => [n.key, n]));
+  function within(node: PathNode): boolean {
+    if (!focus) return true;
+    let current: PathNode | undefined = node;
+    while (current) {if (current.key === focus) return true; current = current.parent ? byKey.get(current.parent) : undefined;}
+    return false;
+  }
+  const leaf = tree.nodes.filter(n => n.kind === 'empty' && within(n)).sort((a,b) => a.depth - b.depth)[0];
   return leaf ? ancestry(tree, leaf.key) : [];
 }
 export interface PositionedPath extends PathNode {x: number; y: number; width: number; height: number}

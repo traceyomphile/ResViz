@@ -34,7 +34,7 @@ export function FullResolutionView({resolution,goal,onBack,onBackToKnowledgeBase
     e.addEventListener('wheel',wheel,{passive:false});return()=>{observer.disconnect();e.removeEventListener('wheel',wheel);};
     // eslint-disable-next-line react-hooks/exhaustive-deps
   },[scale,tab]);
-  const best=shortestPath(tree), proof=new Set(best.map(n=>n.key));
+  const best=shortestPath(tree,focus), proof=new Set(best.map(n=>n.key));
   const byKey=new Map(tree.nodes.map(n=>[n.key,n]));
   const chosen=byKey.get(selected??'');
   const chosenPath=chosen?ancestry(tree,chosen.key):[];
@@ -53,7 +53,7 @@ export function FullResolutionView({resolution,goal,onBack,onBackToKnowledgeBase
   const outcome=(n:PathNode)=>n.kind==='empty'?'Empty clause':n.kind==='wall'?'Brick wall':n.kind==='cycle'?'Repeated state in this path':n.kind==='limit'?'More choices available':n.kind==='tautology'?'Tautology':collapsed.has(n.key)?`${n.children.length} choices · folded`:`${n.children.length} choices below`;
   const resultText=resolution.entailed?'Entailed':resolution.status==='not_entailed'?'Not entailed':'Search incomplete';
   return <main className="resolution-screen full-resolution-screen branch-resolution-screen"><header className="resolution-heading"><div><h1>Resolution visualisation</h1><span className={`result-badge ${resolution.entailed?'result-badge--success':''}`}>{resultText}</span></div><p><strong>Goal:</strong> {display(goal)}</p></header>
-    <section className="resolution-overview"><p>Start at the negated goal. Each partner and pivot creates its own recursive branch. Repeated clauses are copied into each path; branches never merge.</p><div className="graph-summary"><span>{resolution.initial_clauses.length} input clauses</span><span>{tree.nodes.length} separate occurrences</span><span>{leaves.filter(n=>n.kind==='empty').length} paths reach □</span>{best.length>0&&<button className="text-button" onClick={()=>{setFocus(null);reveal(best.at(-1)!.key);}}>{pathText}: {best.at(-1)!.depth} inferences</button>}</div>
+    <section className="resolution-overview"><p>Start at the negated goal. Each partner and pivot creates its own recursive branch. Repeated clauses are copied into each path; branches never merge.</p><div className="graph-summary"><span>{resolution.initial_clauses.length} input clauses</span><span>{tree.nodes.length} separate occurrences</span><span>{leaves.filter(n=>n.kind==='empty').length} paths reach □</span>{best.length>0&&<button className="text-button" onClick={()=>reveal(best.at(-1)!.key)}>{pathText}: {best.at(-1)!.depth} {best.at(-1)!.depth===1?'inference':'inferences'}</button>}</div>
       {limited>0&&<p className="graph-limit">{limited} branches have more choices beyond the initial display budget. Select one and use Continue this branch. A branch stopping or being limited does not determine project entailment.</p>}
       {resolution.entailed&&!best.length&&<p className="graph-limit">The project has a verified contradiction, but none of the displayed goal-led paths has reached it yet. These paths use input clauses and earlier results in the same branch; they do not cover every general resolution proof.</p>}
       {resolution.status==='limit_reached'&&<p className="graph-limit">The project search is incomplete; this does not establish non-entailment.</p>}
