@@ -16,6 +16,7 @@ from app.services.ProjectManager import project_manager
 from app.services.SessionManager import session_manager
 
 project_router = APIRouter(prefix='/projects', tags=['Projects'])
+MAX_PROJECT_UPLOAD_BYTES= 5 * 1024 * 1024  # 5 MB
 
 async def require_session(session_id: str = Header(alias='X-Session-ID')) -> str:
     """
@@ -172,7 +173,7 @@ async def update_project(project_id: str, payload: ProjectUpdate, session_id: st
             detail='Project not found',
         )
 
-    return updated_project
+    return await project_manager.save(session_id, project)
 
 @project_router.delete('/{project_id}', status_code=status.HTTP_204_NO_CONTENT)
 async def delete_project(project_id: str, session_id: str = Depends(require_session)) -> None:

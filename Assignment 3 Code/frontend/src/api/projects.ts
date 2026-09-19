@@ -4,6 +4,8 @@ const API_URL = (import.meta as ImportMeta & {
     env?: {VITE_API_URL?: string };
 }).env?.VITE_API_URL ?? '';
 
+export interface SavedProjectKB {id: string; name: string; formulas: string[]; annotations?: string[]; goal?: string | null}
+
 export interface ProjectSummary {
     id: string;
     name: string;
@@ -11,6 +13,9 @@ export interface ProjectSummary {
     formulas?: string[];
     goal?: string;
     status?: string;
+    knowledge_base?: SavedProjectKB[];
+    annotations?: string[];
+    activeKnowledgeBase?: string | null;
 }
 
 export interface CreateProjectInput {
@@ -38,9 +43,13 @@ type RawProject =
         name?: string;
         description?: string;
         knowledge_base?: unknown[];
+        knowledge_base_annotations?: string[];
         formulas?: unknown[];
         goal?: unknown;
         status?: string;
+        knowledge_bases?: SavedProjectKB[];
+        active_knowledge_base_id?: string | null;
+
     };
 
 export async function getProjects(): Promise<ProjectSummary[]> {
@@ -260,28 +269,19 @@ export async function exportProject(projectId: string): Promise<void> {
     URL.revokeObjectURL(url);
 }
 
-export async function updateProjectName(projectId: string, name: string): Promise<ProjectSummary> {
-    const response = await fetch(`${API_URL}/api/projects/${encodeURIComponent(projectId)}`,
-        {
-            method: 'PUT',
-            headers: {
-                ...projectHeaders(),
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                name,
-            }),
-        },
-    );
+export async function renameProject(projectId: string, name: string): Promise<ProjectSummary> {
+    const response = await fetch(`${API_URL}/api/projects/${encodeURIComponent(projectId)}`, {
+        method: 'PATCH',
+        headers: {...projectHeaders(), 'Content-Type': 'application/json'},
+        body: JSON.stringify({name}),
+    });
+    if (!response.ok) throw await responseError(response, 'Could not rename project');
+    return toProjectSummary(await response.json() as RawProject);
+}
 
-    if (!response.ok) {
-        throw await responseError(
-            response,
-            `Could not update project name (${response.status})`,
-        );
-    }
-
-    return toProjectSummary(
-        await response.json() as RawProject,
-    );
+export async function deleteProject(projectId: string): Promise<void> {
+    const response = await fetch(`${API_URL}/api/projects/${encodeURIComponent(projectId)}`, {
+        method: 'DELETE', headers: projectHeaders(),
+    });
+    if (!response.ok) throw await responseError(response, 'Could not delete project');
 }
