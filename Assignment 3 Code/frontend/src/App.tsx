@@ -1,6 +1,5 @@
-import {useEffect, useCallback,useRef, useState} from 'react';
+import {useCallback, useEffect, useRef, useState} from 'react';
 import './App.css';
-import type {Session} from './types/session';
 import {restoreSession} from './api/session';
 import {getProjects, updateProjectName, createdProject, renameProject, type ProjectSummary, type SavedProjectKB} from './api/projects';
 import {
@@ -29,6 +28,7 @@ import {CnfCompleteView, ResolutionView} from './components/ResolutionView';
 const SPLASH_DURATION_MS = 6000;
 type Screen ='landing' | Section |'workspace' | 'cnf' | 'resolution';
 
+type Screen = 'landing' | Section | 'workspace' | 'cnf' | 'resolution';
 export default function App() {
   const [screen, setScreen] = useState<Screen>('landing');
   const [ready, setReady] = useState(false);
@@ -50,18 +50,12 @@ export default function App() {
   const [renameError, setRenameError] = useState('');
   const [conversion, setConversion] = useState<CNFConversionResponse | null>(null);
   const [resolution, setResolution] = useState<ResolutionResponse | null>(null);
-
-
-  /*
-   * Restore browser/session state.
-  */
   useEffect(() => {
     let active = true;
     const timer = window.setTimeout(() => setSplashDone(true), 2200);
     restoreSession().then(() => getProjects()).then(items => {if (active) {setProjects(items); setReady(true);}}).catch(failure => {if (active) setStartupError(failure instanceof Error ? failure.message : 'Could not connect to your workspace.');});
     return () => {active = false; window.clearTimeout(timer);};
   }, []);
-
   async function navigate(section: Section) {
     if (locked) return;
     setError(''); setScreen(section);
@@ -69,11 +63,9 @@ export default function App() {
       try {setProjects(await getProjects());} catch (failure) {setError(failure instanceof Error ? failure.message : 'Could not refresh projects.');}
     }
   }
-
   function clearProjectDrafts(id: string) {
     for (const key of Object.keys(drafts.current)) if (key.startsWith(`${id}:`)) delete drafts.current[key];
   }
-
   function updateProject(item: ProjectSummary) {setProjects(current => [...current.filter(p => p.id !== item.id), item]);}
   const rememberDraft = useCallback((data: WorkspaceData) => {
     const projectId = project?.id;
@@ -96,7 +88,6 @@ export default function App() {
     setEditorData(drafts.current[`${item.id}:${saved?.id ?? 'new'}`] ?? {name: saved?.name ?? '', formulas: saved?.formulas ?? item.formulas ?? [], annotations: saved?.annotations ?? item.annotations, goal: saved ? saved.goal ?? '' : item.goal ?? '', entryId: saved?.id});
     setEntryId(saved?.id); setConversion(null); setResolution(null); setError(''); setKbMessage(''); setScreen('workspace');
   }
-
   function startKnowledgeBase() {
     if (!project || locked) return;
     const key = `${project.id}:new`;
@@ -104,7 +95,6 @@ export default function App() {
     setEditorData(drafts.current[key]);
     setEntryId(undefined); setConversion(null); setResolution(null); setError(''); setKbMessage(''); setScreen('workspace');
   }
-
   async function selectKnowledgeBase(id: string) {
     if (!project || locked) return;
     if (entryId === id) {setScreen('workspace'); return;}
@@ -118,7 +108,6 @@ export default function App() {
     } catch (failure) {setError(failure instanceof Error ? failure.message : 'Could not open knowledge base.');}
     finally {setBusy(false);}
   }
-
   async function openDemo() {
     if (locked) return;
     setBusy(true); setError('');
@@ -126,7 +115,6 @@ export default function App() {
     catch (failure) {setError(failure instanceof Error ? failure.message : 'Could not open demo.');}
     finally {setBusy(false);}
   }
-
   async function saveKnowledgeBase(data: WorkspaceData, convert = false) {
     if (!project || locked) return;
     setBusy(true); setError(''); setKbMessage('');
@@ -174,15 +162,11 @@ export default function App() {
     } catch (failure) {setError(failure instanceof Error ? failure.message : 'Could not save the knowledge base.');}
     finally {setBusy(false);}
   }
-
   function requestDeleteKnowledgeBase(id: string) {
     if (!project || locked) return;
     const target = project.knowledgeBases?.find(kb => kb.id === id);
     if (target) {setDeleteKbError(''); setDeleteKb(target);}
   }
-  
-
-
   async function deleteKnowledgeBase() {
     if (!project || !deleteKb || locked) return;
     setBusy(true); setDeleteKbError('');
@@ -206,8 +190,7 @@ export default function App() {
     } catch (failure) {setDeleteKbError(failure instanceof Error ? failure.message : 'Could not delete knowledge base.');}
     finally {setBusy(false);}
   }
-
- async function renameCurrentProject(requested: string) {
+  async function renameCurrentProject(requested: string) {
     if (!project || locked) return;
     if (requested === project.name) {setRenameOpen(false); return;}
     setBusy(true); setRenameError('');
@@ -217,7 +200,7 @@ export default function App() {
     } catch (failure) {
       setRenameError(failure instanceof Error ? failure.message : 'Could not rename project.');
     } finally {setBusy(false);}
- }
+  }
   async function beginResolution() {
     if (!project || locked) return;
     setBusy(true); setError('');
@@ -235,8 +218,8 @@ export default function App() {
     {screen === 'projects' && <><ProjectView projects={projects} onContinue={openProject} onProjectCreated={updateProject} onProjectImported={item => {clearProjectDrafts(item.id); updateProject(item);}} onProjectDeleted={id => {clearProjectDrafts(id); setProjects(current => current.filter(item => item.id !== id)); if (project?.id === id) {setProject(null); setConversion(null); setResolution(null); setEntryId(undefined); setRenameOpen(false);}}} />{error && <p className="dashboard-error field-error" role="alert">{error}</p>}</>}
     {(screen === 'learn' || screen === 'help') && <GuideView section={screen} />}
     {screen === 'workspace' && project && editorData && <KBWorkspace key={`${project.id}:${entryId ?? 'new'}`} projectName={project.name} initialFormulas={editorData.formulas} initialAnnotations={editorData.annotations} initialGoal={editorData.goal} initialName={editorData.name} initialEditor={editorData.editor} entryId={entryId} entries={project.knowledgeBases ?? []} busy={busy} error={error} message={kbMessage} onBack={() => void navigate('projects')} onSave={data => saveKnowledgeBase(data)} onConvert={data => saveKnowledgeBase(data, true)} onDraftChange={rememberDraft} onReading={setReading} onDelete={() => {if (entryId) requestDeleteKnowledgeBase(entryId);}} />}
-    {screen === 'cnf' && conversion && <CnfCompleteView conversion={conversion} busy={busy} error={error} goal={project?.goal ?? ''} onBack={() => {setError(''); setScreen('workspace');}} onStartResolution={() => void beginResolution()} />}
-    {screen === 'resolution' && resolution && <ResolutionView resolution={resolution} goal={project?.goal ?? ''} onBack={() => setScreen('cnf')} onBackToKnowledgeBase={() => setScreen('workspace')} />}
+    {screen === 'cnf' && conversion && <CnfCompleteView conversion={conversion} onBack={() => {setError(''); setScreen('workspace');}} onStartResolution={() => void beginResolution()} />}
+    {screen === 'resolution' && resolution && <ResolutionView resolution={resolution} onBack={() => setScreen('cnf')} onBackToKnowledgeBase={() => setScreen('workspace')} />}
     {screen === 'resolution' && error && <div className="global-status field-error" role="alert">{error}</div>}
     {deleteKb && <DeleteKnowledgeBaseDialog name={deleteKb.name} formulaCount={deleteKb.formulas.length} busy={busy} error={deleteKbError} onClose={() => {if (!locked) setDeleteKb(null);}} onDelete={deleteKnowledgeBase} />}
     {renameOpen && project && <RenameProjectDialog name={project.name} busy={busy} error={renameError} onClose={() => {if (!locked) setRenameOpen(false);}} onSave={renameCurrentProject} />}

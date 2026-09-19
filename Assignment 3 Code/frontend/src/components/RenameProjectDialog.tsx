@@ -1,20 +1,20 @@
-import {useEffect, useRef, useState} from "react";
+import {useEffect, useRef, useState} from 'react';
 import {Icon} from './Icons';
 
-export function RenameProjectDialog({name, busy, error, onClose, onSave}:{
-    name: string; busy: boolean; error: string; onClose (): void; onSave(name: string): Promise<void>;
+export function RenameProjectDialog({name, busy, error, onClose, onSave}: {
+  name: string; busy: boolean; error: string; onClose(): void; onSave(name: string): Promise<void>;
 }) {
-    const dialog = useRef<HTMLDialogElement>(null);
-    const input = useRef<HTMLInputElement>(null);
-    const [draft, setDraft] = useState(name);
-    const trimmed = draft.trim();
-    const validation = trimmed  ? '' : 'Enter  a project name.';
-    useEffect(() => {
-        const element = dialog.current;
-        element?.showModal();
-        input.current?.select();
-        return () => element?.close();
-    }, []);
+  const dialog = useRef<HTMLDialogElement>(null);
+  const input = useRef<HTMLInputElement>(null);
+  const [draft, setDraft] = useState(name);
+  const trimmed = draft.trim();
+  const validation = trimmed ? '' : 'Enter a project name.';
+  useEffect(() => {
+    const element = dialog.current;
+    element?.showModal();
+    input.current?.select();
+    return () => element?.close();
+  }, []);
 
   return <dialog ref={dialog} className="rename-dialog" aria-labelledby="rename-project-title" aria-describedby="rename-project-description" onCancel={event => {event.preventDefault(); if (!busy) onClose();}}>
     <form noValidate onSubmit={event => {event.preventDefault(); if (!busy && trimmed) void onSave(trimmed);}}>
@@ -25,5 +25,5 @@ export function RenameProjectDialog({name, busy, error, onClose, onSave}:{
       {(validation || error) && <p id="rename-project-error" className="field-error" role="alert">{validation || error}</p>}
       <footer className="rename-dialog-actions"><button type="button" className="button secondary" disabled={busy} onClick={onClose}>Cancel</button><button type="submit" className="button primary" disabled={busy || !trimmed}>{busy ? 'Saving…' : 'Save name'}</button></footer>
     </form>
-  </dialog>;    
+  </dialog>;
 }

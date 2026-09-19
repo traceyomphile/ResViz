@@ -4,15 +4,13 @@ import {
     deleteProject,
     exportProject,
     importProject,
-    getProject,
     ProjectImportConflictError,
 } from '../api/projects';
 import type { ProjectSummary } from "../api/projects";
-import  {DeleteProjectDialog} from "./DeleteProjectDialog";
-import {getSessionId} from "../api/session";
-import {Icon} from "./Icon";
-import "./ProjectView.css";
-import { TopBar } from "./TopBar";
+import {DeleteProjectDialog} from './DeleteProjectDialog';
+import {getSessionId} from '../api/session';
+import {Icon} from "./Icons";
+
 
 const PROJECT_RECENCY_STORAGE_KEY = 'resviz_project_last_used';
 type ProjectRecency = Record<string, number>;
@@ -29,7 +27,7 @@ function loadProjectRecency(): ProjectRecency {
 
         return Object.fromEntries(
             Object.entries(parsed).filter(
-                (entry): entry is [string, number] => 
+                (entry): entry is [string, number] =>
                     typeof entry[1] === 'number' && Number.isFinite(entry[1]),
             ),
         );
@@ -49,8 +47,8 @@ function saveProjectRecency(recency: ProjectRecency): void {
     }
 }
 
-function recordProjectUse(projectId: string, current: ProjectRecency): ProjectRecency{
-    const updated ={...current, [projectId]:Date.now()};
+function recordProjectUse(projectId: string, current: ProjectRecency): ProjectRecency {
+    const updated = {...current, [projectId]: Date.now()};
     saveProjectRecency(updated);
     return updated;
 }
@@ -64,22 +62,23 @@ interface DemoProject {
 }
 interface ProjectViewProps{
     projects: ProjectSummary[];
+    onProjectDeleted(projectId: string): void;
     onContinue(project: ProjectSummary): void;
     onProjectCreated(project: ProjectSummary): void;
     onProjectImported?(project: ProjectSummary): void;
-} 
+}
 
 const DEMO_PROJECTS: DemoProject[] = [
     {
         id: "demo-a",
-        name: "DEMO A",
+        name: "Demo A",
         description: "Sample project with two formulas",
         formulas: ["(P -> Q)", "P"],
         goal: "Q",
     },
     {
         id: "demo-b",
-        name: "DEMO B",
+        name: "Demo B",
         description: "Sample project with four formulas",
         formulas: ["(M -> A)", "(D -> A)", "(A -> S)", "M"],
         goal: "S",
@@ -96,13 +95,13 @@ export function ProjectView({
     const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
     const [importedProjects, setImportedProjects] = useState<ProjectSummary[]>([]);
     const [projectRecency, setProjectRecency] = useState<ProjectRecency>(loadProjectRecency);
-    const hiddenSamplesKey=`resviz_hidden_demo_projects_${getSessionId()}`;
-    const [hiddenSamples, setHiddenSamples]= useState<string[]>(() => {
-        try{ const value: unknown= JSON.parse(sessionStorage.getItem(hiddenSamplesKey) ?? '[]'); return Array.isArray(value) ? value.filter((id): id is string => typeof id=== 'string'): [];}catch {return [];}
+    const hiddenSamplesKey = `resviz_hidden_samples_${getSessionId()}`;
+    const [hiddenSamples, setHiddenSamples] = useState<string[]>(() => {
+        try {const value: unknown = JSON.parse(sessionStorage.getItem(hiddenSamplesKey) ?? '[]'); return Array.isArray(value) ? value.filter((id): id is string => typeof id === 'string') : [];} catch {return [];}
     });
     const [deleteTarget, setDeleteTarget] = useState<ProjectSummary | null>(null);
     const [deleteError, setDeleteError] = useState('');
-    const [menuId,setmenuId]= useState<string | null>(null);
+    const [menuId, setMenuId] = useState<string | null>(null);
     const [isBusy, setIsBusy] = useState(false);
     const [message, setMessage] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -115,22 +114,22 @@ export function ProjectView({
         else allSavedProjects.push(imported);
     });
 
-    const isLegacyDemoCopy = (project: ProjectSummary) => 
+    const isLegacyDemoCopy = (project: ProjectSummary) =>
         DEMO_PROJECTS.some(
-            (demo) => 
+            (demo) =>
                 project.id !== demo.id
-                && project.name.toLocaleLowerCase() === demo.name.toLocaleLowerCase() 
+                && project.name.toLowerCase() === demo.name.toLowerCase()
                 && project.description === demo.description,
         );
 
     const savedProjects = allSavedProjects.filter(
-        (project) => 
+        (project) =>
             !DEMO_PROJECTS.some((demo) => demo.id === project.id)
             && !isLegacyDemoCopy(project),
     );
 
     const displayProjects: ProjectSummary[] = [
-        ...DEMO_PROJECTS.filter(demo=> !hiddenSamples.includes(demo.id) || allSavedProjects.some(project => project.id === demo.id)).map(demo => allSavedProjects.find(project => project.id === demo.id) ?? demo),
+        ...DEMO_PROJECTS.filter(demo => !hiddenSamples.includes(demo.id) || allSavedProjects.some(project => project.id === demo.id)).map(demo => allSavedProjects.find(project => project.id === demo.id) ?? demo),
         ...savedProjects,
     ];
 
@@ -141,43 +140,68 @@ export function ProjectView({
     );
 
     const markProjectAsUsed = (projectId: string) => {
-        const  updated = recordProjectUse(projectId, projectRecency);
+        const updated = recordProjectUse(projectId, projectRecency);
         setProjectRecency(updated);
     };
 
-    const handleOpen = async (id: string) => {
+    const handleOpen = async (
+        projectOrAction: ProjectSummary | 'new'
+    ) => {
         if (isBusy) return;
 
         setIsBusy(true);
         setMessage(null);
 
         try {
-            if (id === 'new') {
+            // -----------------------------
+            // NEW PROJECT
+            // -----------------------------
+            if (projectOrAction === 'new') {
                 const created = await createProject({
                     name: `Project ${savedProjects.length + 1}`,
                     description: 'New ResViz project',
-                })
+                });
+
+                console.log('Created project:', created);
+
                 markProjectAsUsed(created.id);
                 onProjectCreated(created);
-                onContinue(created)
+                onContinue(created);
                 return;
             }
 
+            const selectedProject = projectOrAction;
+
+            console.log(
+                'Opening project directly:',
+                selectedProject
+            );
+
+            setSelectedProjectId(selectedProject.id);
+
+            // -----------------------------
+            // DEMO PROJECT
+            // -----------------------------
             const selectedDemoProject = DEMO_PROJECTS.find(
-                (project) => project.id == id,
+                demo => demo.id === selectedProject.id
             );
 
             if (selectedDemoProject) {
                 const savedDemoProject = allSavedProjects.find(
-                    (project) => project.id === selectedDemoProject.id,
+                    project => project.id === selectedDemoProject.id
                 );
 
                 if (savedDemoProject) {
-                    const openedProject = await getProject(savedDemoProject.id);
-                    markProjectAsUsed(selectedDemoProject.id);
-                    onContinue(openedProject);
+                    console.log(
+                        'Opening existing demo:',
+                        savedDemoProject
+                    );
+
+                    markProjectAsUsed(savedDemoProject.id);
+                    onContinue(savedDemoProject);
                     return;
                 }
+
                 const created = await createProject({
                     id: selectedDemoProject.id,
                     name: selectedDemoProject.name,
@@ -185,22 +209,37 @@ export function ProjectView({
                     formulas: selectedDemoProject.formulas,
                     goal: selectedDemoProject.goal,
                 });
+
+                console.log('Created demo:', created);
+
                 markProjectAsUsed(created.id);
                 onProjectCreated(created);
                 onContinue(created);
                 return;
             }
-            const selectedProject = savedProjects.find(
-                (project) => project.id === id,
+
+            // -----------------------------
+            // NORMAL SAVED PROJECT
+            // -----------------------------
+            console.log(
+                'Calling onContinue:',
+                selectedProject
             );
 
-            if (selectedProject) {
-                const openedProject = await getProject(selectedProject.id);
-                markProjectAsUsed(openedProject.id);
-                onContinue(openedProject);
-            }
+            markProjectAsUsed(selectedProject.id);
+            onContinue(selectedProject);
+
         } catch (error) {
-            setMessage(error instanceof Error ? error.message : 'Could not open project.');
+            console.error(
+                'Could not open project:',
+                error
+            );
+
+            setMessage(
+                error instanceof Error
+                    ? error.message
+                    : 'Could not open project.'
+            );
         } finally {
             setIsBusy(false);
         }
@@ -244,29 +283,29 @@ export function ProjectView({
         }
     };
 
-    const handleDelete =async () => {
+    const handleDelete = async () => {
         if (!deleteTarget || isBusy) return;
-        const target= deleteTarget;
+        const target = deleteTarget;
         setIsBusy(true); setDeleteError('');
-        try{
+        try {
             if (allSavedProjects.some(item => item.id === target.id)) await deleteProject(target.id);
-            if (DEMO_PROJECTS.some(item => item.id === target.id)){
-                const hidden=[... new Set([...hiddenSamples, target.id])];
+            if (DEMO_PROJECTS.some(item => item.id === target.id)) {
+                const hidden = [...new Set([...hiddenSamples, target.id])];
                 setHiddenSamples(hidden);
-                try{ sessionStorage.setItem(hiddenSamplesKey, JSON.stringify(hidden));}catch{}
+                try {sessionStorage.setItem(hiddenSamplesKey, JSON.stringify(hidden));} catch { /* Removal still works when storage is unavailable. */ }
             }
-            setImportedProjects((current) => current.filter((item) => item.id !== target.id));
+            setImportedProjects(current => current.filter(item => item.id !== target.id));
             const recency = {...projectRecency}; delete recency[target.id];
             setProjectRecency(recency); saveProjectRecency(recency);
             if (selectedProjectId === target.id) setSelectedProjectId(null);
             onProjectDeleted(target.id); setDeleteTarget(null);
             setMessage(`Deleted ${target.name}.`);
-        } catch (error){
+        } catch (error) {
             setDeleteError(error instanceof Error ? error.message : 'Could not delete project.');
         } finally {setIsBusy(false);}
-    }
+    };
 
-    const handleExport = async () => {
+    const handleExport = async (projectId: string) => {
         if (!projectId) return;
         setIsBusy(true);
         setMessage(null);
@@ -298,10 +337,10 @@ export function ProjectView({
         const used = projectRecency[item.id];
         const date = used ? new Intl.DateTimeFormat(undefined, {month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit'}).format(used) : demo ? 'Ready to explore' : 'Not opened yet';
         return <article key={item.id} className={`project-card ${selectedProjectId === item.id ? 'project-card--selected' : ''}`}>
-          <div className="project-card-menu"><button aria-label={`Options for ${item.name}`} aria-expanded={menuId === item.id} onClick={() => setMenuId(menuId === item.id ? null : item.id)}>•••</button>{menuId === item.id && <div className="card-menu"><button disabled={isBusy} onClick={() => {setMenuId(null); void handleOpen(item.id);}}><Icon name="folder" size={16} />Open project</button><button disabled={isBusy || !allSavedProjects.some(p => p.id === item.id)} onClick={() => {setMenuId(null); void handleExport(item.id);}}><Icon name="download" size={16} />Export project</button><button className="delete-project-option" disabled={isBusy} onClick={() => {setMenuId(null); setDeleteError(''); setDeleteTarget(item);}}><Icon name="trash" size={16} />Delete project</button></div>}</div>
+          <div className="project-card-menu"><button aria-label={`Options for ${item.name}`} aria-expanded={menuId === item.id} onClick={() => setMenuId(menuId === item.id ? null : item.id)}>•••</button>{menuId === item.id && <div className="card-menu"><button disabled={isBusy} onClick={() => {setMenuId(null); void handleOpen(item);}}><Icon name="folder" size={16} />Open project</button><button disabled={isBusy || !allSavedProjects.some(p => p.id === item.id)} onClick={() => {setMenuId(null); void handleExport(item.id);}}><Icon name="download" size={16} />Export project</button><button className="delete-project-option" disabled={isBusy} onClick={() => {setMenuId(null); setDeleteError(''); setDeleteTarget(item);}}><Icon name="trash" size={16} />Delete project</button></div>}</div>
           <div className="project-card-header"><span className={`project-card-icon ${!demo ? 'project-card-icon--cnf' : item.id === 'demo-b' ? 'project-card-icon--formula' : ''}`}>{!demo ? <><Icon name="file" size={51} /><b>CNF</b></> : item.id === 'demo-b' ? <span>(p ∨ q)<br />¬r</span> : <Icon name="tree" size={45} />}</span><div><h3>{item.name}</h3><span className={`badge ${demo ? 'sample' : 'progress'}`}>{demo ? 'Sample' : 'In progress'}</span></div></div>
           <p className="project-formula-count"><span>{formulaCount} {formulaCount === 1 ? 'formula' : 'formulas'}</span><span aria-hidden="true">·</span><span>{knowledgeBaseCount} {knowledgeBaseCount === 1 ? 'knowledge base' : 'knowledge bases'}</span></p>
-          <footer className="project-card-footer"><div className="project-last-opened"><Icon name="clock" size={21} /><div><span>{used ? 'Last opened' : demo ? 'Sample project' : 'Last opened'}</span><span>{date}</span></div></div><button className="button primary" disabled={isBusy} onClick={() => {setSelectedProjectId(item.id); void handleOpen(item.id);}}>{isBusy && selectedProjectId === item.id ? 'Opening…' : 'Open'}</button></footer>
+          <footer className="project-card-footer"><div className="project-last-opened"><Icon name="clock" size={21} /><div><span>{used ? 'Last opened' : demo ? 'Sample project' : 'Last opened'}</span><span>{date}</span></div></div><button className="button primary" disabled={isBusy} onClick={() => { void handleOpen(item);}}>{isBusy && selectedProjectId === item.id ? 'Opening…' : 'Open'}</button></footer>
         </article>;
       })}</div>{message && <p className="project-message" role="status">{message}</p>}
       {deleteTarget && <DeleteProjectDialog name={deleteTarget.name} saved={allSavedProjects.some(item => item.id === deleteTarget.id)} busy={isBusy} error={deleteError} onClose={() => {if (!isBusy) setDeleteTarget(null);}} onDelete={handleDelete} />}

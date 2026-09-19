@@ -1,3 +1,4 @@
+import {parseKBContent} from '../utils/kbFiles';
 export interface ValidationRes {
     valid: boolean;
     error?: string;
@@ -30,51 +31,6 @@ class FormulaSyntaxError extends Error {
         super(message);
         this.name="FormulaSyntaxError";
     }
-}
-
-interface AnnotatedFormula {
-    formula: string;
-    annotation: string | null;
-}
-
-function splitAnnotatedFormula(value: string): AnnotatedFormula {
-    const trimmed = value.trim();
-    const separatorIndex = trimmed.indexOf(":");
-
-    // No annotated - normal prop formula
-    if (separatorIndex === -1) {
-        return {
-            formula: trimmed,
-            annotation: null,
-        };
-    }
-
-    const formula = trimmed.slice(0, separatorIndex).trim();
-    const rawAnnotation = trimmed.slice(separatorIndex+1).trim()
-
-    if (!formula) {
-        throw new FormulaSyntaxError("A formula is required before the annotation.");
-    }
-
-    if (!rawAnnotation) {
-        throw new FormulaSyntaxError("An annotation is required after ':'");
-    }
-
-    if (!rawAnnotation.startsWith('"') || !rawAnnotation.endsWith('"')) {
-        throw new FormulaSyntaxError("Annotation must be enclosed in double quotes.");
-    }
-
-    let annotation: string;
-    try {
-        annotation = JSON.parse(rawAnnotation);
-    } catch {
-        throw new FormulaSyntaxError("The annotation contains invalid quotation marks.");
-    }
-
-    return {
-        formula,
-        annotation
-    };
 }
 
 /*convert the formula into tokens that the parse can understand*/
@@ -134,7 +90,7 @@ function  tokenize(formula:string):Token[]{
             continue;
         }
 
-        if (char === "~"){
+        if ((char === "~" || char === "¬")){
             tokens.push({
                 type: "NOT",
                 value: "~",
@@ -145,7 +101,7 @@ function  tokenize(formula:string):Token[]{
             continue;
         }
 
-        if (char === "&"){
+        if ((char === "&" || char === "∧")){
             tokens.push({
                 type: "AND",
                 value: "&",
@@ -156,7 +112,7 @@ function  tokenize(formula:string):Token[]{
             continue;
         }
 
-        if (char === "|"){
+        if ((char === "|" || char === "∨")){
             tokens.push({
                 type: "OR",
                 value: "|",
@@ -214,7 +170,7 @@ function  tokenize(formula:string):Token[]{
             `Unexpected character "${char}" at position ${pos+1}`
         );
     }
-     
+
     return tokens;
 }
 
@@ -315,7 +271,7 @@ class FormulaParser {
                     "Empty bracket are not allowed"
                 );
             }
-            
+
             this.parseEquivalent();
 
             if (!this.match("RIGHT_PAREN")) {
@@ -332,7 +288,7 @@ class FormulaParser {
                 'Unexpected closing bracket ")".'
             );
         }
-        
+
         if (!this.isAtEnd()) {
             const token =this.peek();
 
@@ -407,16 +363,14 @@ export function  validateFormula(
     }
 
     try {
-        const annotated = splitAnnotatedFormula(value)
-        // Only the prop logic part goes through the parser.
-        const tokens = tokenize(annotated.formula);
-        const parser = new FormulaParser(tokens);
+        const tokens =tokenize(value);
 
+        const parser = new FormulaParser(tokens);
         parser.parse();
 
         return {
             valid: true,
-        }
+        };
     } catch (error) {
         if (error instanceof FormulaSyntaxError) {
             return {
@@ -430,187 +384,27 @@ export function  validateFormula(
                 error:"invalid formula.",
         };
     }
-  } 
+  }
 
-/* KB Validation */
-
-function validateTextKB (
-    content: string
-): UploadedValidationRes {
-    const lines = content.split (/\r?\n/);
-    const errors: UploadedFormulaError[]=[];
-
-    lines.forEach((line, index) => {
-        const formula =line.trim();
-
-        if (!formula) {
-            return;
-        }
-
-        const validation = validateFormula(formula);
-
-        if (!validation.valid) {
-            errors.push({
-                line:index+1,
-                formula,
-                error: validation.error ?? "Invalid formula."
-            });
-        }
-    });
-
-    return {
-        valid: errors.length === 0,
-        errors,
-    };
-}
-
-/* validate json file */
-
-function validateJsonKB(
-    content: string
-): UploadedValidationRes {
-    let parsed: unknown;
-
+/* Validate only the logical formulas; annotations are optional plain text. */
+export async function validateKBFile(file: File): Promise<UploadedValidationRes> {
+    const fail = (error: string): UploadedValidationRes => ({valid: false, errors: [{formula: '', error}]});
+    if (!/\.(txt|kb|json)$/i.test(file.name)) return fail('Only .txt, .kb and .json files are supported.');
+    if (file.size > 5 * 1024 ** 2) return fail('The uploaded file is larger than 5 MB.');
     try {
-        parsed = JSON.parse(content);
-    } catch {
-        return {
-            valid: false,
-            errors: [
-                {
-                    formula: "",
-                    error:
-                        "The uploaded file is not valid JSON.",
-                },
-            ],
-        };
-    }
-
-    let formulas: unknown;
-    if (Array.isArray(parsed)) {
-        formulas = parsed;
-    }
-    else if (
-        typeof parsed === "object" &&
-        parsed !== null
-    ) {
-        const object =
-            parsed as Record<string, unknown>;
-
-        formulas =
-            object.formulas ??
-            object.knowledgeBase ??
-            object.knowledge_base;
-    }
-
-    if (!Array.isArray(formulas)) {
-        return {
-            valid: false,
-            errors: [
-                {
-                    formula: "",
-                    error:
-                        'The JSON file must contain a "formulas" array.',
-                },
-            ],
-        };
-    }   
-    
-    const errors: UploadedFormulaError[] = [];
-
-    formulas.forEach((item, index) => {
-        if (typeof item !== "string") {
-            errors.push({
-                formulaIndex: index + 1,
-                formula: String(item),
-                error:
-                    "Formula must be written as text.",
-            });
-
-            return;
+        const content = await file.text();
+        if (!content.trim()) return fail('The uploaded file is empty.');
+        const parsed = parseKBContent(file.name, content);
+        if (!parsed.rows.length) return fail('The file contains no formulas.');
+        const errors: UploadedFormulaError[] = [];
+        parsed.rows.forEach((row, index) => {
+            const validation = validateFormula(row.formula);
+            if (!validation.valid) errors.push({formula: row.formula, line: row.line, formulaIndex: index + 1, error: validation.error ?? 'Invalid formula.'});
+        });
+        if (parsed.goal?.trim()) {
+            const validation = validateFormula(parsed.goal);
+            if (!validation.valid) errors.push({formula: parsed.goal, error: `Goal: ${validation.error ?? 'Invalid formula.'}`});
         }
-
-        const formula = item.trim();
-
-        const validation =
-            validateFormula(formula);
-
-        if (!validation.valid) {
-            errors.push({
-                formulaIndex: index + 1,
-                formula,
-                error:
-                    validation.error ??
-                    "Invalid formula.",
-            });
-        }
-    });
-
-    return {
-        valid: errors.length === 0,
-        errors,
-    };
-}
-
-/* public file validator*/
-export async function validateKBFile(
-    file: File
-): Promise<UploadedValidationRes> {
-    const fileName = file.name.toLowerCase();
-
-    const validExtension =
-        fileName.endsWith(".txt") ||
-        fileName.endsWith(".kb") ||
-        fileName.endsWith(".json");
-
-    if (!validExtension) {
-        return {
-            valid: false,
-            errors: [
-                {
-                    formula: "",
-                    error:
-                        "Only .txt, .kb and .json files are supported.",
-                },
-            ],
-        };
-    }
-
-    const maxFileSize=1024**1024
-
-    if (file.size > maxFileSize){
-        return {
-            valid: false,
-            errors: [
-                {
-                    formula: "",
-                    error:
-                        "The uploaded file is larger than 1 MB."
-                },
-            ],
-        };
-    }
-
-    const content =await file.text();
-
-    if (!content.trim()) {
-        return {
-            valid: false,
-            errors:[
-                {
-                    formula:"",
-                    error:
-                    "The uploaded file is empty."
-                },
-            ],
-        };
-    }
-
-    if (fileName.endsWith(".json")) {
-        return validateJsonKB(
-            content
-        );
-    }
-    return validateTextKB( content );
-
+        return {valid: errors.length === 0, errors};
+    } catch (error) {return fail(error instanceof Error ? error.message : 'Could not read the file.');}
 }

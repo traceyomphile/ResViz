@@ -3,6 +3,7 @@ import type {Session} from "../types/session";
 const API_URL = (import.meta as ImportMeta & {
     env?: { VITE_API_URL?: string };
 }).env?.VITE_API_URL ?? "";
+
 const TAB_ID_KEY = 'resviz_tab_id';
 const SESSION_ID_KEY = 'resviz_session_id';
 
@@ -29,14 +30,21 @@ export function getTabId(): string {
 export function getSessionId(): string | null {
     return sessionStorage.getItem(SESSION_ID_KEY)
 }
+
+export function sessionHeaders(): HeadersInit {
+    return {
+        'Accept': 'application/json',
+        'X-Tab-ID': getTabId(),
+    };
+}
+
 export async function restoreSession(): Promise<Session> {
     let response: Response;
     try {
         response = await fetch(`${API_URL}/api/session`, {
             method: 'GET',
-            headers: {
-                'X-Tab-ID': getTabId(),
-            }
+            headers: sessionHeaders(),
+            credentials: 'include',
         });
     } catch (err) {
         console.error('restoreSession: network/CORS error', err);
@@ -57,23 +65,26 @@ export async function restoreSession(): Promise<Session> {
 }
 
 export async function deleteSession(): Promise<void> {
-    const sessionId = getSessionId();
+    const tabId = sessionStorage.getItem(TAB_ID_KEY);
 
-    if (!sessionId) {
+    if (!tabId) {
         sessionStorage.removeItem(SESSION_ID_KEY);
-        sessionStorage.removeItem(TAB_ID_KEY);
         return;
     }
 
     try {
-        await fetch(`${API_URL}/api/session`, {
+        const response = await fetch(`${API_URL}/api/session`, {
             method: 'DELETE',
             headers: {
-                'X-Session-ID': sessionId,
-                'X-Tab-ID': getTabId(),
+                'X-Tab-ID': tabId,
             },
+            credentials: 'include',
             keepalive: true,
         });
+
+        if (!response.ok && response.status !== 404) {
+            console.warn(`Could not explicitly delete backend session (${response.status}).`);
+        }
     } catch (err) {
         console.warn('Could not explicitly delete backend session.', err);
     } finally {
