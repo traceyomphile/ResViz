@@ -23,7 +23,7 @@ def _get_or_create_browser_id(request: Request, response: Response) -> str:
         key=SESSION_COOKIE_NAME,
         value=browser_id,
         httponly=True,
-        secure=IS_PRODUCTION,
+        secure=False,
         samesite='lax',
         path='/',
     )
@@ -55,10 +55,10 @@ async def restore_session(
 async def delete_session(request: Request, x_tab_id: str | None = Header(default=None)) -> None:
     if not x_tab_id:
         raise HTTPException(
-            status_code=status.HTTP_404_BAD_REQUEST,
+            status_code=status.HTTP_400_BAD_REQUEST,
             detail='Missing X-Tab-ID header',
         )
-    browser_id = request.cookie.get(SESSION_COOKIE_NAME)
+    browser_id = request.cookies.get(SESSION_COOKIE_NAME)
     if not browser_id:
         return
 

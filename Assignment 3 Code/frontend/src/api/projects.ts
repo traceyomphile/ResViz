@@ -4,6 +4,13 @@ const API_URL = (import.meta as ImportMeta & {
     env?: {VITE_API_URL?: string };
 }).env?.VITE_API_URL ?? '';
 
+export interface SavedProjectKB {
+    id: string;
+    name: string;
+    formulas: string[];
+    annotations?: string[];
+    goal?: string | null;
+}
 export interface ProjectSummary {
     id: string;
     name: string;
@@ -11,6 +18,9 @@ export interface ProjectSummary {
     formulas?: string[];
     goal?: string;
     status?: string;
+    knowledgeBases?: SavedProjectKB[];
+    annotations?: string[];
+    activeKnowledgeBaseId?: string | null;
 }
 
 export interface CreateProjectInput {
@@ -38,9 +48,12 @@ type RawProject =
         name?: string;
         description?: string;
         knowledge_base?: unknown[];
+        knowledge_base_annotations?: string[];
         formulas?: unknown[];
         goal?: unknown;
         status?: string;
+        knowledge_bases?: SavedProjectKB[];
+        active_knowledge_base_id?: string | null;
     };
 
 export async function getProjects(): Promise<ProjectSummary[]> {
@@ -109,6 +122,9 @@ function toProjectSummary(project: RawProject): ProjectSummary {
             .filter((formula): formula is string => typeof formula === 'string'),
         goal: typeof project.goal === 'string' ? project.goal : '',
         status: project.status,
+        knowledgeBases: project.knowledge_bases,
+        activeKnowledgeBaseId: project.active_knowledge_base_id,
+        annotations: project.knowledge_base_annotations,
     };
 }
 
@@ -249,7 +265,7 @@ export async function exportProject(projectId: string): Promise<void> {
     URL.revokeObjectURL(url);
 }
 
-export async function updateProjectName(projectId: string, name: string): Promise<ProjectSummary> {
+export async function renameProject(projectId: string, name: string): Promise<ProjectSummary> {
     const response = await fetch(`${API_URL}/api/projects/${encodeURIComponent(projectId)}`,
         {
             method: 'PUT',
@@ -274,4 +290,15 @@ export async function updateProjectName(projectId: string, name: string): Promis
     return toProjectSummary(
         await response.json() as RawProject,
     );
+}
+
+export async function deleteProject(projectId: string): Promise<void> {
+    const response = await fetch(`${API_URL}/api/projects/${encodeURIComponent(projectId)}`, {
+        method: 'DELETE',
+        headers: projectHeaders(),
+        credentials: 'include',
+    });
+    if (!response.ok) {
+        throw await responseError(response, 'Could not delete project');
+    }
 }

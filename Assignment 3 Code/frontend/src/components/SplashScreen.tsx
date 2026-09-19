@@ -1,156 +1,51 @@
-import { useEffect, useState } from 'react';
 import './SplashScreen.css';
 
-const LOGO_TEXT = 'ResViz';
-const TYPE_SPEED_MS = 80;
-const TAGLINE_HOLD_MS = 1100;
-
 export default function SplashScreen() {
-    const [typedText, setTypedText] = useState('');
-    const [showTagline, setShowTagline] = useState(false);
-    const [showDiagram, setShowDiagram] = useState(false);
-
-    useEffect(() => {
-        let index = 0;
-
-        const typingInterval = setInterval(() => {
-            index += 1;
-            setTypedText(LOGO_TEXT.slice(0, index));
-
-            if (index === LOGO_TEXT.length) {
-                clearInterval(typingInterval);
-                setShowTagline(true);
-            }
-        }, TYPE_SPEED_MS);
-
-        return () => clearInterval(typingInterval);
-    }, []);
-
-    useEffect(() => {
-        if (!showTagline) {return;}
-
-        const timeout = setTimeout(() => {
-            setShowDiagram(true);
-        }, TAGLINE_HOLD_MS);
-
-        return () => clearTimeout(timeout);
-    }, [showTagline]);
-
-    return (
-        <div className="splash-screen">
-            <div className={`splash-diagram ${showDiagram ? 'diagram-visible' : ''}`}>
-                <svg
-                    className='diagram-lines'
-                    viewBox='0 0 100 100'
-                    preserveAspectRatio='none'
-                    aria-hidden='true'
-                >
-                    {/* core arc over the logo */}
-                    <path
-                        pathLength={1}
-                        className="draw-path draw-1 line-cyan"
-                        d="M21,21 Q50,6 79,21"
-                    />
-                    <path
-                        pathLength={1}
-                        className="draw-path draw-2 line-cyan"
-                        d="M21,21 C10,28 4,40 4,50"
-                    />
-                    <path
-                        pathLength={1}
-                        className="draw-path draw-2 line-magenta"
-                        d="M79,21 C90,28 96,40 96,50"
-                    />
-
-                    <circle className="dot dot-cyan dot-appear" cx="4" cy="50" r="0.9" />
-                    <circle className="dot dot-magenta dot-appear" cx="96" cy="50" r="0.9" />
-
-                    <g className="diagram-extras">
-                        <path
-                            pathLength={1}
-                            className="dot-line dot-line-4 line-dotted line-cyan"
-                            d="M4,50 Q6,58 12,58"
-                        />
-                        <path
-                            pathLength={1}
-                            className="dot-line dot-line-4 line-dotted line-magenta"
-                            d="M96,50 Q94,58 90,58"
-                        />
-                        <path
-                            pathLength={1}
-                            className="dot-line dot-line-5 line-dotted line-cyan"
-                            d="M18,68 Q26,66 30,62"
-                        />
-
-                        <path pathLength={1} className="draw-path draw-5 line-cyan" d="M36,64 Q45,66 51,66" />
-                        <path pathLength={1} className="draw-path draw-5 line-magenta" d="M70,64 Q60,66 55,66" />
-                        <path pathLength={1} className="draw-path draw-6 line-cyan" d="M53,70 L53,74" />
-                        <path pathLength={1} className="dot-line dot-line-6 line-dotted line-magenta" d="M53,80 L53,85" />
-                    </g>
-                </svg>
-
-                <div className="conn-circle conn-and fade-3">∧</div>
-                <div className="conn-circle conn-or fade-3">∨</div>
-
-                <div className="formula-line formula-line-1 fade-4">¬P ⇒ Q</div>
-                <div className="formula-line formula-line-2 fade-4">P ∨ Q</div>
-
-                <div className="splash-core">
-                    <div className="splash-logo">
-                        {typedText}
-                        <span className="splash-cursor">|</span>
-                    </div>
-
-                    <div
-                        className={`splash-tagline ${
-                            showTagline ? 'splash-tagline-visible' : ''
-                        }`}
-                    >
-                        Find your resolution, visualise your w0rld!
-                    </div>
-                </div>
-
-                <div className="diagram-extras">
-                    <table className="truth-table fade-5" aria-hidden="true">
-                        <thead>
-                            <tr>
-                                <th>P</th>
-                                <th>Q</th>
-                                <th>P⇒Q</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr><td>T</td><td>T</td><td>T</td></tr>
-                            <tr><td>T</td><td>F</td><td>F</td></tr>
-                            <tr><td>F</td><td>T</td><td>T</td></tr>
-                            <tr><td>F</td><td>F</td><td>T</td></tr>
-                        </tbody>
-                    </table>
-
-                    <div className="clause-box clause-c1 fade-5">
-                        C<sub>1</sub>: Rain ∨ Sunny
-                    </div>
-                    <div className="clause-box clause-c2 fade-5">
-                        C<sub>2</sub>: ¬Rain ∨ Windy
-                    </div>
-
-                    <div className="clause-node fade-6" />
-
-                    <div className="clause-box clause-c3 fade-6">
-                        C<sub>3</sub>: Sunny ∨ Windy
-                    </div>
-
-                    <div className="clause-bottom fade-7">⊥</div>
-
-                    <div className="symbol-list">
-                        <span className="fade-6">¬</span>
-                        <span className="fade-6">∧</span>
-                        <span className="fade-7">∨</span>
-                        <span className="fade-7">⇒</span>
-                        <span className="fade-7">⊥</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
+  return <div className="splash-screen" role="status" aria-label="Preparing your workspace">
+    <svg className="splash-backdrop" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+      <defs>
+        <pattern id="splash-grid" width="64" height="64" patternUnits="userSpaceOnUse"><path d="M64 0H0V64" fill="none" stroke="#6aabff" strokeWidth=".6" /></pattern>
+        <linearGradient id="splash-orbit" x1="0" y1="0" x2="1" y2="1"><stop stopColor="#38baff" /><stop offset="1" stopColor="#8b65ea" /></linearGradient>
+      </defs>
+      <rect width="1920" height="1080" fill="url(#splash-grid)" opacity=".07" />
+      <g className="splash-orbits" fill="none" stroke="url(#splash-orbit)" strokeWidth="1.2">
+        <ellipse cx="720" cy="280" rx="910" ry="410" transform="rotate(-24 720 280)" />
+        <ellipse cx="1370" cy="900" rx="950" ry="400" transform="rotate(-24 1370 900)" />
+        <circle cx="1810" cy="50" r="380" />
+      </g>
+      <g className="splash-background-formulas" fill="#83baff">
+        <text x="150" y="190" fontSize="48">¬P → Q</text><text x="215" y="325" fontSize="38">P ∨ Q</text>
+        <text x="110" y="455" fontSize="34">(P ∧ R) → S</text><text x="1650" y="170" fontSize="38">P ∨ ¬P</text>
+        <text x="1480" y="950" fontSize="32">(A ∧ B) → C</text>
+      </g>
+      <g className="splash-background-proof" fill="none" stroke="#6da9ef" strokeWidth="1.5">
+        <rect x="1430" y="320" width="195" height="60" rx="11" /><rect x="1670" y="320" width="195" height="60" rx="11" />
+        <path d="M1528 380C1528 435 1638 410 1638 475M1768 380C1768 435 1638 410 1638 475" />
+        <rect x="1540" y="475" width="195" height="60" rx="11" /><rect x="1430" y="560" width="195" height="60" rx="11" />
+        <path d="M1638 535V650M1528 620C1528 650 1638 625 1638 650M1638 650V670" />
+        <rect x="1608" y="670" width="60" height="60" rx="10" />
+        <g fill="#8abcff" stroke="none" textAnchor="middle" fontSize="23"><text x="1528" y="358">¬P ∨ Q</text><text x="1768" y="358">P</text><text x="1638" y="513">Q</text><text x="1528" y="598">¬Q</text><text x="1638" y="710">□</text></g>
+      </g>
+      <g className="splash-background-sets" fill="none" stroke="#6da9ef" strokeWidth="1.5">
+        <circle cx="165" cy="780" r="90" /><circle cx="280" cy="780" r="90" /><circle cx="223" cy="880" r="90" />
+        <g fill="#8abcff" stroke="none" fontSize="34" textAnchor="middle"><text x="140" y="787">P</text><text x="307" y="787">Q</text><text x="223" y="910">R</text></g>
+      </g>
+      <g fill="#43b5ff" opacity=".3"><circle cx="500" cy="235" r="4" /><circle cx="1240" cy="125" r="5" /><circle cx="125" cy="555" r="5" /><circle cx="1750" cy="820" r="4" /></g>
+    </svg>
+    <div className="splash-core">
+      <svg className="splash-mark" viewBox="0 0 360 218" aria-hidden="true">
+        <defs>
+          <linearGradient id="splash-wire" x1="0" y1="0" x2="1" y2="1"><stop stopColor="#2baaff" /><stop offset="1" stopColor="#6fdcff" /></linearGradient>
+          <radialGradient id="splash-node"><stop stopColor="#123966" /><stop offset="1" stopColor="#071d3b" /></radialGradient>
+        </defs>
+        <path className="splash-mark-wire" d="M99 73C127 95 179 94 180 141M261 73C233 95 181 94 180 141" fill="none" stroke="url(#splash-wire)" strokeWidth="2.7" />
+        <g fill="url(#splash-node)" strokeWidth="2.7"><circle cx="70" cy="49" r="43" stroke="#2daaff" /><circle cx="290" cy="49" r="43" stroke="#a078ff" /><circle cx="180" cy="172" r="43" stroke="#46c5ff" /></g>
+        <g fill="#eff7ff" textAnchor="middle" fontSize="46"><text x="70" y="63">∧</text><text x="290" y="63">∨</text><text x="180" y="187">⊥</text></g>
+        <circle className="splash-mark-junction" cx="180" cy="137" r="3.5" fill="#76d9ff" />
+      </svg>
+      <h1 className="splash-wordmark">Res<span>Viz</span></h1>
+      <p className="splash-tagline">Visualise logic. <span>Understand resolution.</span></p>
+      <div className="splash-loading"><span className="splash-loading-dots" aria-hidden="true"><i /><i /><i /></span><span>Preparing your workspace</span></div>
+    </div>
+  </div>;
 }

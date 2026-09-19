@@ -3,6 +3,7 @@ import type {Session} from "../types/session";
 const API_URL = (import.meta as ImportMeta & {
     env?: { VITE_API_URL?: string };
 }).env?.VITE_API_URL ?? "";
+
 const TAB_ID_KEY = 'resviz_tab_id';
 const SESSION_ID_KEY = 'resviz_session_id';
 
@@ -29,14 +30,20 @@ export function getTabId(): string {
 export function getSessionId(): string | null {
     return sessionStorage.getItem(SESSION_ID_KEY)
 }
+
+export function sessionHeaders(): HeadersInit {
+    return {
+        'Accept': 'application/json',
+        'X-Tab-ID': getTabId(),
+    };
+}
+
 export async function restoreSession(): Promise<Session> {
     let response: Response;
     try {
         response = await fetch(`${API_URL}/api/session`, {
             method: 'GET',
-            headers: {
-                'X-Tab-ID': getTabId(),
-            },
+            headers: sessionHeaders(),
             credentials: 'include',
         });
     } catch (err) {

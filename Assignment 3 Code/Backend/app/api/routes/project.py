@@ -164,7 +164,7 @@ async def create_project(project: Project, session: SessionResponse = Depends(re
     return created_project
 
 @project_router.put('/{project_id}',  response_model=Project)
-async def update_project(project_id: str, payload: ProjectUpdate, session: SessionResponse = Depends(require_session)) -> Project:
+async def rename_project(project_id: str, payload: ProjectUpdate, session: SessionResponse = Depends(require_session)) -> Project:
     project = await project_manager.get(session.session_id, project_id)
     if project is None:
         raise HTTPException(
