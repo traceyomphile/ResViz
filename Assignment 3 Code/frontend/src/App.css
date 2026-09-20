@@ -540,10 +540,6 @@
     border-radius: 10px;
 }
 
-.project-import {
-    font-size: 12px;
-    color: var(--muted);
-}
 
 .recent-heading {
     font-size: 26px;
@@ -991,6 +987,26 @@
 
 .kb-panel .panel-heading {
     margin-bottom: 6px;
+}
+
+.kb-panel-heading-copy {
+    min-width: 0;
+    flex: 1;
+}
+
+.kb-panel-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+}
+
+.kb-panel-title-row h2 {
+    min-width: 0;
+}
+
+.kb-heading-add {
+    flex-shrink: 0;
 }
 
 .field-label {
@@ -2885,23 +2901,6 @@
     margin: 8px 0 12px;
 }
 
-.sidebar-add-kb {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    width: 100%;
-    padding: 9px 10px;
-    margin-top: 8px;
-    color: #9cc8ff;
-    border: 1px dashed #77b5ff55;
-    border-radius: 7px;
-    background: none;
-    font-size: 12px;
-}
-
-.sidebar-add-kb:hover {
-    background: #1471ff20;
-}
 
 .knowledge-base-tabs-bar {
     display: flex;
@@ -2976,7 +2975,7 @@
         padding-top: 14px;
     }
 
-    .sidebar-kb-heading, .sidebar-knowledge-bases > p, .sidebar-kb-list small, .sidebar-add-kb > span {
+    .sidebar-kb-heading, .sidebar-knowledge-bases > p, .sidebar-kb-list small {
         display: none;
     }
 
@@ -2993,10 +2992,6 @@
         display: none;
     }
 
-    .sidebar-add-kb {
-        justify-content: center;
-        padding: 10px 5px;
-    }
 
     .knowledge-base-tabs-bar {
         gap: 7px;
@@ -4008,4 +4003,517 @@
 
 .project-formula-count > span {
     white-space: nowrap;
+}
+
+/* =========================================================
+   KB workspace simplification: saved KBs live in the sidebar
+   ========================================================= */
+.kb-columns--simple {
+    grid-template-columns: minmax(0, 1.35fr) minmax(320px, .65fr);
+    gap: 16px;
+}
+
+.kb-columns--simple .kb-panel {
+    padding-bottom: 18px;
+}
+
+.formula-review--builder {
+    margin-top: 18px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+}
+
+.formula-section-heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 10px;
+}
+
+.formula-section-heading strong {
+    display: block;
+    font-size: 13px;
+}
+
+.formula-section-heading p {
+    margin-top: 2px;
+    color: #6375a5;
+    font-size: 12px;
+}
+
+.formula-section-heading > span {
+    flex-shrink: 0;
+    padding: 3px 8px;
+    border-radius: 999px;
+    background: var(--blue-soft);
+    color: var(--blue);
+    font-size: 11px;
+    font-weight: 700;
+}
+
+
+.kb-inline-message {
+    margin-top: 12px;
+    color: var(--blue);
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.goal-panel--standalone {
+    min-height: 0;
+    padding: 18px 21px 21px;
+}
+
+.goal-panel--standalone .panel-heading {
+    margin-bottom: 20px;
+}
+
+.goal-panel--standalone .field-label {
+    margin-bottom: 5px;
+}
+
+.goal-kb-summary {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 13px;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    background: var(--page);
+    color: var(--muted);
+    font-size: 12px;
+}
+
+.goal-kb-summary svg {
+    flex-shrink: 0;
+    color: var(--blue);
+}
+
+.workspace-actions--minimal {
+    border-top: 0;
+    margin-top: 16px;
+    padding-top: 0;
+}
+
+.workspace-actions--minimal .button {
+    min-width: 154px;
+}
+
+/* Saved knowledge-base viewer/editor */
+.kb-dialog {
+    width: min(760px, calc(100vw - 32px));
+    padding: 26px;
+}
+
+.kb-dialog-heading {
+    margin-bottom: 18px;
+}
+
+.kb-dialog-view,
+.kb-dialog-formulas {
+    display: grid;
+    gap: 8px;
+    max-height: min(52vh, 520px);
+    overflow-y: auto;
+    padding-right: 4px;
+    scrollbar-width: thin;
+}
+
+.kb-dialog-formula {
+    display: grid;
+    grid-template-columns: 31px minmax(0, 1fr);
+    gap: 11px;
+    align-items: start;
+    padding: 11px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--page);
+}
+
+.kb-dialog-formula > span {
+    width: 28px;
+    height: 28px;
+    display: grid;
+    place-items: center;
+    border-radius: 6px;
+    background: var(--blue-soft);
+    color: var(--blue);
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.kb-dialog-formula strong {
+    display: block;
+    overflow-wrap: anywhere;
+    font-family: var(--font-ui);
+    font-size: 14px;
+}
+
+.kb-dialog-formula p {
+    margin-top: 5px;
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.45;
+}
+
+.kb-dialog-editor > .field-label {
+    margin-bottom: 5px;
+}
+
+.kb-dialog-editor > input {
+    margin: 0 0 14px;
+}
+
+.kb-dialog-edit-row {
+    padding: 8px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--page);
+}
+
+.kb-dialog-edit-row .formula-row {
+    padding: 0;
+    border: 0;
+    background: transparent;
+}
+
+.kb-dialog-edit-row textarea {
+    min-height: 34px;
+    margin-top: 6px;
+    padding: 7px 10px;
+    resize: vertical;
+    font-size: 12px;
+}
+
+.kb-dialog-add-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.kb-dialog-add-row input {
+    margin: 0;
+}
+
+.kb-dialog-add-row .button {
+    min-width: 82px;
+}
+
+.kb-dialog-error {
+    margin-top: 12px;
+}
+
+.kb-dialog-actions .button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+}
+
+@media (max-width: 980px) {
+    .kb-columns--simple {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 650px) {
+    .kb-inline-save {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .workspace-actions--minimal .button {
+        width: 100%;
+    }
+
+    .kb-dialog {
+        padding: 20px;
+    }
+
+    .kb-dialog-add-row {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* New-project action chooser */
+.new-project-dialog {
+    width: min(610px, calc(100vw - 32px));
+    padding: 27px;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    background: var(--panel);
+    color: var(--ink);
+    box-shadow: 0 24px 80px #0005;
+    font-family: var(--font-ui);
+}
+
+.new-project-dialog::backdrop {
+    background: #020d2080;
+    backdrop-filter: blur(4px);
+}
+
+.new-project-dialog-heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 18px;
+    margin-bottom: 22px;
+}
+
+.new-project-dialog-heading h2 {
+    font-size: 25px;
+    letter-spacing: -.35px;
+}
+
+.new-project-dialog-heading p {
+    margin-top: 5px;
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.55;
+}
+
+.new-project-dialog-close {
+    display: grid;
+    place-items: center;
+    flex: 0 0 auto;
+    padding: 6px;
+    border: 0;
+    border-radius: 7px;
+    background: transparent;
+    color: var(--muted);
+}
+
+.new-project-dialog-close:hover:not(:disabled) {
+    background: var(--soft-blue);
+    color: var(--blue);
+}
+
+.new-project-options {
+    display: grid;
+    gap: 11px;
+}
+
+.new-project-option {
+    width: 100%;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 14px;
+    padding: 16px;
+    text-align: left;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--panel);
+    color: var(--ink);
+    transition: border-color .16s ease, background .16s ease, transform .16s ease;
+}
+
+.new-project-option:hover:not(:disabled) {
+    border-color: #82b1ff;
+    background: var(--soft-blue);
+    transform: translateY(-1px);
+}
+
+.new-project-option-icon {
+    width: 47px;
+    height: 47px;
+    display: grid;
+    place-items: center;
+    border-radius: 11px;
+    background: #e6f0ff;
+    color: var(--blue);
+}
+
+[data-theme="dark"] .new-project-option-icon {
+    background: #0c3263;
+}
+
+.new-project-option > span:nth-child(2) {
+    display: grid;
+    gap: 4px;
+}
+
+.new-project-option strong {
+    font-size: 15px;
+}
+
+.new-project-option small {
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.45;
+}
+
+.new-project-option > svg {
+    color: var(--muted);
+}
+
+@media (max-width: 520px) {
+    .new-project-dialog {
+        padding: 20px;
+    }
+
+    .new-project-option {
+        grid-template-columns: auto minmax(0, 1fr);
+    }
+
+    .new-project-option > svg:last-child {
+        display: none;
+    }
+}
+
+/* =========================================================
+   Knowledge-base sidebar actions + per-KB export
+   ========================================================= */
+.app-shell--workspace .sidebar {
+    width: 268px;
+    flex-basis: 268px;
+}
+
+.app-shell--workspace .main-content {
+    width: calc(100% - 268px);
+}
+
+.sidebar-kb-list {
+    max-height: none;
+    overflow: visible;
+}
+
+.sidebar-kb-entry {
+    position: relative;
+    gap: 6px;
+}
+
+.sidebar-kb-entry > .sidebar-kb-main {
+    flex: 1;
+    min-width: 0;
+    padding: 10px 9px;
+}
+
+.sidebar-kb-menu {
+    position: relative;
+    flex: 0 0 auto;
+}
+
+.sidebar-kb-list .sidebar-kb-menu-trigger {
+    width: 32px;
+    height: 34px;
+    padding: 0;
+    justify-content: center;
+    border-color: transparent;
+    color: #a9c9ee;
+}
+
+.sidebar-kb-list .sidebar-kb-menu-trigger:hover:not(:disabled),
+.sidebar-kb-list .sidebar-kb-menu-trigger[aria-expanded="true"] {
+    background: #ffffff12;
+    border-color: #7faee24a;
+    color: #ffffff;
+}
+
+.sidebar-kb-list .sidebar-kb-menu-trigger svg {
+    color: currentColor;
+}
+
+.sidebar-kb-menu-popover {
+    position: absolute;
+    z-index: 80;
+    top: calc(100% + 5px);
+    right: 0;
+    width: 168px;
+    padding: 6px;
+    border: 1px solid #547aa74d;
+    border-radius: 9px;
+    background: #102945;
+    box-shadow: 0 14px 35px #04152b66;
+}
+
+.sidebar-kb-list .sidebar-kb-menu-popover button {
+    width: 100%;
+    min-height: 34px;
+    padding: 7px 9px;
+    gap: 9px;
+    border: 0;
+    border-radius: 6px;
+    color: #e8f2ff;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.sidebar-kb-list .sidebar-kb-menu-popover button:hover:not(:disabled) {
+    background: #2b548044;
+    border: 0;
+}
+
+.sidebar-kb-list .sidebar-kb-menu-popover button svg {
+    color: #99c7f6;
+}
+
+.sidebar-kb-list .sidebar-kb-menu-popover button.danger {
+    color: #ffadb8;
+}
+
+.sidebar-kb-list .sidebar-kb-menu-popover button.danger svg {
+    color: #ff8999;
+}
+
+.sidebar-kb-list .sidebar-kb-menu-popover button.danger:hover:not(:disabled) {
+    background: #c8324026;
+}
+
+.sidebar-kb-menu-divider {
+    height: 1px;
+    margin: 5px 4px;
+    background: #547aa73b;
+}
+
+@media (max-width: 1200px) {
+    .app-shell--workspace .sidebar {
+        width: 236px;
+        flex-basis: 236px;
+    }
+
+    .app-shell--workspace .main-content {
+        width: calc(100% - 236px);
+    }
+}
+
+@media (max-width: 650px) {
+    .app-shell--workspace .sidebar {
+        width: 74px;
+        flex-basis: 74px;
+        padding: 20px 8px;
+    }
+
+    .app-shell--workspace .main-content {
+        width: calc(100% - 74px);
+    }
+
+    .sidebar-kb-entry {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 24px;
+        align-items: center;
+        gap: 0;
+    }
+
+    .sidebar-kb-entry > .sidebar-kb-main {
+        width: 100%;
+        justify-content: center;
+        padding: 10px 4px;
+    }
+
+    .sidebar-kb-list .sidebar-kb-menu-trigger {
+        width: 24px;
+        min-height: 30px;
+        height: 30px;
+        padding: 0;
+    }
+
+    .sidebar-kb-menu-popover {
+        top: 0;
+        right: auto;
+        left: calc(100% + 8px);
+    }
 }

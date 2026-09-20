@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
     createProject,
     deleteProject,
@@ -11,6 +11,71 @@ import {DeleteProjectDialog} from './DeleteProjectDialog';
 import {getSessionId} from '../api/session';
 import {Icon} from "./Icons";
 
+
+
+function NewProjectChoiceDialog({busy, onClose, onStart, onImport}: {
+    busy: boolean;
+    onClose(): void;
+    onStart(): void;
+    onImport(): void;
+}) {
+    const dialog = useRef<HTMLDialogElement>(null);
+
+    useEffect(() => {
+        const element = dialog.current;
+        element?.showModal();
+        return () => element?.close();
+    }, []);
+
+    return (
+        <dialog
+            ref={dialog}
+            className="new-project-dialog"
+            aria-labelledby="new-project-dialog-title"
+            aria-describedby="new-project-dialog-description"
+            onCancel={(event) => {
+                event.preventDefault();
+                if (!busy) onClose();
+            }}
+        >
+            <header className="new-project-dialog-heading">
+                <div>
+                    <h2 id="new-project-dialog-title">Create a project</h2>
+                    <p id="new-project-dialog-description">Start from scratch or restore a project you exported earlier.</p>
+                </div>
+                <button
+                    type="button"
+                    className="new-project-dialog-close"
+                    aria-label="Close project options"
+                    disabled={busy}
+                    onClick={onClose}
+                >
+                    <Icon name="close" size={20} />
+                </button>
+            </header>
+
+            <div className="new-project-options">
+                <button type="button" className="new-project-option" disabled={busy} onClick={onStart}>
+                    <span className="new-project-option-icon"><Icon name="plus" size={27} /></span>
+                    <span>
+                        <strong>Start new project</strong>
+                        <small>Create an empty ResViz workspace and build your knowledge bases.</small>
+                    </span>
+                    <Icon name="arrow" size={20} />
+                </button>
+
+                <button type="button" className="new-project-option" disabled={busy} onClick={onImport}>
+                    <span className="new-project-option-icon"><Icon name="upload" size={25} /></span>
+                    <span>
+                        <strong>Import project</strong>
+                        <small>Choose a ResViz JSON export and restore its project data.</small>
+                    </span>
+                    <Icon name="arrow" size={20} />
+                </button>
+            </div>
+        </dialog>
+    );
+}
 
 const PROJECT_RECENCY_STORAGE_KEY = 'resviz_project_last_used';
 type ProjectRecency = Record<string, number>;
@@ -104,6 +169,7 @@ export function ProjectView({
     const [menuId, setMenuId] = useState<string | null>(null);
     const [isBusy, setIsBusy] = useState(false);
     const [message, setMessage] = useState<string | null>(null);
+    const [showProjectChoice, setShowProjectChoice] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const allSavedProjects = [...projects];
@@ -323,7 +389,7 @@ export function ProjectView({
 
     return <main className="project-screen">
       <input ref={fileInputRef} className="project-file-input" type="file" accept="application/json,.json" onChange={event => {const file = event.target.files?.[0]; if (file) void handleImport(file);}} />
-      <header className="project-page-heading"><div><h1>Projects</h1><p className="page-subtitle">Create a workspace or continue your reasoning.</p></div><div className="project-header-actions"><button className="button primary" disabled={isBusy} onClick={() => void handleOpen('new')}><Icon name="plus" size={25} />New project</button><button className="text-button project-import" disabled={isBusy} onClick={() => fileInputRef.current?.click()}><Icon name="upload" size={13} />Import project</button></div></header>
+      <header className="project-page-heading"><div><h1>Projects</h1><p className="page-subtitle">Create a workspace or continue your reasoning.</p></div><div className="project-header-actions"><button className="button primary" disabled={isBusy} onClick={() => setShowProjectChoice(true)}><Icon name="plus" size={25} />New project</button></div></header>
       <h2 className="recent-heading">Recent projects</h2>
       <div className="project-grid" aria-label="Projects">{displayProjects.map(item => {
         const demo = item.id.startsWith('demo-');
@@ -343,6 +409,18 @@ export function ProjectView({
           <footer className="project-card-footer"><div className="project-last-opened"><Icon name="clock" size={21} /><div><span>{used ? 'Last opened' : demo ? 'Sample project' : 'Last opened'}</span><span>{date}</span></div></div><button className="button primary" disabled={isBusy} onClick={() => { void handleOpen(item);}}>{isBusy && selectedProjectId === item.id ? 'Opening…' : 'Open'}</button></footer>
         </article>;
       })}</div>{message && <p className="project-message" role="status">{message}</p>}
+      {showProjectChoice && <NewProjectChoiceDialog
+        busy={isBusy}
+        onClose={() => setShowProjectChoice(false)}
+        onStart={() => {
+          setShowProjectChoice(false);
+          void handleOpen('new');
+        }}
+        onImport={() => {
+          setShowProjectChoice(false);
+          fileInputRef.current?.click();
+        }}
+      />}
       {deleteTarget && <DeleteProjectDialog name={deleteTarget.name} saved={allSavedProjects.some(item => item.id === deleteTarget.id)} busy={isBusy} error={deleteError} onClose={() => {if (!isBusy) setDeleteTarget(null);}} onDelete={handleDelete} />}
     </main>;
 }

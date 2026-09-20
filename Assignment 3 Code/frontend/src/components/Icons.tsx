@@ -1,6 +1,7 @@
-export type IconName = 'folder' | 'learn' | 'help' | 'file' | 'target' | 'book' | 'upload' | 'edit' | 'arrow' | 'back' | 'plus' | 'close' | 'clock' | 'user' | 'sun' | 'moon' | 'refresh' | 'fit' | 'tree' | 'check' | 'download' | 'trash';
+export type IconName = 'folder' | 'learn' | 'help' | 'file' | 'target' | 'book' | 'upload' | 'edit' | 'arrow' | 'back' | 'plus' | 'close' | 'clock' | 'user' | 'bulb' | 'sun' | 'moon' | 'refresh' | 'fit' | 'tree' | 'check' | 'download' | 'trash' | 'more';
 
 const paths: Record<IconName, string> = {
+  more: 'M12 5.5h.01M12 12h.01M12 18.5h.01',
   trash: 'M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7m4-7v7',
   folder: 'M3 7V5a2 2 0 0 1 2-2h5l2 3h7a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7h18',
   learn: 'M2 8l10-5 10 5-10 5L2 8m4 2v7c4 3 8 3 12 0v-7m4-2v9',
@@ -14,6 +15,7 @@ const paths: Record<IconName, string> = {
   plus: 'M12 3v18M3 12h18', close: 'm6 6 12 12M6 18 18 6',
   clock: 'M12 6v6l4 3M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0',
   user: 'M8 7a4 4 0 1 0 8 0 4 4 0 0 0-8 0M5 21v-2a7 7 0 0 1 14 0v2',
+  bulb: 'M9 18h6M10 22h4M8.5 14.5A7 7 0 1 1 15.5 14.5C14.5 15.4 14 16.3 14 18h-4c0-1.7-.5-2.6-1.5-3.5Z',
   sun: 'M8 12a4 4 0 1 0 8 0 4 4 0 0 0-8 0M12 1v2m0 18v2M1 12h2m18 0h2M4 4l2 2m12 12 2 2M4 20l2-2M18 6l2-2',
   moon: 'M21 13A9 9 0 1 1 11 3a7 7 0 0 0 10 10',
   refresh: 'M3 10a9 9 0 0 1 16-5l2 2m0-5v5h-5M21 14A9 9 0 0 1 5 19l-2-2m0 5v-5h5',
