@@ -4,7 +4,7 @@ import type {SavedProjectKB} from '../api/projects';
 import {parseKBContent} from '../utils/kbFiles';
 import {createId} from '../utils/id';
 import {Icon} from './Icons';
-import {WorkspaceHeader} from './AppShell';
+import {WorkspaceHeader} from './Appshell';
 interface Row {id: string; value: string; annotation?: string; fileId?: string}
 interface UploadedFile {id: string; name: string}
 export interface WorkspaceData {name: string; formulas: string[]; annotations?: string[]; goal: string; entryId?: string; editor?: {rows: Row[]; files: UploadedFile[]; pendingFormula?: string}}

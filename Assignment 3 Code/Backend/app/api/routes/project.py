@@ -12,14 +12,13 @@ from fastapi import (
 )
 from fastapi.responses import Response
 from pydantic import ValidationError
-from app.config import SESSION_COOKIE_NAME
+from app.config import settings
 from app.schemas.project import Project, ProjectUpdate
 from app.schemas.session import SessionResponse
 from app.services.ProjectManager import project_manager
 from app.services.SessionManager import session_manager
 
 project_router = APIRouter(prefix='/projects', tags=['Projects'])
-MAX_PROJECT_UPLOAD_BYTES= 5 * 1024 * 1024  # 5 MB
 
 async def require_session(request: Request, x_tab_id: str = Header(alias='X-Tab-ID')) -> str:
     """
@@ -32,7 +31,7 @@ async def require_session(request: Request, x_tab_id: str = Header(alias='X-Tab-
             detail='Missing X-Tab-ID header',
         )
 
-    browser_id = request.cookies.get(SESSION_COOKIE_NAME)
+    browser_id = request.cookies.get(settings.session_cookie_name)
     if not browser_id:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -188,7 +187,7 @@ async def rename_project(project_id: str, payload: ProjectUpdate, session: Sessi
             detail='Project not found',
         )
 
-    return await project_manager.save(session_id, project)
+    return updated_project
 
 @project_router.delete('/{project_id}', status_code=status.HTTP_204_NO_CONTENT)
 async def delete_project(project_id: str, session: SessionResponse = Depends(require_session)) -> None:

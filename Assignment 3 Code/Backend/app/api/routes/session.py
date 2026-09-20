@@ -4,7 +4,7 @@ import secrets
 from datetime import datetime, timezone
 from fastapi import APIRouter, HTTPException, Header, Request, Response, status
 from app.schemas.session import SessionResponse, SessionErrorResponse
-from app.config import SESSION_COOKIE_NAME
+from app.config import settings
 from app.services.SessionManager import session_manager, SessionLimitExceededError
 
 session_router = APIRouter(prefix='/session', tags=['Session'])
@@ -14,13 +14,13 @@ def _get_or_create_browser_id(request: Request, response: Response) -> str:
     """
     Return the browser identifier stored in the HTTPOnly session cookie.
     """
-    browser_id = request.cookies.get(SESSION_COOKIE_NAME)
+    browser_id = request.cookies.get(settings.session_cookie_name)
     if browser_id:
         return browser_id
     browser_id = secrets.token_urlsafe(32)
 
     response.set_cookie(
-        key=SESSION_COOKIE_NAME,
+        key=settings.session_cookie_name,
         value=browser_id,
         httponly=True,
         secure=False,
@@ -58,7 +58,7 @@ async def delete_session(request: Request, x_tab_id: str | None = Header(default
             status_code=status.HTTP_400_BAD_REQUEST,
             detail='Missing X-Tab-ID header',
         )
-    browser_id = request.cookies.get(SESSION_COOKIE_NAME)
+    browser_id = request.cookies.get(settings.session_cookie_name)
     if not browser_id:
         return
 

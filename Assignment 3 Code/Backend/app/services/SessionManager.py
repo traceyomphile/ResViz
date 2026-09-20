@@ -2,13 +2,13 @@ import hashlib
 import hmac
 import redis.asyncio as redis
 from datetime import timedelta, datetime, timezone
-from app.config import MAX_ACTIVE_SESSIONS_PER_BROWSER, SESSION_DURATION, _REDIS_URL, SESSION_SECRET
+from app.config import settings
 from app.schemas.session import SessionResponse
 
 class SessionLimitExceededError(Exception):
     """Raised when one browser already has the maximum number of live sessions."""
 class SessionManager:
-    def __init__(self, redis_url: str = _REDIS_URL, duration: timedelta = SESSION_DURATION, max_active_sessions_per_browser: int = MAX_ACTIVE_SESSIONS_PER_BROWSER):
+    def __init__(self, redis_url: str = settings.redis_url, duration: timedelta = settings.session_duration, max_active_sessions_per_browser: int = settings.max_active_sessions_per_browser):
         self._redis = redis.from_url(redis_url, decode_responses=True)      # Return strings instead of bytes
         self._duration = duration   # A session expires after this amount of inactivity.
         self._max_active_sessions_per_browser = max_active_sessions_per_browser
@@ -18,7 +18,7 @@ class SessionManager:
         value=f"{browser_id}:{tab_id}"
 
         return hmac.new(
-            SESSION_SECRET.encode(),
+            settings.session_secret.encode(),
             value.encode(),
             hashlib.sha256,
         ).hexdigest()
@@ -26,7 +26,7 @@ class SessionManager:
     def _browser_id_hash(self, browser_id: str) -> str:
         """Hash the browser id before using it in Redis key names."""
         return hmac.new(
-            SESSION_SECRET.encode(),
+            settings.session_secret.encode(),
             browser_id.encode(),
             hashlib.sha256,
         ).hexdigest()

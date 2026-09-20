@@ -1,10 +1,9 @@
 # app/schemas/project.py
 
 from pydantic import BaseModel, ConfigDict, Field
-from typing import Self
 
 from app.src.parser import Node
-from app.schemas.knowledge_base import KnowledgeBaseEntry, align_annotations
+from app.schemas.knowledge_base import KnowledgeBaseEntry
 
 
 class Project(BaseModel):
@@ -15,11 +14,11 @@ class Project(BaseModel):
     description: str = ""
 
     knowledge_base: list[Node] = Field(default_factory=list)
-    knowledge_bases: list[KnowledgeBaseEntry] = Field(default_factory=list)
+    knowledge_base_annotations: list[str] = Field(default_factory=list)
 
-    # CNF clauses use displayable strings such as:
-    # "~Applicant | Qualified"
-    # A CNF clause is not necessarily a parser Node.
+    knowledge_bases: list[KnowledgeBaseEntry] = Field(default_factory=list)
+    active_knowledge_base_id: str | None = None
+
     cnf_kb: list[str] | None = None
     cnf_steps: list[dict[str, str | int]] = Field(default_factory=list)
 

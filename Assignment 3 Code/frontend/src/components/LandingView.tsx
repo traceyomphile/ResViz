@@ -1,5 +1,5 @@
 import {Brand, Icon} from './Icons';
-import {SessionMenu, ThemeToggle, type Section} from './AppShell';
+import {SessionMenu, ThemeToggle, type Section} from './Appshell';
 export function LandingView({onNavigate, onStart, onDemo}: {onNavigate(section: Section): void; onStart(): void; onDemo(): void}) {
   return <div className="landing-page"><header className="landing-header"><Brand /><nav aria-label="Main navigation"><button onClick={() => onNavigate('projects')}>Projects</button><button onClick={() => onNavigate('learn')}>Learn</button><button onClick={() => onNavigate('help')}>Help</button></nav><div className="header-tools"><ThemeToggle /><SessionMenu /></div></header>
     <main className="landing-hero"><div className="hero-copy"><p className="eyebrow">Propositional logic</p><h1>Visualise logic.<br /><span>Understand resolution.</span></h1><p className="hero-description">ResViz helps you find your resolution, visualise your world.<br />Build, explore and understand propositional logic using resolution proofs.</p><div className="hero-actions"><button className="button primary" onClick={onStart}><Icon name="arrow" />Start a project</button><button className="button secondary" onClick={onDemo}>Open demo</button></div></div>

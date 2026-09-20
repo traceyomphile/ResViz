@@ -8,6 +8,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 class Settings(BaseSettings):
     session_secret: str
     redis_url: str
+    frontend_urls: list[str]
+
+    session_duration: timedelta = timedelta(minutes=20)
+    max_active_sessions_per_browser: int = 10
+    session_cookie_name: str = 'resviz_session'
 
     model_config = SettingsConfigDict(
         env_file=BASE_DIR / '.env',
@@ -16,17 +21,4 @@ class Settings(BaseSettings):
     )
 
 settings = Settings()
-
-SESSION_SECRET = settings.session_secret
-_REDIS_URL = settings.redis_url
-
-FRONTEND_URLS = [
-    'http://127.0.0.1:5173',
-    'http://localhost:5173',
-    'http://192.168.232.157:5173'
-]
-
-SESSION_DURATION = timedelta(minutes=20)
-MAX_ACTIVE_SESSIONS_PER_BROWSER = 10
-SESSION_COOKIE_NAME = 'resviz_session'
 

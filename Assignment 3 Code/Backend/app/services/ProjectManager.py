@@ -3,7 +3,7 @@ import redis.asyncio as redis
 import logging
 from datetime import timedelta, datetime, timezone
 from pydantic import ValidationError
-from app.config import _REDIS_URL, SESSION_DURATION
+from app.config import settings
 from app.schemas.project import Project
 from app.schemas.knowledge_base import KnowledgeBaseEntry
 from app.services.SessionManager import session_manager
@@ -11,7 +11,7 @@ from app.services.SessionManager import session_manager
 logger = logging.getLogger(__name__)
 
 class ProjectManager:
-    def __init__(self, redis_url: str = _REDIS_URL, duration: timedelta = SESSION_DURATION):
+    def __init__(self, redis_url: str = settings.redis_url, duration: timedelta = settings.session_duration):
         self._redis = redis.from_url(redis_url, decode_responses=True)
         self._duration = duration
 
