@@ -1,0 +1,1039 @@
+commit 55c79aa9421f0c58abeb25945bd165ff93a725bb
+Merge: a94b0f9 246ff82
+Author: Tracey Letlape <ltltra001@cs.uct.ac.za>
+Date:   Sun Sep 20 10:21:01 2026 +0200
+
+    Merge branch 'ScrumMaster' into 'main'
+    
+    Refactor lexer and parser for improved token handling and error reporting; add...
+    
+    See merge request clausexi/resviz!21
+
+commit 246ff8209c6ba455e509e19b12bb6c0106e8f197
+Author: traceyomphile <omphiletracey@gmail.com>
+Date:   Sun Sep 20 10:16:15 2026 +0200
+
+    Final commit
+
+commit d00ffd8397f1df55ae5ac0418ff452bad11c345c
+Author: traceyomphile <omphiletracey@gmail.com>
+Date:   Sun Sep 20 09:34:28 2026 +0200
+
+    Switched from resolution search tree to a resolution tree
+
+commit ac2b7eadf7735dfcb028bec54be1cfe8e64131c6
+Author: traceyomphile <omphiletracey@gmail.com>
+Date:   Sun Sep 20 08:33:19 2026 +0200
+
+    feat: enhance knowledge base functionality and UI
+    
+    - Added 'more' icon to Icons component with corresponding SVG path.
+    - Refactored KBWorkspace component to improve state management and validation logic.
+    - Introduced KnowledgeBaseDialog component for editing knowledge bases with improved UX.
+    - Implemented NewProjectChoiceDialog for streamlined project creation and import options in ProjectView.
+    - Updated project view to conditionally render new project options dialog.
+
+commit b3cb7c0b36f248070c960de60e57ba0859cd5322
+Author: Amahle-M <mbamboamahle800@gmail.com>
+Date:   Sun Sep 20 07:13:14 2026 +0200
+
+    Merging
+
+commit 0873ac2483e62c94641dba0e8a886061894a751c
+Merge: a919dc4 92a3e63
+Author: traceyomphile <omphiletracey@gmail.com>
+Date:   Sun Sep 20 06:42:27 2026 +0200
+
+    On ScrumMaster: Restructuring
+
+commit 92a3e63372f95ac4cadb4f384479eedb6bdfc3d5
+Author: traceyomphile <omphiletracey@gmail.com>
+Date:   Sun Sep 20 06:42:27 2026 +0200
+
+    index on ScrumMaster: a919dc4 Restructuring
+
+commit a919dc4e8b8493353273080775f1b0340f603890
+Author: traceyomphile <omphiletracey@gmail.com>
+Date:   Sun Sep 20 06:42:19 2026 +0200
+
+    Restructuring
+
+commit 4f2107f36f148a5979797e0c3d806765f2eb6bd1
+Author: traceyomphile <omphiletracey@gmail.com>
+Date:   Sun Sep 20 06:41:08 2026 +0200
+
+    Restructuring the project
+
+commit cfc2fe17b73ce777be40e253d28b1875738f513e
+Merge: f85a94d 0093170
+Author: traceyomphile <omphiletracey@gmail.com>
+Date:   Sun Sep 20 05:17:34 2026 +0200
+
+    Merge branch 'nkmkar002-main-patch-43570' of https://gitlab.cs.uct.ac.za/clausexi/resviz into ScrumMaster
+
+commit f85a94d1d3818f19ab8aaa386e6a82abfd8bce5b
+Author: traceyomphile <omphiletracey@gmail.com>
+Date:   Sun Sep 20 05:03:13 2026 +0200
+
+    Mess
+
+commit 89025e77d2da89b6f3d537fd93c8abb1bbad62ab
+Author: traceyomphile <omphiletracey@gmail.com>
+Date:   Sun Sep 20 03:48:25 2026 +0200
+
+    Fixing merge conflicts
+
+commit 43b0ab512bce8ca3b04912cbbf0855805d059408
+Author: Amahle <MBMAMA007@myuct.ac.za>
+Date:   Sun Sep 20 03:14:19 2026 +0200
+
+    updated the frontend UI
+
+commit 5691bb993283799c6287ab38bdc2b542169dce65
+Author: Amahle-M <mbamboamahle800@gmail.com>
+Date:   Sun Sep 20 01:52:43 2026 +0200
+
+    Refactor Appshell component for improved structure and user experience; update session information and enhance theme toggle functionality.
+
+commit fb85a0c1fb2e95d34a14ae37a9fb63d3c4f3d2ff
+Merge: 94bb876 9dbb74d
+Author: Amahle-M <mbamboamahle800@gmail.com>
+Date:   Sun Sep 20 01:52:30 2026 +0200
+
+    Merge branch 'ScrumMaster' of gitlab.cs.uct.ac.za:clausexi/resviz into AMA-Work
+
+commit 94bb8768e2272a642a2ab4ad28bad57e2e37ff84
+Author: Amahle-M <mbamboamahle800@gmail.com>
+Date:   Sun Sep 20 01:35:25 2026 +0200
+
+    Refactor App component and project API integration
+    
+    - Updated App component to streamline state management and navigation.
+    - Introduced new state variables for project handling and knowledge base management.
+    - Replaced project name update logic with a renameProject function in the API.
+    - Added SavedProjectKB interface to enhance project data structure.
+    - Implemented new knowledge base handling methods including save and delete functionalities.
+    - Created a utility function for generating unique IDs.
+    - Updated backend .gitignore to include virtual environment files.
+
+commit 9dbb74dd8d91432f8cfc1eab474d2004af8d0147
+Author: traceyomphile <omphiletracey@gmail.com>
+Date:   Sun Sep 20 01:23:50 2026 +0200
+
+    Remove unused files and lexer implementation to clean up the project structure
+
+commit 6381228248e5ef1268fb8410f63ec57513596b2b
+Author: traceyomphile <omphiletracey@gmail.com>
+Date:   Sun Sep 20 00:34:06 2026 +0200
+
+    Refactor SplashScreen component for improved loading experience and visual updates; add ThemeContext for theme management; streamline CSS styles for better readability; enhance formula validation logic and file parsing utilities.
+
+commit 49c6475370c4b3cf84a82622ae76ee56e1804086
+Author: Amahle <MBMAMA007@myuct.ac.za>
+Date:   Sat Sep 19 04:21:45 2026 +0200
+
+    Made structural change in the projectView.tsx and added project management dashboard.
+
+commit 009317005b44062795cd0ed2e49c77ba03d7fca8
+Author: Karabo Nkambule <137390860+justkbthings@users.noreply.github.com>
+Date:   Sat Sep 19 02:22:02 2026 +0200
+
+    Add interactive proof tree exploration
+
+commit 966875febb91b8f511d6b17531c7b8d6c19d08be
+Author: Karabo Nkambule <137390860+justkbthings@users.noreply.github.com>
+Date:   Sat Sep 19 02:21:13 2026 +0200
+
+    Render independent recursive proof branches
+
+commit 669459c9e80232bbcca2b5810059308eb1fd0a1c
+Author: Karabo Nkambule <137390860+justkbthings@users.noreply.github.com>
+Date:   Sat Sep 19 02:20:08 2026 +0200
+
+    Verify entailment and highlight shortest proof paths
+
+commit 6e380d3c907e998d71a21f81682bac747d98ff3e
+Author: Karabo Nkambule <137390860+justkbthings@users.noreply.github.com>
+Date:   Sat Sep 19 02:18:17 2026 +0200
+
+    Convert all project knowledge bases to CNF
+
+commit 5e9e75978e38237b31e8cedda933bcd401ddf711
+Author: Karabo Nkambule <137390860+justkbthings@users.noreply.github.com>
+Date:   Sat Sep 19 02:17:07 2026 +0200
+
+    Add JSON project import and export
+
+commit d1b968c4f83d07b0e13e716fa1c5be06ac5d872a
+Author: Karabo Goodwill Nkambule <nkmkar002@cs.uct.ac.za>
+Date:   Sat Sep 19 00:20:31 2026 +0200
+
+    changed application ui
+
+commit 24cbebe6a460149a1459f53ce8cb95dd68d26fb7
+Author: Karabo Goodwill Nkambule <nkmkar002@cs.uct.ac.za>
+Date:   Sat Sep 19 00:19:28 2026 +0200
+
+    changed application ui
+
+commit e40e491b11fe72025cf725da7fbfcb1952d0b840
+Merge: 8c36eef 1460218
+Author: Karabo Goodwill Nkambule <nkmkar002@cs.uct.ac.za>
+Date:   Thu Sep 17 09:42:27 2026 +0200
+
+    Merge branch 'ScrumMaster' into 'nkmkar002-main-patch-43570'
+    
+    Refactor lexer and parser for improved token handling and error reporting; add...
+    
+    See merge request clausexi/resviz!20
+
+commit 1460218f7dac644b40875fee375e5fa687b6111e
+Author: traceyomphile <omphiletracey@gmail.com>
+Date:   Tue Sep 15 22:31:17 2026 +0200
+
+    Limited session creation, updated the frontend routes
+
+commit e27b3edd6442ffb7b77ffd0370ba6a047611e070
+Author: traceyomphile <omphiletracey@gmail.com>
+Date:   Tue Sep 15 01:02:54 2026 +0200
+
+    Added the feature to rename your project
+
+commit 5220b0338247be0fac6af58dcbc6ec63bd172834
+Author: traceyomphile <omphiletracey@gmail.com>
+Date:   Mon Sep 14 20:45:18 2026 +0200
+
+    Changing app to dashboard structure
+
+commit 1e5e7c5e1db26c2b2dc1c45c9bdea130f1f1733b
+Author: traceyomphile <omphiletracey@gmail.com>
+Date:   Mon Sep 14 20:15:07 2026 +0200
+
+    Updated proposed project structure
+
+commit fe78c25691aa7cada6926c51b74f92ee83106285
+Author: traceyomphile <omphiletracey@gmail.com>
+Date:   Mon Sep 14 19:28:50 2026 +0200
+
+    Added the logic for annotation and how to parse them
+
+commit 3aa0d416f980e7ce4d28fea3f4ea0646e128afc6
+Author: traceyomphile <omphiletracey@gmail.com>
+Date:   Mon Sep 14 18:07:41 2026 +0200
+
+    Refactor error handling in knowledge base API and lexer; improve validation error messages and adjust status codes
+
+commit 2e89556a0977ab9605499e6b409361f477ccf24c
+Author: traceyomphile <omphiletracey@gmail.com>
+Date:   Mon Sep 14 17:09:54 2026 +0200
+
+    Refactor lexer and parser for improved token handling and error reporting; add annotation support in Node class
+
+commit b3f5fd944f11ecbc31a3d2d85beb15d47e570560
+Author: traceyomphile <omphiletracey@gmail.com>
+Date:   Sat Sep 12 21:06:12 2026 +0200
+
+    Add .gitignore files for backend and frontend to exclude environment and cache files
+
+commit 8c36eefaef6451c421302db371db9e53a71a040d
+Author: Karabo Goodwill Nkambule <nkmkar002@myuct.ac.za>
+Date:   Thu Sep 10 23:06:52 2026 +0200
+
+    modernize ResViz interface and project workflow
+
+commit 693857a9c4f5720ed990c12ca7860e3e0959ada1
+Author: Karabo Nkambule <137390860+justkbthings@users.noreply.github.com>
+Date:   Thu Sep 10 13:22:14 2026 +0200
+
+    Organize assignment code directories
+
+commit 6018bc7eb630303dcb94d54749338b131ee11b4e
+Author: Karabo Goodwill Nkambule <nkmkar002@cs.uct.ac.za>
+Date:   Thu Sep 10 04:34:58 2026 +0200
+
+    Assignment 2 Code + Updates for Assignment 3
+
+commit bb06bdb4ca814788494ea8a17f802003a8643074
+Author: Karabo Goodwill Nkambule <nkmkar002@cs.uct.ac.za>
+Date:   Thu Sep 10 04:32:36 2026 +0200
+
+    Assignment 2 folder for easier marking.
+
+commit c989708790083911808e653b5697394ad10e9bc0
+Merge: 8310f55 b5e28f9
+Author: Karabo Goodwill Nkambule <nkmkar002@cs.uct.ac.za>
+Date:   Tue Sep 1 22:11:34 2026 +0200
+
+    Merge branch 'nkmkar002-main-patch-89855' into 'nkmkar002-main-patch-43570'
+    
+    Implement CNF conversion endpoint and update project schema; enhance...
+    
+    See merge request clausexi/resviz!18
+
+commit b5e28f95e79e521a6c661133179ac46ce546a3da
+Author: Karabo Goodwill Nkambule <nkmkar002@cs.uct.ac.za>
+Date:   Tue Sep 1 22:09:03 2026 +0200
+
+    Test Files for Unit Tests both for Backend and Frontend
+
+commit c934c483d3fa98623879fc99f5992c5e0c18a8f0
+Author: Karabo Goodwill Nkambule <nkmkar002@cs.uct.ac.za>
+Date:   Tue Sep 1 21:38:18 2026 +0200
+
+    not working
+
+commit a94b0f9e7c59c0ab7fdec618e7b82ecf685726db
+Merge: 8914199 d813dfc
+Author: Tracey Letlape <ltltra001@cs.uct.ac.za>
+Date:   Tue Sep 1 20:20:49 2026 +0200
+
+    Merge branch 'ScrumMaster' into 'main'
+    
+    Add unit tests for ProjectManager, ResolutionEngine, and SessionManager
+    
+    See merge request clausexi/resviz!16
+
+commit d813dfcd3e6b0d42a459bf287872bdcbb4f76dcf
+Author: traceyomphile <omphiletracey@gmail.com>
+Date:   Tue Sep 1 20:18:49 2026 +0200
+
+    Add commit log file with history of changes
+
+commit b2fa29325cb47b225aab389108d08523c3f43c8f
+Author: traceyomphile <omphiletracey@gmail.com>
+Date:   Tue Sep 1 11:32:41 2026 +0200
+
+    Add unit tests for ProjectManager, ResolutionEngine, and SessionManager
+    
+    - Implement tests for ProjectManager including reasoning invalidation, knowledge base entry saving, activation, and deletion.
+    - Add tests for ResolutionEngine covering modus ponens, unrelated queries, tautological resolvents, and step limits.
+    - Create tests for SessionManager to ensure deterministic session IDs, session creation with TTL, and session deletion behavior.
+    - Update Makefile to run tests through a dedicated script.
+    - Revise ProjectStructure.md and README.md to reflect the current project structure and functionality.
+    - Enhance endpoints.md with detailed API endpoint descriptions and requirements.
+
+commit 89141997a8f8f602aa7ba21b8813a88837ead283
+Merge: 1aadfc7 3396ba6
+Author: Tracey Letlape <ltltra001@cs.uct.ac.za>
+Date:   Tue Sep 1 08:05:29 2026 +0200
+
+    Merge branch 'ScrumMaster' into 'main'
+    
+    Final demo commit
+    
+    See merge request clausexi/resviz!15
+
+commit 3396ba6937504ecf4e9698de57f0cbcf88233b76
+Merge: 7526544 8310f55
+Author: traceyomphile <omphiletracey@gmail.com>
+Date:   Tue Sep 1 08:00:31 2026 +0200
+
+    Merge branch 'nkmkar002-main-patch-43570' of https://gitlab.cs.uct.ac.za/clausexi/resviz into ScrumMaster
+
+commit 8310f55ee424df125168ff6e835291c143a9a8e1
+Author: nkmkar002 <nkmkar002@cs.uct.ac.za>
+Date:   Tue Sep 1 07:09:47 2026 +0200
+
+    api requests through the vite
+
+commit 7869484a8aa00e66d8aea6f1a73b99eaab3ec753
+Author: nkmkar002 <nkmkar002@cs.uct.ac.za>
+Date:   Tue Sep 1 07:07:28 2026 +0200
+
+    the theme now, supports the resolution screens
+
+commit a19be13235d7f511d4a750d583dc5f8edc427e0e
+Author: nkmkar002 <nkmkar002@cs.uct.ac.za>
+Date:   Tue Sep 1 07:03:37 2026 +0200
+
+    styling the cnf and the resolution screen
+
+commit 476526f0ab40758a42428ebe0f8355ad1caacd0c
+Author: nkmkar002 <nkmkar002@cs.uct.ac.za>
+Date:   Tue Sep 1 07:02:53 2026 +0200
+
+    add CNF, the contradiction, and the resolution steps
+
+commit 054b496ba2c7bb64f6b492cfbb56c9fef4ec562c
+Author: nkmkar002 <nkmkar002@cs.uct.ac.za>
+Date:   Tue Sep 1 07:01:33 2026 +0200
+
+    add goal input and convert to cnf
+
+commit d2b86935dd5ddc396266d0dd5b158e7dd053ca9f
+Author: nkmkar002 <nkmkar002@cs.uct.ac.za>
+Date:   Tue Sep 1 07:00:01 2026 +0200
+
+    preservs the project formulas and its goal
+
+commit d63db6835869651fcaf065c7d3e46be506503f84
+Author: nkmkar002 <nkmkar002@cs.uct.ac.za>
+Date:   Tue Sep 1 06:58:42 2026 +0200
+
+    add cnf conversion and resolution methods
+
+commit f18305c7d53215792890115df0f5de72c9b44124
+Author: nkmkar002 <nkmkar002@cs.uct.ac.za>
+Date:   Tue Sep 1 06:57:13 2026 +0200
+
+    it now conencts knowledge base input to cnf
+
+commit c12be95e62154618e68886c9fa5e0de9ffcfc6e8
+Author: nkmkar002 <nkmkar002@cs.uct.ac.za>
+Date:   Tue Sep 1 06:54:07 2026 +0200
+
+    it now supports the named knowledge base and the results
+
+commit 69734c0b37cd27b6623c875da6d6045a9f612aa4
+Author: nkmkar002 <nkmkar002@cs.uct.ac.za>
+Date:   Tue Sep 1 06:52:26 2026 +0200
+
+    the cnf and the resolution states
+
+commit 94c3a6fd1f0f4df0a83861a73f08862607bb7645
+Author: nkmkar002 <nkmkar002@cs.uct.ac.za>
+Date:   Tue Sep 1 06:51:09 2026 +0200
+
+    parses knowledge base formulas
+
+commit c162785e0397014531f7ffd959e99724487b30d8
+Author: nkmkar002 <nkmkar002@cs.uct.ac.za>
+Date:   Tue Sep 1 06:48:46 2026 +0200
+
+    the project CNF conversion and resolution endpoints
+
+commit c96eecb0331195d184f2c78766d34e499f483b1a
+Author: nkmkar002 <nkmkar002@cs.uct.ac.za>
+Date:   Tue Sep 1 06:47:30 2026 +0200
+
+    it now registers the CNF conversion and the resolution routes
+
+commit 7ff0be465d77c798d814586e404b70ebdce0cd2b
+Author: nkmkar002 <nkmkar002@cs.uct.ac.za>
+Date:   Tue Sep 1 06:45:22 2026 +0200
+
+    parser now correctly parses parenthesized formulars
+
+commit 089bdbce1c820d85c4bc8fba0b9347e116b47005
+Author: nkmkar002 <nkmkar002@cs.uct.ac.za>
+Date:   Tue Sep 1 06:38:04 2026 +0200
+
+    the lexer now supports full words
+
+commit 75265441efce9dd5ca23050ca8ae8da0d5ae1f59
+Author: traceyomphile <omphiletracey@gmail.com>
+Date:   Tue Sep 1 06:22:45 2026 +0200
+
+    Implement CNF conversion endpoint and update project schema; enhance KBChoiceView and KBInputView for improved validation and user experience.
+
+commit d205426ac0c724422ffbbc9d2ed654a07d56e483
+Merge: 8ad935c 9c4b13f
+Author: Karabo Goodwill Nkambule <nkmkar002@cs.uct.ac.za>
+Date:   Tue Sep 1 05:25:48 2026 +0200
+
+    Merge branch 'ScrumMaster' into 'nkmkar002-main-patch-43570'
+    
+    Enhance knowledge base upload functionality to support .txt and .kb file...
+    
+    See merge request clausexi/resviz!14
+
+commit 9c4b13ffca26b9bb6e06ab2cf16b55d429747d77
+Author: traceyomphile <omphiletracey@gmail.com>
+Date:   Tue Sep 1 05:17:16 2026 +0200
+
+    Enhance knowledge base upload functionality to support .txt and .kb file formats; improve KBChoiceView with query validation and dynamic UI updates for active knowledge bases.
+
+commit 8ad935c4395f0f9d02924f72f3a3e5a54980e547
+Merge: c26784d ef88d9f
+Author: Karabo Goodwill Nkambule <nkmkar002@cs.uct.ac.za>
+Date:   Tue Sep 1 04:43:56 2026 +0200
+
+    Merge branch 'ScrumMaster' into 'nkmkar002-main-patch-43570'
+    
+    Implement knowledge base management features: add endpoints for saving,...
+    
+    See merge request clausexi/resviz!13
+
+commit ef88d9fce0e1f87f2b6efe7520dd61d2d9be7ba6
+Author: traceyomphile <omphiletracey@gmail.com>
+Date:   Tue Sep 1 04:08:45 2026 +0200
+
+    Fix endpoint path in knowledge base upload and improve ProjectManager methods; enhance KBChoiceView with error handling and conversion button
+
+commit d3db515bed6bfaf375c6071ed7586ea701f6c9bb
+Merge: 75f25d0 4283ec6
+Author: traceyomphile <omphiletracey@gmail.com>
+Date:   Tue Sep 1 03:39:08 2026 +0200
+
+    Merge branch 'AMA-Work' of https://gitlab.cs.uct.ac.za/clausexi/resviz into ScrumMaster
+
+commit 4283ec6cc0db8a96c43b32b39c2677a0e307f199
+Author: Amahle <MBMAMA007@myuct.ac.za>
+Date:   Tue Sep 1 02:00:23 2026 +0200
+
+    Test validation oof the formulas and also that the upload components work correctly, added the Kb name text box as well
+
+commit 75f25d0619707026606a5a2b4ecb8cffecb6066f
+Author: traceyomphile <omphiletracey@gmail.com>
+Date:   Tue Sep 1 01:10:56 2026 +0200
+
+    Fix typos in knowledge base imports and improve knowledge base selection UI with loading states and error handling
+
+commit f5310e586859478f81b18f5d457bc44612f3fdb6
+Author: traceyomphile <omphiletracey@gmail.com>
+Date:   Mon Aug 31 21:58:25 2026 +0200
+
+    Implement knowledge base management features: add endpoints for saving, listing, activating, and deleting knowledge bases; enhance schemas and project manager logic for handling named knowledge bases.
+
+commit 4d75e7b2119e35b8636a4f24db7b98f654d46b84
+Merge: f719284 d0e292a
+Author: traceyomphile <omphiletracey@gmail.com>
+Date:   Mon Aug 31 19:40:53 2026 +0200
+
+    Merge branch 'AMA-Work' of https://gitlab.cs.uct.ac.za/clausexi/resviz into ScrumMaster
+
+commit f719284edf8678173d1cbb07bc3ec845196e744e
+Author: traceyomphile <omphiletracey@gmail.com>
+Date:   Mon Aug 31 19:33:41 2026 +0200
+
+    Attempting to fix the upload KB... NOT WORKING
+
+commit c26784d54ac1b18d702b8af374e6f4a7455d411a
+Merge: 5928bae 0fea844
+Author: Karabo Goodwill Nkambule <nkmkar002@cs.uct.ac.za>
+Date:   Mon Aug 31 18:10:06 2026 +0200
+
+    Merge branch 'ScrumMaster' into 'nkmkar002-main-patch-43570'
+    
+    Export feature is working too. The sorting ain't working. The project names...
+    
+    See merge request clausexi/resviz!12
+
+commit 0fea8449bdbe5b922077afe157dc823575bd09c1
+Author: traceyomphile <omphiletracey@gmail.com>
+Date:   Mon Aug 31 15:57:23 2026 +0200
+
+    Refactor knowledge base router tags and enhance KB input view with dynamic project name and improved file upload handling
+
+commit 2f98eb65dd82d5ffadec0ab0149c7ed327f5da43
+Author: traceyomphile <omphiletracey@gmail.com>
+Date:   Mon Aug 31 15:24:22 2026 +0200
+
+    Add knowledge base router and schemas for knowledge base management
+
+commit 91db766ed24df871b3ed03c2608c354fd904ade1
+Author: traceyomphile <omphiletracey@gmail.com>
+Date:   Mon Aug 31 14:39:19 2026 +0200
+
+    Added logic to manage project updates and storage
+
+commit d0e292a4ef72a37ab15847df003c3fabfd2efda8
+Author: Amahle <MBMAMA007@myuct.ac.za>
+Date:   Mon Aug 31 05:25:39 2026 +0200
+
+    Added the validation type to check the correct format  uploaded file or the typed formulas.
+
+commit b8f758eb15eee5f2ec3381292df242423539f4be
+Author: traceyomphile <omphiletracey@gmail.com>
+Date:   Mon Aug 31 04:38:01 2026 +0200
+
+    Export feature is working too. The sorting ain't working. The project names should not be reset eveerytime.
+
+commit 0460a8d779a9a76ca3751cba02a10e4187a5c20e
+Author: traceyomphile <omphiletracey@gmail.com>
+Date:   Mon Aug 31 03:15:00 2026 +0200
+
+    Connected the project creation to backend.
+
+commit 8c11a4b03c9cc3fe2c7dd81cf5f6ba8513ad08c1
+Author: Amahle-M <mbamboamahle800@gmail.com>
+Date:   Sun Aug 30 20:44:19 2026 +0200
+
+    Update .gitignore and fix import path for KBInputView component
+
+commit 3fb80163fa697a54653785e868f5de0482fc1ce8
+Merge: d943694 50dbda5
+Author: Amahle Mbambo <mbmama007@cs.uct.ac.za>
+Date:   Sun Aug 30 19:34:57 2026 +0200
+
+    Merge branch 'ScrumMaster' into 'AMA-Work'
+    
+    Refactor session management and enhance API structure
+    
+    See merge request clausexi/resviz!9
+
+commit 50dbda5cb8a4daf9180fe637d0c4e2f70bec659d
+Author: traceyomphile <omphiletracey@gmail.com>
+Date:   Sun Aug 30 17:51:55 2026 +0200
+
+    Updated project structure
+
+commit 2b63e356b4ccc9919f26e4e09e6c3d53e1e54322
+Author: traceyomphile <omphiletracey@gmail.com>
+Date:   Sun Aug 30 17:47:25 2026 +0200
+
+    Updateed project structure
+
+commit 51c3589d932cd05e8f2e387fc7879f4c3143de0e
+Author: traceyomphile <omphiletracey@gmail.com>
+Date:   Sun Aug 30 17:35:41 2026 +0200
+
+    Added the import and export features for project
+
+commit 5928baee46dd02d0003bc2d20f55b012c8df078e
+Author: Karabo Goodwill Nkambule <nkmkar002@cs.uct.ac.za>
+Date:   Sun Aug 30 12:21:49 2026 +0200
+
+    add resolution engine with step tracking
+
+commit 31117bf9fbf6c0973cf07bdcfa8de644a210bd7d
+Author: Karabo Goodwill Nkambule <nkmkar002@cs.uct.ac.za>
+Date:   Sun Aug 30 10:28:16 2026 +0200
+
+    add clause representation for CNF and resolution
+
+commit e9718084d608f17e6d2fb93db45ef67033b075d0
+Author: Karabo Goodwill Nkambule <nkmkar002@cs.uct.ac.za>
+Date:   Sun Aug 30 10:25:28 2026 +0200
+
+    implement CNF conversion algorithm
+
+commit 5350e9a0c29a41ae129614521923e145f9be491f
+Merge: 21f3f15 7cabdf2
+Author: Karabo Goodwill Nkambule <nkmkar002@cs.uct.ac.za>
+Date:   Sun Aug 30 09:31:52 2026 +0200
+
+    Merge branch 'ScrumMaster' into 'nkmkar002-main-patch-43570'
+    
+    Scrum master
+    
+    See merge request clausexi/resviz!8
+
+commit 7cabdf293579fc93b9ff825ef402be7c11a8fe06
+Merge: 37e7e0e 21f3f15
+Author: Karabo Goodwill Nkambule <nkmkar002@cs.uct.ac.za>
+Date:   Sun Aug 30 09:25:05 2026 +0200
+
+    Merge branch 'nkmkar002-main-patch-43570' into 'ScrumMaster'
+    
+    # Conflicts:
+    #   Backend/requirements.txt
+
+commit 37e7e0ef79dca30b346fc91e8a5aacf3b25fb99f
+Author: traceyomphile <omphiletracey@gmail.com>
+Date:   Sun Aug 30 03:00:44 2026 +0200
+
+    Reasonable nonsense so far... hour break
+
+commit 37acdf41762e402f4ff51daaa7b6dee1f3b8ef7d
+Author: traceyomphile <omphiletracey@gmail.com>
+Date:   Sun Aug 30 02:49:28 2026 +0200
+
+    Theme to persist across different screens.
+
+commit ad6abd3eb367d48737d26f48115a0104b986e345
+Author: traceyomphile <omphiletracey@gmail.com>
+Date:   Sun Aug 30 01:19:35 2026 +0200
+
+    Merged the changes from Amahle
+
+commit 4b403e7ed092404407a1e003507be0c9eb8ceaaf
+Merge: dc2b9b4 d943694
+Author: traceyomphile <omphiletracey@gmail.com>
+Date:   Sun Aug 30 01:11:45 2026 +0200
+
+    Merge branch 'AMA-Work' of https://gitlab.cs.uct.ac.za/clausexi/resviz into ScrumMaster
+
+commit dc2b9b4fddb0121c85b136476f81365eaf152eb8
+Author: traceyomphile <omphiletracey@gmail.com>
+Date:   Sun Aug 30 00:15:14 2026 +0200
+
+    Added the demo projects logic from Amahle. Changed the SplashScreen and the logo
+
+commit d9436945a0883062ec155b55475fe06f5a6fc181
+Author: Amahle <MBMAMA007@myuct.ac.za>
+Date:   Sat Aug 29 22:47:38 2026 +0200
+
+    made changes to the KBinput component and styled it using it css file and then tested it.
+
+commit b8c97dc187fc41512fa65592007ec5c30c714983
+Author: traceyomphile <omphiletracey@gmail.com>
+Date:   Sat Aug 29 22:34:40 2026 +0200
+
+    Removed the next button
+
+commit f9085e8747f867a86fd0b25494c25a5237a8b9c5
+Author: traceyomphile <omphiletracey@gmail.com>
+Date:   Sat Aug 29 22:10:17 2026 +0200
+
+    Added the switcing between light mode and dark mode option.
+
+commit 1f2b00c14df18d1c62aa27c91d134dfb69c41e2c
+Author: traceyomphile <omphiletracey@gmail.com>
+Date:   Sat Aug 29 20:31:52 2026 +0200
+
+    Added the backend logic for importing and exporting a project
+
+commit c463fe26f3a1589188e16388ff1bd764ca133927
+Merge: 1db8ce7 057d300
+Author: traceyomphile <omphiletracey@gmail.com>
+Date:   Sat Aug 29 19:26:45 2026 +0200
+
+    Merge branches 'ScrumMaster' and 'AMA-Work' of https://gitlab.cs.uct.ac.za/clausexi/resviz into ScrumMaster
+
+commit 1db8ce763c230bcaec8f7459d8fbb11b6efc3c63
+Author: traceyomphile <omphiletracey@gmail.com>
+Date:   Sat Aug 29 19:12:18 2026 +0200
+
+    Project screen looks sensible now.
+
+commit c14aa6d378ee83e923dd6a9257e119dbbc27ddd6
+Author: traceyomphile <omphiletracey@gmail.com>
+Date:   Sat Aug 29 18:52:33 2026 +0200
+
+    Added parser.out to gitignore
+
+commit dc97bd5804938ac99fe82e319c8caa41780df9c6
+Author: traceyomphile <omphiletracey@gmail.com>
+Date:   Sat Aug 29 18:51:20 2026 +0200
+
+    Made the project welcome screen a get request
+
+commit 057d300d34eae867befd07faebcd7f52e24fc222
+Author: Amahle <MBMAMA007@myuct.ac.za>
+Date:   Sat Aug 29 07:43:21 2026 +0200
+
+    Created the KBInputView css file
+
+commit b5828ce702a1a25d5b4b50cc613c8ce839497031
+Author: Amahle <MBMAMA007@myuct.ac.za>
+Date:   Sat Aug 29 05:05:53 2026 +0200
+
+    created the KBChoice View css and tested implementation of the KBChoiceView component
+
+commit bfe8ac83506224784a32321de6951e831949d606
+Author: traceyomphile <omphiletracey@gmail.com>
+Date:   Sat Aug 29 03:48:33 2026 +0200
+
+    Updated the session endpoints.
+
+commit f3a85d08ff7d4848d212c238048dc12e15688f07
+Author: traceyomphile <omphiletracey@gmail.com>
+Date:   Sat Aug 29 03:42:20 2026 +0200
+
+    FIxed the different session tab, added the some formulas in the background
+
+commit 64a7f31cbdcc8abba5ea6eb6f535f70509cd1c79
+Author: Amahle <MBMAMA007@myuct.ac.za>
+Date:   Sat Aug 29 01:49:40 2026 +0200
+
+    Added the KBchoiceView and continued implementing KBInputView file
+
+commit e82b4b2cca78fafdf28c3f28d1366608d354610e
+Merge: f591678 a1b7791
+Author: traceyomphile <omphiletracey@gmail.com>
+Date:   Sat Aug 29 00:20:27 2026 +0200
+
+    Merge branch 'AMA-Work' of https://gitlab.cs.uct.ac.za/clausexi/resviz into ScrumMaster
+
+commit a1b7791cfeb865d570c63ffe146049b4f57f064e
+Author: Amahle <MBMAMA007@myuct.ac.za>
+Date:   Fri Aug 28 01:58:33 2026 +0200
+
+    Added the type file and KBInputview component
+
+commit f59167850390b59b237a7fc60c83a83715c42121
+Author: traceyomphile <omphiletracey@gmail.com>
+Date:   Thu Aug 27 11:02:19 2026 +0200
+
+    Added SplashScreen to the App when session is successful.
+
+commit 2bbcf6eaf45f495e590ba480f072e03970435a7c
+Author: Amahle <MBMAMA007@myuct.ac.za>
+Date:   Thu Aug 27 04:03:13 2026 +0200
+
+    changed the layout of the card ProjectView card
+
+commit 520c36b876e3a498ba2ebbff917f2e28fc6d2e01
+Author: Amahle <MBMAMA007@myuct.ac.za>
+Date:   Thu Aug 27 03:22:45 2026 +0200
+
+    Added ProjectView on the App file to test if it works
+
+commit 09099beb538f806ece265c8ed61250b975ea7b74
+Author: traceyomphile <omphiletracey@gmail.com>
+Date:   Thu Aug 27 02:26:33 2026 +0200
+
+    Define methods to managing the existence of a Project
+
+commit 337812dbbff472a5e1387ff74d41eb2c6237ecbc
+Author: traceyomphile <omphiletracey@gmail.com>
+Date:   Thu Aug 27 02:03:30 2026 +0200
+
+    Separated created a session and getting one. Fixed the potential bug in restore_session
+
+commit 5deead92eec9e87b2e9008543b76ab9814b1261c
+Author: traceyomphile <omphiletracey@gmail.com>
+Date:   Thu Aug 27 01:26:06 2026 +0200
+
+    Compiled session ID to be a conjunction of the tab and browser id
+
+commit 21f3f15a8225604fab20dda1770dc4540cff2a76
+Author: Karabo Goodwill Nkambule <nkmkar002@myuct.ac.za>
+Date:   Thu Aug 27 01:08:41 2026 +0200
+
+    Fix PLY dependency version
+
+commit ae51cc076cd1ff392aab9a8393e051362b16d152
+Author: Amahle <MBMAMA007@myuct.ac.za>
+Date:   Thu Aug 27 01:01:53 2026 +0200
+
+    created the ProjectView file
+
+commit 3e9d7b97e204099d71ec89b93f65e927fc46f3aa
+Merge: cd8f123 91bc94d
+Author: Karabo Goodwill Nkambule <nkmkar002@myuct.ac.za>
+Date:   Thu Aug 27 00:19:34 2026 +0200
+
+    A
+    Merge remote-tracking branch 'origin/ScrumMaster' into nkmkar002-main-patch-43570
+     the commit.
+     merging it with the cnf and resolution code
+
+commit 91bc94d1e52904734c99fc1453cbb18f0ce866d4
+Author: traceyomphile <omphiletracey@gmail.com>
+Date:   Wed Aug 26 21:44:15 2026 +0200
+
+    Added the parser and lexer logic given by Dr Zola
+
+commit 32828fa04a4a48060ccd6396da7f31ae1dcaa286
+Author: traceyomphile <omphiletracey@gmail.com>
+Date:   Wed Aug 26 21:11:57 2026 +0200
+
+    Finally, session is finally working.
+
+commit cd8f123ab25dbead2389fc0b9df7ee72f39a59fc
+Merge: 3542585 37a1314
+Author: Karabo Goodwill Nkambule <nkmkar002@cs.uct.ac.za>
+Date:   Wed Aug 26 20:48:38 2026 +0200
+
+    Merge branch 'ScrumMaster' into 'nkmkar002-main-patch-43570'
+    
+    Refactor session management and enhance API structure
+    
+    See merge request clausexi/resviz!4
+
+commit 37a1314940124bfdb3bdddb264633f302755c7af
+Author: traceyomphile <omphiletracey@gmail.com>
+Date:   Tue Aug 25 16:41:07 2026 +0200
+
+    Stop tracking frontenv env file
+
+commit ae5e7ab1e0fecff881477f4be43b115d06af7a0e
+Author: traceyomphile <omphiletracey@gmail.com>
+Date:   Tue Aug 25 16:39:22 2026 +0200
+
+    Restore session ain't working
+
+commit 635e0aedea2751e9d9fb0758a5a20a6843fd824d
+Author: Amahle <MBMAMA007@myuct.ac.za>
+Date:   Tue Aug 25 00:35:52 2026 +0200
+
+    Adding the Saved SplashView file
+
+commit 0a2f8397091d54c8a60db224bd791ab0dfa6cc44
+Author: Amahle <MBMAMA007@myuct.ac.za>
+Date:   Tue Aug 25 00:32:38 2026 +0200
+
+    Created the Splash screen and styled it
+
+commit 38397336537350b75a35f27e25f7168702ef5425
+Author: traceyomphile <omphiletracey@gmail.com>
+Date:   Mon Aug 24 22:32:06 2026 +0200
+
+    Refactor session management and enhance API structure
+    
+    - Updated session handling in the backend to support tab-specific sessions.
+    - Increased session duration from 2 to 20 minutes for better user experience.
+    - Added new session-related endpoints and improved session restoration logic.
+    - Introduced environment variable for API URL in the frontend.
+    - Created utility functions for managing session IDs in the frontend.
+    - Revised project structure documentation to reflect changes.
+
+commit 6bb042f5b5fd4fce4481e34ec7628b6286b189bb
+Author: traceyomphile <omphiletracey@gmail.com>
+Date:   Mon Aug 24 20:49:41 2026 +0200
+
+    Implemented backend API sesssion management and app definition
+
+commit 1f2cadb7a08a9543a92c1b2a2fb4551a5cb433ed
+Author: traceyomphile <omphiletracey@gmail.com>
+Date:   Mon Aug 24 14:06:30 2026 +0200
+
+    Defined the project structure and added the endpoints for sessions.
+
+commit 55bdbcbeae7d758da1412e9b0b2c3489a9568fe5
+Author: Amahle <MBMAMA007@myuct.ac.za>
+Date:   Mon Aug 24 02:47:31 2026 +0200
+
+    created the knowledge base choise view component
+
+commit 7e12a2fbdd83b9be49336ef5c1aeaaa71f24eca3
+Author: Amahle <MBMAMA007@myuct.ac.za>
+Date:   Sun Aug 23 13:50:40 2026 +0200
+
+    Set up React frontend with Vite
+
+commit c2939703a0170a5b48047d6b9e5b34cf2705e704
+Author: traceyomphile <omphiletracey@gmail.com>
+Date:   Sat Aug 22 22:25:30 2026 +0200
+
+    Backend proposed backend structure
+
+commit 0d7cea730d075975160dca2fcdbeb5d4fcfc4966
+Author: traceyomphile <omphiletracey@gmail.com>
+Date:   Sat Aug 22 21:45:52 2026 +0200
+
+    Defined Project API endpoints
+
+commit 053285684304338e4c23a73cd6a5dec555250a35
+Merge: 3ca0fd9 3542585
+Author: Tracey Letlape <ltltra001@cs.uct.ac.za>
+Date:   Mon Aug 17 01:48:01 2026 +0200
+
+    Merge branch 'nkmkar002-main-patch-43570' into 'ScrumMaster'
+    
+    Nkmkar002 main patch 43570
+    
+    See merge request clausexi/resviz!3
+
+commit 3ca0fd9566eed87a956ebc1b4f948d9243383c74
+Merge: 1aadfc7 66b5388
+Author: Tracey Letlape <ltltra001@cs.uct.ac.za>
+Date:   Mon Aug 17 01:44:01 2026 +0200
+
+    Merge branch 'AM-work' into 'ScrumMaster'
+    
+    initial commit, adding frontend to project
+    
+    See merge request clausexi/resviz!2
+
+commit 66b538874fbebb210c52afe8cc9d46d003259656
+Author: Amahle <MBMAMA007@myuct.ac.za>
+Date:   Sun Aug 16 18:30:50 2026 +0200
+
+    initial commit, adding frontend to project
+
+commit 1aadfc770d746ad1401f5c87acbe866413637181
+Author: Tracey Letlape <ltltra001@cs.uct.ac.za>
+Date:   Fri Aug 14 03:00:47 2026 +0200
+
+    Moved Capstone_2026_Assignment_1.docx to under forms
+
+commit cc48fd8e00e645e8303eb808f2b2973d24dcb62f
+Author: Tracey Letlape <ltltra001@cs.uct.ac.za>
+Date:   Fri Aug 14 02:59:43 2026 +0200
+
+    Moved the assignment 1 form
+
+commit cdd00a8bb8a43b376c23ba084bcfc0b76dc7740a
+Author: Tracey Letlape <ltltra001@cs.uct.ac.za>
+Date:   Fri Aug 14 02:58:41 2026 +0200
+
+    store assignment forms in one directory
+
+commit eddb11dd1b2bee4f678264d74d4a508532ac0067
+Author: Tracey Letlape <ltltra001@cs.uct.ac.za>
+Date:   Fri Aug 14 02:57:49 2026 +0200
+
+    Analysis class diagram
+
+commit 9f62e312ac7f713cf9c29a237770d87b06078da8
+Author: Tracey Letlape <ltltra001@cs.uct.ac.za>
+Date:   Fri Aug 14 02:57:18 2026 +0200
+
+    Sequence Diagram
+
+commit b38c1353819951d0eb3af33bfdaa01afc835d51e
+Author: Tracey Letlape <ltltra001@cs.uct.ac.za>
+Date:   Fri Aug 14 02:56:48 2026 +0200
+
+    Use case diagram
+
+commit e53c7a2705915997c8549890ef4f96c7bfb01551
+Author: Tracey Letlape <ltltra001@cs.uct.ac.za>
+Date:   Fri Aug 14 02:55:45 2026 +0200
+
+    Sequence, use case and class diagrams
+
+commit 3542585c377b482d8a20f3ad2c8670921cbe78d2
+Author: Karabo Goodwill Nkambule <nkmkar002@cs.uct.ac.za>
+Date:   Thu Aug 13 20:23:46 2026 +0200
+
+    Add new file: cnf.py file
+
+commit 081add49004fad4092b1266420050c0a9e75cc88
+Author: Karabo Goodwill Nkambule <nkmkar002@cs.uct.ac.za>
+Date:   Thu Aug 13 20:23:19 2026 +0200
+
+    Add new file: parser.py file
+
+commit 7b4b93c0dcb55a3210d6a8e04fc13efbd51d680e
+Author: Karabo Goodwill Nkambule <nkmkar002@cs.uct.ac.za>
+Date:   Thu Aug 13 20:22:51 2026 +0200
+
+    Add new file: lexer.py file
+
+commit 94f564827c8b7461ed7a69c412d84c106251728f
+Author: Karabo Goodwill Nkambule <nkmkar002@cs.uct.ac.za>
+Date:   Thu Aug 13 20:22:05 2026 +0200
+
+    Add new file: Init.py file
+
+commit 787298b108e53c05751babf85297f7126a0bf39c
+Author: Karabo Goodwill Nkambule <nkmkar002@cs.uct.ac.za>
+Date:   Thu Aug 13 20:21:15 2026 +0200
+
+    Add new directory: contains the cnf algorithm, parser etc
+
+commit 5acb4a68a2411e5cea6ded0e2a0d516903030d06
+Author: Karabo Goodwill Nkambule <nkmkar002@cs.uct.ac.za>
+Date:   Thu Aug 13 20:19:15 2026 +0200
+
+    Add new fille: Contains the requirements needed to run program
+
+commit f5f0d4fc0cf896556676a2936398aa26e4ff085d
+Author: Karabo Goodwill Nkambule <nkmkar002@cs.uct.ac.za>
+Date:   Thu Aug 13 20:18:04 2026 +0200
+
+    Add a Backend Directory
+
+commit 71c2485af8bb2de15f5f2d2407808b24a1d66623
+Author: Tracey Letlape <ltltra001@cs.uct.ac.za>
+Date:   Sun Aug 9 23:31:52 2026 +0200
+
+    Fixed the backlog items, added the functionality and test case descriptions.
+
+commit 81e3da7c646c0f782762d28a056863e6c6d410ee
+Author: Tracey Letlape <ltltra001@cs.uct.ac.za>
+Date:   Sun Aug 9 00:56:52 2026 +0200
+
+    Delete README.md
+
+commit 4b7fbe5758e06119267e5d76568aaa9065c0e253
+Author: Tracey Letlape <ltltra001@cs.uct.ac.za>
+Date:   Sun Aug 9 00:55:28 2026 +0200
+
+    Replace Capstone_2026_Assignment_1.docx
+
+commit c21cb1b87893c6c435ecbc4a1fcac3efc7728350
+Author: Tracey Letlape <ltltra001@cs.uct.ac.za>
+Date:   Wed Aug 5 14:41:03 2026 +0200
+
+    A1 form
+
+commit 11c22a8e156099ba563faf32304a5d106d6d92b6
+Author: Tracey Letlape <ltltra001@cs.uct.ac.za>
+Date:   Wed Aug 5 14:32:37 2026 +0200
+
+    Initial commit
