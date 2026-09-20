@@ -1,32 +1,16 @@
 import {useCallback, useEffect, useRef, useState} from 'react';
 import './App.css';
 import {restoreSession} from './api/session';
-import {getProjects, updateProjectName, createdProject, renameProject, type ProjectSummary, type SavedProjectKB} from './api/projects';
-import {
-  activateKnowledgeBase,
-  convertProjectToCnf,
-  deleteSavedKnowledgeBase,
-  resolveProject,
-  updateNamedKnowledgeBase,
-  saveNamedKnowledgeBase,
-  saveQuery,
-  saveTypedKnowledgeBase,
-  uploadKnowledgeBase,
-  validateKnowledgeBase,
-  type CNFConversionResponse,
-  type ResolutionResponse,
-} from './api/knowledgeBase';
+import {getProjects, getProject, createProject, renameProject, type ProjectSummary, type SavedProjectKB} from './api/projects';
+import {deleteSavedKnowledgeBase, activateKnowledgeBase, convertProjectToCnf, resolveProject, saveNamedKnowledgeBase, updateNamedKnowledgeBase, validateKnowledgeBase, type CNFConversionResponse, type ResolutionResponse} from './api/knowledgeBase';
 import {DeleteKnowledgeBaseDialog} from './components/DeleteKnowledgeBaseDialog';
 import {RenameProjectDialog} from './components/RenameProjectDialog';
-import {LandingView} from './components/LandingView';
 import SplashScreen from './components/SplashScreen';
 import {LandingView} from './components/LandingView';
-import {AppShell, GuideView, ThemeToggle, SessionMenu, type Section} from './components/Appshell';
+import {AppShell, GuideView, ThemeToggle, SessionMenu, type Section} from './components/AppShell';
 import {ProjectView} from './components/ProjectView';
 import {KBWorkspace, type WorkspaceData} from './components/KBWorkspace';
 import {CnfCompleteView, ResolutionView} from './components/ResolutionView';
-const SPLASH_DURATION_MS = 6000;
-type Screen ='landing' | Section |'workspace' | 'cnf' | 'resolution';
 
 type Screen = 'landing' | Section | 'workspace' | 'cnf' | 'resolution';
 export default function App() {
@@ -75,11 +59,9 @@ export default function App() {
     if (previous && JSON.stringify([previous.name, previous.formulas, previous.goal]) !== JSON.stringify([data.name, data.formulas, data.goal])) {
       setConversion(null); setResolution(null); setKbMessage('');
     }
-
     if (previous && JSON.stringify(previous.annotations) !== JSON.stringify(data.annotations)) setKbMessage('');
     drafts.current[key] = data;
   }, [project?.id, entryId]);
-
   function openProject(item: ProjectSummary) {
     setProject(item);
     const saved = item.knowledgeBases?.find(kb => kb.id === item.activeKnowledgeBaseId)
@@ -224,5 +206,4 @@ export default function App() {
     {deleteKb && <DeleteKnowledgeBaseDialog name={deleteKb.name} formulaCount={deleteKb.formulas.length} busy={busy} error={deleteKbError} onClose={() => {if (!locked) setDeleteKb(null);}} onDelete={deleteKnowledgeBase} />}
     {renameOpen && project && <RenameProjectDialog name={project.name} busy={busy} error={renameError} onClose={() => {if (!locked) setRenameOpen(false);}} onSave={renameCurrentProject} />}
   </AppShell>;
-  
 }

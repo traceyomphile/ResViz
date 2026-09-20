@@ -1,7 +1,7 @@
 import {useState, type ReactNode} from 'react';
 import {useTheme} from '../context/ThemeContext';
 import type {SavedProjectKB} from '../api/projects';
-import {Brand, Icon} from './Icons';
+import {Brand, Icon} from './Icons.tsx';
 
 export type Section = 'projects' | 'learn' | 'help';
 export function ThemeToggle() {
