@@ -292,6 +292,26 @@ export async function renameProject(projectId: string, name: string): Promise<Pr
     );
 }
 
+export async function completeProject(projectId: string): Promise<ProjectSummary> {
+    const response = await fetch(
+        `${API_URL}/api/projects/${encodeURIComponent(projectId)}/complete`,
+        {
+            method: 'POST',
+            headers: projectHeaders(),
+            credentials: 'include',
+        },
+    );
+
+    if (!response.ok) {
+        throw await responseError(
+            response,
+            `Could not mark project as completed (${response.status})`,
+        );
+    }
+
+    return toProjectSummary(await response.json() as RawProject);
+}
+
 export async function deleteProject(projectId: string): Promise<void> {
     const response = await fetch(`${API_URL}/api/projects/${encodeURIComponent(projectId)}`, {
         method: 'DELETE',

@@ -4873,3 +4873,287 @@
         height: 540px;
     }
 }
+
+/* Full-context resolution proof: all project clauses remain visible while the walkthrough focuses one inference. */
+.proof-context-legend {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px 12px;
+    color: var(--muted);
+    font-size: 10px;
+}
+
+.proof-context-legend span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+}
+
+.proof-context-legend span::before {
+    content: '';
+    width: 10px;
+    height: 10px;
+    border-radius: 3px;
+    border: 2px solid #6f94c2;
+    background: var(--panel);
+}
+
+.proof-context-legend .proof-legend-unused::before {
+    border-color: #aab5c4;
+    border-style: dashed;
+    opacity: .72;
+}
+
+.proof-context-legend .proof-legend-goal::before {
+    border-color: var(--blue);
+    background: var(--blue-soft);
+}
+
+.proof-tree-viewport {
+    scroll-behavior: smooth;
+}
+
+.proof-input-bank-label,
+.proof-derivation-label {
+    fill: var(--muted);
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: .8px;
+}
+
+.proof-input-bank-divider {
+    stroke: var(--border);
+    stroke-width: 1;
+    stroke-dasharray: 5 5;
+}
+
+.proof-tree-node.used-input rect {
+    stroke: #6f94c2;
+    stroke-width: 1.8;
+}
+
+.proof-tree-node.unused-input {
+    opacity: .58;
+}
+
+.proof-tree-node.unused-input rect {
+    fill: color-mix(in srgb, var(--page) 72%, var(--panel));
+    stroke: #aab5c4;
+    stroke-width: 1.2;
+    stroke-dasharray: 5 4;
+}
+
+.proof-tree-node.unused-input .proof-node-caption,
+.proof-tree-node.unused-input .proof-node-footer {
+    fill: color-mix(in srgb, var(--muted) 78%, transparent);
+}
+
+.proof-tree-node.unused-input:hover,
+.proof-tree-node.unused-input.selected,
+.proof-tree-node.unused-input:focus-visible {
+    opacity: 1;
+}
+
+.proof-tree-node.unused-input.selected rect,
+.proof-tree-node.unused-input:focus-visible rect {
+    stroke: var(--blue);
+    stroke-dasharray: none;
+}
+
+.proof-tree-svg.is-walking .proof-tree-node.context-dimmed {
+    opacity: .14;
+}
+
+.proof-tree-svg.is-walking .proof-tree-node.context-dimmed.selected {
+    opacity: .5;
+}
+
+.proof-tree-svg.is-walking .proof-tree-node.active-step {
+    opacity: 1;
+}
+
+.proof-tree-svg.is-walking .proof-tree-node.active-step rect {
+    filter: drop-shadow(0 2px 7px color-mix(in srgb, var(--blue) 24%, transparent));
+}
+
+.proof-pivot-group {
+    transition: opacity .18s ease;
+}
+
+.proof-pivot-group.dimmed {
+    opacity: .12;
+}
+
+.proof-project-clause-list .clause-list-row {
+    grid-template-columns: 48px minmax(160px, 1fr) minmax(110px, .65fr) auto;
+    align-items: center;
+}
+
+.proof-clause-status {
+    justify-self: end;
+    padding: 4px 8px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    background: var(--page);
+    font-size: 10px;
+    font-style: normal;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.proof-clause-status.used {
+    border-color: color-mix(in srgb, var(--blue) 42%, var(--border));
+    color: var(--blue);
+    background: var(--blue-soft);
+}
+
+.proof-clause-status.unused {
+    opacity: .72;
+}
+
+@media (max-width: 920px) {
+    .proof-context-legend {
+        width: 100%;
+        order: 3;
+    }
+
+    .proof-project-clause-list .clause-list-row {
+        grid-template-columns: 42px 1fr;
+    }
+
+    .proof-project-clause-list .clause-list-row > small,
+    .proof-project-clause-list .proof-clause-status {
+        grid-column: 2;
+        justify-self: start;
+    }
+}
+
+/* Project completion ------------------------------------------------------ */
+.badge.completed {
+    color: #176b36;
+    background: #e4f7ea;
+    border: 1px solid #b8e2c6;
+}
+
+.proof-completion-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 1200;
+    display: grid;
+    place-items: center;
+    padding: 24px;
+    background: rgba(14, 22, 36, .48);
+    backdrop-filter: blur(5px);
+}
+
+.proof-completion-dialog {
+    width: min(620px, 100%);
+    border: 1px solid var(--border);
+    border-radius: 22px;
+    background: var(--surface);
+    box-shadow: 0 24px 70px rgba(8, 18, 34, .24);
+    padding: 32px;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 20px 22px;
+    animation: proof-completion-in .18s ease-out;
+}
+
+.proof-completion-symbol {
+    width: 68px;
+    height: 68px;
+    border-radius: 18px;
+    display: grid;
+    place-items: center;
+    align-self: start;
+    font-size: 34px;
+    font-weight: 800;
+    line-height: 1;
+    color: #176b36;
+    background: #e4f7ea;
+    border: 1px solid #b8e2c6;
+}
+
+.proof-completion-copy {
+    min-width: 0;
+}
+
+.proof-completion-kicker {
+    display: block;
+    margin-bottom: 7px;
+    color: #176b36;
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+
+.proof-completion-dialog h2 {
+    margin: 0;
+    font-size: clamp(25px, 4vw, 34px);
+    line-height: 1.08;
+}
+
+.proof-completion-dialog p {
+    margin: 13px 0 0;
+    color: var(--muted);
+    line-height: 1.65;
+}
+
+.proof-completion-save-state {
+    margin-top: 18px;
+    border-radius: 12px;
+    padding: 10px 12px;
+    font-size: 14px;
+    font-weight: 650;
+    background: var(--surface-soft, rgba(90, 110, 140, .08));
+    color: var(--muted);
+}
+
+.proof-completion-save-state.saved {
+    color: #176b36;
+    background: #effaf2;
+}
+
+.proof-completion-save-state.error {
+    color: #a52f2f;
+    background: #fff0f0;
+}
+
+.proof-completion-actions {
+    grid-column: 1 / -1;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding-top: 4px;
+}
+
+@keyframes proof-completion-in {
+    from { opacity: 0; transform: translateY(8px) scale(.985); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@media (max-width: 620px) {
+    .proof-completion-dialog {
+        grid-template-columns: 1fr;
+        padding: 24px;
+    }
+
+    .proof-completion-symbol {
+        width: 56px;
+        height: 56px;
+        border-radius: 15px;
+        font-size: 29px;
+    }
+
+    .proof-completion-actions {
+        flex-direction: column-reverse;
+    }
+
+    .proof-completion-actions .button {
+        width: 100%;
+    }
+}

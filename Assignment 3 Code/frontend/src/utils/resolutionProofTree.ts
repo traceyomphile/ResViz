@@ -27,13 +27,17 @@ export interface ProofTreeNode {
     pivot: string | null;
     level: number;
     parents: ProofTreeNode[];
+    usedInProof: boolean;
 }
 
 export interface ProofTree {
     root: ProofTreeNode | null;
+    nodes: ProofTreeNode[];
     inferences: ProofInference[];
     clauses: Map<string, ResolutionClause>;
+    inputClauseIds: string[];
     usedInputIds: string[];
+    unusedInputIds: string[];
     maxLevel: number;
     source: 'shortest-proof' | 'resolution-trace' | 'none';
 }
@@ -55,9 +59,11 @@ export interface ProofTreeEdge {
 export interface ProofTreeLayout {
     nodes: PositionedProofNode[];
     byKey: Map<string, PositionedProofNode>;
+    byClauseId: Map<string, PositionedProofNode>;
     edges: ProofTreeEdge[];
     width: number;
     height: number;
+    inputBandBottom: number;
 }
 
 function clauseMap(response: ResolutionResponse): Map<string, ResolutionClause> {
@@ -105,14 +111,17 @@ function syntheticClause(id: string, expression = id): ResolutionClause {
 }
 
 /**
- * Builds only the proof that establishes the final contradiction.
+ * Builds the displayed contradiction proof while keeping the complete set of
+ * original project clauses available to the visualiser.
  *
- * The backend's full graph contains search alternatives. `shortest_proof`
- * identifies the inference sequence that is actually needed. Reconstructing
- * recursively from its final result turns that sequence into a genuine binary
- * resolution proof tree: two parents above every derived clause and □ at the
- * bottom. Shared subproofs are intentionally duplicated so the visual remains
- * a tree rather than a DAG.
+ * The backend's full graph contains every search alternative. We deliberately
+ * do not render those alternatives in the proof view. Instead, shortest_proof
+ * (or the regular step trace as a fallback) identifies the actual inference
+ * chain, while every original input clause remains visible as context.
+ *
+ * Unlike the older tree builder, clause nodes are unique by clause id. This
+ * means the renderer behaves like a proof DAG when a derived clause is reused,
+ * while still reading visually as a top-down resolution proof.
  */
 export function buildResolutionProofTree(response: ResolutionResponse): ProofTree {
     const clauses = clauseMap(response);
@@ -123,99 +132,133 @@ export function buildResolutionProofTree(response: ResolutionResponse): ProofTre
         inferences = traceInferences(response);
         source = 'resolution-trace';
     }
+
+    const inputClauseIds = response.initial_clauses.map(clause => clause.id);
+
     if (!inferences.length) {
+        const nodes = response.initial_clauses.map(clause => ({
+            key: `clause:${clause.id}`,
+            clauseId: clause.id,
+            expression: clause.expression,
+            sourceFormula: clause.source_formula,
+            sourceKnowledgeBase: clause.source_knowledge_base ?? null,
+            isNegatedGoal: Boolean(clause.is_negated_goal),
+            kind: 'input' as const,
+            derivationStep: null,
+            inferenceId: null,
+            pivot: null,
+            level: 0,
+            parents: [],
+            usedInProof: false,
+        }));
         return {
             root: null,
+            nodes,
             inferences: [],
             clauses,
+            inputClauseIds,
             usedInputIds: [],
+            unusedInputIds: [...inputClauseIds],
             maxLevel: 0,
             source: 'none',
         };
     }
 
-    // Ensure every referenced clause is available to the renderer, including
-    // older API responses that only supplied the step trace.
     for (const inference of inferences) {
         if (!clauses.has(inference.parent1)) clauses.set(inference.parent1, syntheticClause(inference.parent1));
         if (!clauses.has(inference.parent2)) clauses.set(inference.parent2, syntheticClause(inference.parent2));
-        if (!clauses.has(inference.resultId)) clauses.set(inference.resultId, syntheticClause(inference.resultId, inference.resultExpression));
+        if (!clauses.has(inference.resultId)) {
+            clauses.set(inference.resultId, syntheticClause(inference.resultId, inference.resultExpression));
+        }
     }
 
     const derivationByResult = new Map(inferences.map(inference => [inference.resultId, inference]));
-    const levelByClause = new Map<string, number>();
-    for (const clause of response.initial_clauses) levelByClause.set(clause.id, 0);
+    const usedClauseIds = new Set<string>();
     for (const inference of inferences) {
-        const parentLevel = Math.max(
-            levelByClause.get(inference.parent1) ?? 0,
-            levelByClause.get(inference.parent2) ?? 0,
-        );
-        levelByClause.set(inference.resultId, parentLevel + 1);
+        usedClauseIds.add(inference.parent1);
+        usedClauseIds.add(inference.parent2);
+        usedClauseIds.add(inference.resultId);
+    }
+
+    const levelMemo = new Map<string, number>();
+    const levelActive = new Set<string>();
+    function levelFor(clauseId: string): number {
+        if (levelMemo.has(clauseId)) return levelMemo.get(clauseId)!;
+        const inference = derivationByResult.get(clauseId);
+        if (!inference || levelActive.has(clauseId)) {
+            levelMemo.set(clauseId, 0);
+            return 0;
+        }
+        levelActive.add(clauseId);
+        const level = Math.max(levelFor(inference.parent1), levelFor(inference.parent2)) + 1;
+        levelActive.delete(clauseId);
+        levelMemo.set(clauseId, level);
+        return level;
+    }
+
+    const nodeByClauseId = new Map<string, ProofTreeNode>();
+    const buildActive = new Set<string>();
+    function materialise(clauseId: string): ProofTreeNode {
+        const existing = nodeByClauseId.get(clauseId);
+        if (existing) return existing;
+
+        const clause = clauses.get(clauseId) ?? syntheticClause(clauseId);
+        const inference = derivationByResult.get(clauseId);
+        const expression = clause.expression || clauseId;
+        const node: ProofTreeNode = {
+            key: `clause:${clauseId}`,
+            clauseId,
+            expression,
+            sourceFormula: clause.source_formula,
+            sourceKnowledgeBase: clause.source_knowledge_base ?? null,
+            isNegatedGoal: Boolean(clause.is_negated_goal),
+            kind: expression.trim() === '□' ? 'empty' : inference ? 'derived' : 'input',
+            derivationStep: inference?.index ?? null,
+            inferenceId: inference?.id ?? null,
+            pivot: inference?.pivot ?? null,
+            level: levelFor(clauseId),
+            parents: [],
+            usedInProof: usedClauseIds.has(clauseId),
+        };
+        nodeByClauseId.set(clauseId, node);
+
+        if (inference && !buildActive.has(clauseId)) {
+            buildActive.add(clauseId);
+            node.parents = [materialise(inference.parent1), materialise(inference.parent2)];
+            buildActive.delete(clauseId);
+        }
+        return node;
+    }
+
+    // Always materialise every starting project clause, even when it never
+    // contributes to the displayed proof.
+    for (const clauseId of inputClauseIds) materialise(clauseId);
+    for (const inference of inferences) {
+        materialise(inference.parent1);
+        materialise(inference.parent2);
+        materialise(inference.resultId);
     }
 
     const finalInference = [...inferences].reverse().find(inference => {
         const expression = clauses.get(inference.resultId)?.expression ?? inference.resultExpression;
         return expression.trim() === '□';
     }) ?? inferences.at(-1)!;
+    const root = materialise(finalInference.resultId);
 
-    let occurrence = 0;
-    const usedInputs = new Set<string>();
-    const active = new Set<string>();
+    const inputSet = new Set(inputClauseIds);
+    const usedInputIds = inputClauseIds.filter(id => inputSet.has(id) && usedClauseIds.has(id));
+    const unusedInputIds = inputClauseIds.filter(id => !usedClauseIds.has(id));
+    const nodes = [...nodeByClauseId.values()];
 
-    function build(clauseId: string): ProofTreeNode {
-        occurrence += 1;
-        const key = `P${occurrence}`;
-        const clause = clauses.get(clauseId) ?? syntheticClause(clauseId);
-        const inference = derivationByResult.get(clauseId);
-        const expression = clause.expression || clauseId;
-
-        // A cycle should not exist in a valid proof, but treating an unexpected
-        // repeated active clause as a leaf prevents a malformed response from
-        // recursively crashing the visualiser.
-        if (!inference || active.has(clauseId)) {
-            usedInputs.add(clauseId);
-            return {
-                key,
-                clauseId,
-                expression,
-                sourceFormula: clause.source_formula,
-                sourceKnowledgeBase: clause.source_knowledge_base ?? null,
-                isNegatedGoal: Boolean(clause.is_negated_goal),
-                kind: expression.trim() === '□' ? 'empty' : 'input',
-                derivationStep: null,
-                inferenceId: null,
-                pivot: null,
-                level: levelByClause.get(clauseId) ?? 0,
-                parents: [],
-            };
-        }
-
-        active.add(clauseId);
-        const parents = [build(inference.parent1), build(inference.parent2)];
-        active.delete(clauseId);
-        return {
-            key,
-            clauseId,
-            expression,
-            sourceFormula: clause.source_formula,
-            sourceKnowledgeBase: clause.source_knowledge_base ?? null,
-            isNegatedGoal: Boolean(clause.is_negated_goal),
-            kind: expression.trim() === '□' ? 'empty' : 'derived',
-            derivationStep: inference.index,
-            inferenceId: inference.id,
-            pivot: inference.pivot,
-            level: levelByClause.get(clauseId) ?? inference.index + 1,
-            parents,
-        };
-    }
-
-    const root = build(finalInference.resultId);
     return {
         root,
+        nodes,
         inferences,
         clauses,
-        usedInputIds: [...usedInputs],
-        maxLevel: Math.max(0, ...levelByClause.values()),
+        inputClauseIds,
+        usedInputIds,
+        unusedInputIds,
+        maxLevel: Math.max(0, ...nodes.map(node => node.level)),
         source,
     };
 }
@@ -228,73 +271,114 @@ export function firstRelevantProofStep(node: ProofTreeNode, inferences: ProofInf
     return firstUse?.index ?? null;
 }
 
+/**
+ * Lays out all original project clauses in one context row at the top, then
+ * places only proof-derived clauses beneath them. The overview can therefore
+ * show the complete starting state, while walkthrough mode can zoom to one
+ * local inference without changing the underlying graph.
+ */
 export function layoutResolutionProofTree(
     proof: ProofTree,
-    nodeWidth = 236,
+    nodeWidth = 224,
     nodeHeight = 88,
-    horizontalGap = 64,
-    verticalGap = 158,
+    horizontalGap = 34,
+    verticalGap = 166,
 ): ProofTreeLayout {
-    if (!proof.root) {
-        return {nodes: [], byKey: new Map(), edges: [], width: 720, height: 480};
-    }
+    const leftPadding = 48;
+    const topPadding = 48;
+    const inputNodes = proof.inputClauseIds
+        .map(id => proof.nodes.find(node => node.clauseId === id))
+        .filter((node): node is ProofTreeNode => Boolean(node));
 
-    const span = new Map<string, number>();
-    function measure(node: ProofTreeNode): number {
-        if (!node.parents.length) {
-            span.set(node.key, nodeWidth);
-            return nodeWidth;
-        }
-        const measured = node.parents.map(measure);
-        const width = Math.max(nodeWidth, measured.reduce((total, value) => total + value, 0) + horizontalGap * (measured.length - 1));
-        span.set(node.key, width);
-        return width;
-    }
-
-    measure(proof.root);
-    const nodes: PositionedProofNode[] = [];
-    const edges: ProofTreeEdge[] = [];
-
-    function place(node: ProofTreeNode, left: number): number {
-        const ownSpan = span.get(node.key) ?? nodeWidth;
-        const childCenters: number[] = [];
-        let offset = left;
-
-        for (const parent of node.parents) {
-            const parentSpan = span.get(parent.key) ?? nodeWidth;
-            childCenters.push(place(parent, offset));
-            edges.push({
-                from: parent.key,
-                to: node.key,
-                step: node.derivationStep ?? 0,
-                pivot: node.pivot ?? '',
-            });
-            offset += parentSpan + horizontalGap;
-        }
-
-        const center = childCenters.length
-            ? (childCenters[0] + childCenters[childCenters.length - 1]) / 2
-            : left + ownSpan / 2;
-        const y = 36 + node.level * verticalGap;
-        nodes.push({
+    const positioned = new Map<string, PositionedProofNode>();
+    inputNodes.forEach((node, index) => {
+        positioned.set(node.clauseId, {
             ...node,
-            x: center - nodeWidth / 2,
-            y,
+            x: leftPadding + index * (nodeWidth + horizontalGap),
+            y: topPadding,
             width: nodeWidth,
             height: nodeHeight,
         });
-        return center;
+    });
+
+    const inputBandBottom = topPadding + nodeHeight + 70;
+    const occupiedByLevel = new Map<number, Array<{left: number; right: number}>>();
+
+    function parentCenter(clauseId: string): number {
+        const parent = positioned.get(clauseId);
+        return parent ? parent.x + parent.width / 2 : leftPadding + nodeWidth / 2;
     }
 
-    const contentWidth = span.get(proof.root.key) ?? nodeWidth;
-    place(proof.root, 40);
-    const width = Math.max(760, contentWidth + 80);
-    const height = Math.max(520, 36 + (proof.maxLevel + 1) * verticalGap + 80);
+    for (const inference of proof.inferences) {
+        const node = proof.nodes.find(candidate => candidate.clauseId === inference.resultId);
+        if (!node) continue;
+
+        const level = Math.max(1, node.level);
+        const idealCenter = (parentCenter(inference.parent1) + parentCenter(inference.parent2)) / 2;
+        let x = Math.max(leftPadding, idealCenter - nodeWidth / 2);
+        const occupied = occupiedByLevel.get(level) ?? [];
+
+        let moved = true;
+        while (moved) {
+            moved = false;
+            for (const interval of occupied) {
+                const right = x + nodeWidth;
+                if (right + horizontalGap > interval.left && x - horizontalGap < interval.right) {
+                    x = interval.right + horizontalGap;
+                    moved = true;
+                }
+            }
+        }
+
+        occupied.push({left: x, right: x + nodeWidth});
+        occupiedByLevel.set(level, occupied);
+        positioned.set(node.clauseId, {
+            ...node,
+            x,
+            y: inputBandBottom + (level - 1) * verticalGap,
+            width: nodeWidth,
+            height: nodeHeight,
+        });
+    }
+
+    // Synthetic proof parents that were not part of initial_clauses are rare,
+    // but place them in the input band instead of dropping them from the graph.
+    const extras = proof.nodes.filter(node => !positioned.has(node.clauseId));
+    for (const node of extras) {
+        const index = positioned.size;
+        positioned.set(node.clauseId, {
+            ...node,
+            x: leftPadding + index * (nodeWidth + horizontalGap),
+            y: topPadding,
+            width: nodeWidth,
+            height: nodeHeight,
+        });
+    }
+
+    const edges: ProofTreeEdge[] = [];
+    for (const inference of proof.inferences) {
+        if (!positioned.has(inference.parent1) || !positioned.has(inference.parent2) || !positioned.has(inference.resultId)) continue;
+        edges.push({from: inference.parent1, to: inference.resultId, step: inference.index, pivot: inference.pivot});
+        edges.push({from: inference.parent2, to: inference.resultId, step: inference.index, pivot: inference.pivot});
+    }
+
+    const minX = Math.min(leftPadding, ...[...positioned.values()].map(node => node.x));
+    if (minX < leftPadding) {
+        const shift = leftPadding - minX;
+        for (const node of positioned.values()) node.x += shift;
+    }
+
+    const nodes = [...positioned.values()];
+    const maxRight = Math.max(760, ...nodes.map(node => node.x + node.width + leftPadding));
+    const maxBottom = Math.max(520, ...nodes.map(node => node.y + node.height + 90));
+
     return {
         nodes,
         byKey: new Map(nodes.map(node => [node.key, node])),
+        byClauseId: new Map(nodes.map(node => [node.clauseId, node])),
         edges,
-        width,
-        height,
+        width: maxRight,
+        height: maxBottom,
+        inputBandBottom,
     };
 }

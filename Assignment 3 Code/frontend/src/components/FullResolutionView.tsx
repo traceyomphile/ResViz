@@ -6,7 +6,7 @@ import {
     layoutResolutionProofTree,
     type PositionedProofNode,
     type ProofInference,
-} from '../utils/resolutionProofTree.ts';
+} from '../utils/resolutionProofTree';
 import {Icon} from './Icons';
 
 const display = (value: string) => value
@@ -28,7 +28,8 @@ function nodeCaption(node: PositionedProofNode): string {
     if (node.kind === 'empty') return `${node.clauseId} · FINAL CONTRADICTION`;
     if (node.derivationStep !== null) return `${node.clauseId} · STEP ${node.derivationStep + 1}`;
     if (node.isNegatedGoal) return `${node.clauseId} · NEGATED GOAL`;
-    return `${node.clauseId} · INPUT CLAUSE`;
+    if (node.usedInProof) return `${node.clauseId} · USED INPUT`;
+    return `${node.clauseId} · PROJECT INPUT`;
 }
 
 function walkthroughText(inference: ProofInference, resolution: ResolutionResponse): string {
@@ -48,11 +49,13 @@ export function FullResolutionView({
     goal,
     onBack,
     onBackToKnowledgeBase,
+    onContradictionReached,
 }: {
     resolution: ResolutionResponse;
     goal: string;
     onBack(): void;
     onBackToKnowledgeBase(): void;
+    onContradictionReached?(): void | Promise<void>;
 }) {
     const proof = useMemo(() => buildResolutionProofTree(resolution), [resolution]);
     const layout = useMemo(() => layoutResolutionProofTree(proof), [proof]);
@@ -64,25 +67,36 @@ export function FullResolutionView({
     const viewport = useRef<HTMLDivElement>(null);
     const drag = useRef<{x: number; y: number; left: number; top: number} | null>(null);
     const anchor = useRef<{x: number; y: number; worldX: number; worldY: number} | null>(null);
+    const completionTriggered = useRef(false);
+    const [completionOpen, setCompletionOpen] = useState(false);
+    const [completionState, setCompletionState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+    const [completionError, setCompletionError] = useState('');
 
     const selectedNode = layout.byKey.get(selected ?? '') ?? null;
     const currentInference = walkthrough ? proof.inferences[stepIndex] ?? null : null;
+    const contradictionStep = useMemo(() => proof.inferences.findIndex(inference => {
+        const expression = proof.clauses.get(inference.resultId)?.expression ?? inference.resultExpression;
+        return expression.trim() === '□';
+    }), [proof]);
     const verifiedShortest = Boolean(
         resolution.graph?.shortest_proof?.length
         && resolution.graph.shortest_is_optimal,
     );
+    const usedInputSet = useMemo(() => new Set(proof.usedInputIds), [proof.usedInputIds]);
 
     function fit() {
         const element = viewport.current;
         if (!element) return;
         anchor.current = null;
         const next = Math.max(
-            0.25,
+            0.14,
             Math.min(1.15, (element.clientWidth - 30) / layout.width, (element.clientHeight - 30) / layout.height),
         );
         setScale(next);
-        element.scrollLeft = 0;
-        element.scrollTop = 0;
+        requestAnimationFrame(() => {
+            element.scrollLeft = 0;
+            element.scrollTop = 0;
+        });
     }
 
     function zoom(value: number, x?: number, y?: number) {
@@ -96,7 +110,7 @@ export function FullResolutionView({
             worldX: (element.scrollLeft + localX) / scale,
             worldY: (element.scrollTop + localY) / scale,
         };
-        setScale(Math.max(0.2, Math.min(3, value)));
+        setScale(Math.max(0.14, Math.min(3, value)));
     }
 
     function centerNode(key: string) {
@@ -115,6 +129,76 @@ export function FullResolutionView({
         });
     }
 
+    function focusClauseIds(clauseIds: string[]) {
+        const element = viewport.current;
+        if (!element) return;
+        const nodes = clauseIds
+            .map(id => layout.byClauseId.get(id))
+            .filter((node): node is PositionedProofNode => Boolean(node));
+        if (!nodes.length) return;
+
+        const minX = Math.min(...nodes.map(node => node.x));
+        const minY = Math.min(...nodes.map(node => node.y));
+        const maxX = Math.max(...nodes.map(node => node.x + node.width));
+        const maxY = Math.max(...nodes.map(node => node.y + node.height));
+        const focusWidth = maxX - minX + 160;
+        const focusHeight = maxY - minY + 170;
+        const nextScale = Math.max(
+            0.58,
+            Math.min(1.55, (element.clientWidth - 36) / focusWidth, (element.clientHeight - 36) / focusHeight),
+        );
+        const centerX = (minX + maxX) / 2;
+        const centerY = (minY + maxY) / 2;
+
+        anchor.current = null;
+        setScale(nextScale);
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+            const left = Math.max(0, centerX * nextScale - element.clientWidth / 2);
+            const top = Math.max(0, centerY * nextScale - element.clientHeight / 2);
+            if (typeof element.scrollTo === 'function') {
+                element.scrollTo({left, top, behavior: 'smooth'});
+            } else {
+                element.scrollLeft = left;
+                element.scrollTop = top;
+            }
+        }));
+    }
+
+    function focusInference(index: number) {
+        const inference = proof.inferences[index];
+        if (!inference) return;
+        focusClauseIds([inference.parent1, inference.parent2, inference.resultId]);
+    }
+
+    async function persistCompletion() {
+        setCompletionState('saving');
+        setCompletionError('');
+        try {
+            await onContradictionReached?.();
+            setCompletionState('saved');
+        } catch (failure) {
+            setCompletionState('error');
+            setCompletionError(
+                failure instanceof Error
+                    ? failure.message
+                    : 'The contradiction was reached, but the project status could not be saved.',
+            );
+        }
+    }
+
+    function announceContradiction(index: number) {
+        if (
+            !resolution.entailed
+            || contradictionStep < 0
+            || index !== contradictionStep
+            || completionTriggered.current
+        ) return;
+
+        completionTriggered.current = true;
+        setCompletionOpen(true);
+        void persistCompletion();
+    }
+
     function jumpToStep(index: number, preferredKey?: string) {
         if (!proof.inferences.length) return;
         const bounded = Math.max(0, Math.min(proof.inferences.length - 1, index));
@@ -123,38 +207,37 @@ export function FullResolutionView({
         setTab('tree');
 
         const inference = proof.inferences[bounded];
-        const target = preferredKey
-            ? layout.byKey.get(preferredKey)
-            : layout.nodes.find(node =>
-                node.clauseId === inference.resultId && node.derivationStep === bounded,
-            );
-        if (target) {
-            setSelected(target.key);
-            centerNode(target.key);
-        }
+        const preferred = preferredKey ? layout.byKey.get(preferredKey) : null;
+        const target = preferred ?? layout.byClauseId.get(inference.resultId);
+        if (target) setSelected(target.key);
+        requestAnimationFrame(() => focusInference(bounded));
+        announceContradiction(bounded);
     }
 
     function selectNode(node: PositionedProofNode) {
         setSelected(node.key);
         const step = firstRelevantProofStep(node, proof.inferences);
-        if (step !== null) jumpToStep(step, node.key);
-        else centerNode(node.key);
+        if (step !== null) {
+            jumpToStep(step, node.key);
+            return;
+        }
+        // An unused project clause has no proof step to jump to. Keep it in the
+        // overview and explain that status in the details panel.
+        setWalkthrough(false);
+        setTab('tree');
+        centerNode(node.key);
     }
 
     function showFinalProof() {
         setWalkthrough(false);
         setTab('tree');
-        if (proof.root) {
-            setSelected(proof.root.key);
-            centerNode(proof.root.key);
-        }
+        if (proof.root) setSelected(proof.root.key);
+        requestAnimationFrame(fit);
     }
 
     useLayoutEffect(() => {
         if (tab !== 'tree' || !viewport.current) return;
         fit();
-        // Layout changes only when the proof changes; do not refit while users
-        // are walking through steps or selecting nodes.
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [layout, tab]);
 
@@ -185,7 +268,9 @@ export function FullResolutionView({
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [scale, tab]);
 
+    const totalInputs = proof.inputClauseIds.length;
     const usedInputs = proof.usedInputIds.length;
+    const unusedInputs = proof.unusedInputIds.length;
     const finalExpression = proof.root?.expression ?? '';
     const stepCount = proof.inferences.length;
 
@@ -223,6 +308,12 @@ export function FullResolutionView({
         ? new Set([currentInference.parent1, currentInference.parent2, currentInference.resultId])
         : new Set<string>();
 
+    const selectedPairings = selectedNode
+        ? (resolution.graph?.branches ?? []).filter(branch =>
+            branch.parent_1 === selectedNode.clauseId || branch.parent_2 === selectedNode.clauseId,
+        ).length
+        : 0;
+
     return (
         <main className="resolution-screen full-resolution-screen proof-resolution-screen">
             <header className="resolution-heading">
@@ -237,23 +328,25 @@ export function FullResolutionView({
 
             <section className="resolution-overview proof-overview">
                 <p>
-                    This is the proof itself, not the resolution search space. Each derived clause sits below the two clauses used to produce it, and the proof finishes at the empty clause <strong>□</strong>.
+                    Every starting clause in the project stays visible. Proof edges are drawn only for the clauses that actually contribute to the displayed contradiction proof, so you can see both the full context and the proof itself.
                 </p>
                 <div className="graph-summary">
+                    <span>{totalInputs} project {totalInputs === 1 ? 'clause' : 'clauses'}</span>
+                    <span>{usedInputs} used in proof</span>
+                    <span>{unusedInputs} not used in this proof</span>
                     <span>{stepCount} proof {stepCount === 1 ? 'inference' : 'inferences'}</span>
-                    <span>{usedInputs} input {usedInputs === 1 ? 'clause' : 'clauses'} used</span>
                     <span>Final clause: <strong>{display(finalExpression)}</strong></span>
                     <span>{verifiedShortest ? 'Verified shortest proof' : 'Proof returned by resolution'}</span>
                 </div>
                 <div className="proof-help-strip">
-                    <strong>Interactive:</strong> click any clause to jump to the step where it is derived or first used, then move through the proof with Previous and Next.
+                    <strong>Walkthrough:</strong> Previous and Next automatically zoom to the two parent clauses and their resolvent. All other project clauses remain on the canvas, but fade into the background.
                 </div>
             </section>
 
             <nav className="resolution-tabs" aria-label="Resolution proof views">
                 <button className={tab === 'tree' ? 'active' : ''} onClick={() => setTab('tree')}>Proof tree</button>
                 <button className={tab === 'steps' ? 'active' : ''} onClick={() => setTab('steps')}>Proof steps</button>
-                <button className={tab === 'clauses' ? 'active' : ''} onClick={() => setTab('clauses')}>Input clauses</button>
+                <button className={tab === 'clauses' ? 'active' : ''} onClick={() => setTab('clauses')}>Project clauses</button>
             </nav>
 
             {tab === 'tree' && (
@@ -265,7 +358,7 @@ export function FullResolutionView({
                                     className={!walkthrough ? 'active' : ''}
                                     onClick={showFinalProof}
                                 >
-                                    Final proof
+                                    Overview
                                 </button>
                                 <button
                                     className={walkthrough ? 'active' : ''}
@@ -273,6 +366,12 @@ export function FullResolutionView({
                                 >
                                     Step through
                                 </button>
+                            </div>
+
+                            <div className="proof-context-legend" aria-label="Proof graph legend">
+                                <span className="proof-legend-used">Used in proof</span>
+                                <span className="proof-legend-unused">Available input</span>
+                                <span className="proof-legend-goal">Negated goal</span>
                             </div>
 
                             {walkthrough && currentInference && (
@@ -307,7 +406,7 @@ export function FullResolutionView({
                             className="full-graph-viewport proof-tree-viewport"
                             ref={viewport}
                             tabIndex={0}
-                            aria-label="Resolution proof tree canvas"
+                            aria-label="Resolution proof tree canvas with all project clauses"
                             onKeyDown={event => {
                                 if (event.target !== event.currentTarget) return;
                                 if (['+', '=', '-'].includes(event.key)) {
@@ -358,7 +457,7 @@ export function FullResolutionView({
                                 width={layout.width * scale}
                                 height={layout.height * scale}
                                 viewBox={`0 0 ${layout.width} ${layout.height}`}
-                                aria-label="Final binary resolution proof tree"
+                                aria-label="Final resolution proof with complete project clause context"
                             >
                                 <defs>
                                     <marker id="proof-arrow" markerWidth="7" markerHeight="7" refX="6" refY="3" orient="auto">
@@ -366,9 +465,23 @@ export function FullResolutionView({
                                     </marker>
                                 </defs>
 
-                                {layout.edges.map(edge => {
-                                    const parent = layout.byKey.get(edge.from)!;
-                                    const child = layout.byKey.get(edge.to)!;
+                                <text className="proof-input-bank-label" x={48} y={27}>
+                                    PROJECT CLAUSES · {totalInputs}
+                                </text>
+                                <line
+                                    className="proof-input-bank-divider"
+                                    x1={38}
+                                    x2={Math.max(38, layout.width - 38)}
+                                    y1={layout.inputBandBottom - 34}
+                                    y2={layout.inputBandBottom - 34}
+                                />
+                                <text className="proof-derivation-label" x={48} y={layout.inputBandBottom - 11}>
+                                    PROOF DERIVATIONS
+                                </text>
+
+                                {layout.edges.map((edge, index) => {
+                                    const parent = layout.byClauseId.get(edge.from)!;
+                                    const child = layout.byClauseId.get(edge.to)!;
                                     const future = walkthrough && edge.step > stepIndex;
                                     const active = walkthrough && edge.step === stepIndex;
                                     const complete = walkthrough && edge.step < stepIndex;
@@ -379,7 +492,7 @@ export function FullResolutionView({
                                     const joinY = y2 - 30;
                                     return (
                                         <path
-                                            key={`${edge.from}-${edge.to}`}
+                                            key={`${edge.from}-${edge.to}-${index}`}
                                             className={`proof-tree-edge ${future ? 'future' : ''} ${active ? 'active' : ''} ${complete ? 'complete' : ''}`}
                                             d={`M${x1},${y1} V${joinY} H${x2} V${y2}`}
                                             markerEnd="url(#proof-arrow)"
@@ -389,25 +502,28 @@ export function FullResolutionView({
 
                                 {layout.nodes
                                     .filter(node => node.derivationStep !== null)
-                                    .map(node => (
-                                        <g key={`pivot-${node.key}`}>
-                                            <rect
-                                                className="proof-pivot-pill"
-                                                x={node.x + node.width / 2 - 43}
-                                                y={node.y - 24}
-                                                width={86}
-                                                height={18}
-                                                rx={9}
-                                            />
-                                            <text
-                                                className="proof-pivot-text"
-                                                x={node.x + node.width / 2}
-                                                y={node.y - 11}
-                                            >
-                                                on {short(display(node.pivot ?? ''), 10)}
-                                            </text>
-                                        </g>
-                                    ))}
+                                    .map(node => {
+                                        const dimmed = walkthrough && node.derivationStep !== stepIndex;
+                                        return (
+                                            <g key={`pivot-${node.key}`} className={dimmed ? 'proof-pivot-group dimmed' : 'proof-pivot-group'}>
+                                                <rect
+                                                    className="proof-pivot-pill"
+                                                    x={node.x + node.width / 2 - 43}
+                                                    y={node.y - 24}
+                                                    width={86}
+                                                    height={18}
+                                                    rx={9}
+                                                />
+                                                <text
+                                                    className="proof-pivot-text"
+                                                    x={node.x + node.width / 2}
+                                                    y={node.y - 11}
+                                                >
+                                                    on {short(display(node.pivot ?? ''), 10)}
+                                                </text>
+                                            </g>
+                                        );
+                                    })}
 
                                 {layout.nodes.map(node => {
                                     const future = walkthrough
@@ -420,13 +536,15 @@ export function FullResolutionView({
                                     const completed = walkthrough
                                         && node.derivationStep !== null
                                         && node.derivationStep < stepIndex;
+                                    const unusedInput = node.derivationStep === null && !node.usedInProof;
+                                    const contextDimmed = walkthrough && !active;
                                     return (
                                         <g
                                             key={node.key}
                                             data-proof-node={node.key}
                                             role="button"
                                             tabIndex={0}
-                                            className={`proof-tree-node ${node.kind} ${node.isNegatedGoal ? 'negated-goal' : ''} ${selected === node.key ? 'selected' : ''} ${future ? 'future' : ''} ${active ? 'active-step' : ''} ${currentResult ? 'current-result' : ''} ${completed ? 'completed' : ''}`}
+                                            className={`proof-tree-node ${node.kind} ${node.isNegatedGoal ? 'negated-goal' : ''} ${node.usedInProof && node.derivationStep === null ? 'used-input' : ''} ${unusedInput ? 'unused-input' : ''} ${selected === node.key ? 'selected' : ''} ${future ? 'future' : ''} ${active ? 'active-step' : ''} ${currentResult ? 'current-result' : ''} ${completed ? 'completed' : ''} ${contextDimmed ? 'context-dimmed' : ''}`}
                                             aria-label={`${node.clauseId}: ${display(node.expression)}, ${node.derivationStep === null ? 'input clause' : `derived at step ${node.derivationStep + 1}`}`}
                                             onClick={() => selectNode(node)}
                                             onKeyDown={event => {
@@ -438,23 +556,27 @@ export function FullResolutionView({
                                         >
                                             <title>
                                                 {nodeCaption(node)}. {display(node.expression)}.
-                                                {node.derivationStep === null
-                                                    ? ' Click to start where this clause is first used.'
-                                                    : ` Click to jump to proof step ${node.derivationStep + 1}.`}
+                                                {node.derivationStep !== null
+                                                    ? ` Click to jump to proof step ${node.derivationStep + 1}.`
+                                                    : node.usedInProof
+                                                        ? ' Click to jump to the first proof step that uses this clause.'
+                                                        : ' This project clause is not used in the displayed proof.'}
                                             </title>
                                             <rect x={node.x} y={node.y} width={node.width} height={node.height} rx={11} />
                                             <text className="proof-node-caption" x={node.x + 14} y={node.y + 21}>
                                                 {nodeCaption(node)}
                                             </text>
                                             <text className="proof-node-expression" x={node.x + 14} y={node.y + 51}>
-                                                {node.kind === 'empty' ? '□  Contradiction' : short(display(node.expression), 27)}
+                                                {node.kind === 'empty' ? '□  Contradiction' : short(display(node.expression), 25)}
                                             </text>
                                             <text className="proof-node-footer" x={node.x + 14} y={node.y + 75}>
                                                 {node.isNegatedGoal
                                                     ? 'Added negation of the goal'
                                                     : node.derivationStep !== null
                                                         ? `Derived by resolution · step ${node.derivationStep + 1}`
-                                                        : short(node.sourceKnowledgeBase ?? 'Knowledge-base premise', 30)}
+                                                        : unusedInput
+                                                            ? 'Available · not used in displayed proof'
+                                                            : short(node.sourceKnowledgeBase ?? 'Knowledge-base premise', 28)}
                                             </text>
                                         </g>
                                     );
@@ -467,7 +589,7 @@ export function FullResolutionView({
                                 <button className="icon-button" aria-label="Zoom out" onClick={() => zoom(scale / 1.18)}>−</button>
                                 <span>{Math.round(scale * 100)}%</span>
                                 <button className="icon-button" aria-label="Zoom in" onClick={() => zoom(scale * 1.18)}>+</button>
-                                <button className="button secondary small" onClick={fit}><Icon name="fit" size={17} />Fit view</button>
+                                <button className="button secondary small" onClick={fit}><Icon name="fit" size={17} />Fit all clauses</button>
                                 <button className="button secondary small" onClick={() => zoom(1)}>100%</button>
                             </div>
                             {walkthrough && (
@@ -485,6 +607,7 @@ export function FullResolutionView({
                                 <div className="detail-clause proof-detail-clause">
                                     <strong>{display(selectedNode.expression)}</strong>
                                     {selectedNode.isNegatedGoal && <small>Negated goal</small>}
+                                    {selectedNode.derivationStep === null && !selectedNode.usedInProof && <small>Not used in displayed proof</small>}
                                 </div>
 
                                 {selectedNode.derivationStep === null ? (
@@ -492,9 +615,21 @@ export function FullResolutionView({
                                         <p>Role in the proof</p>
                                         <div className="proof-detail-copy">
                                             {selectedNode.isNegatedGoal
-                                                ? 'This premise is the negation of the goal introduced for proof by contradiction.'
-                                                : 'This is an original knowledge-base premise used by the proof.'}
+                                                ? 'This clause is the negation of the goal introduced for proof by contradiction.'
+                                                : selectedNode.usedInProof
+                                                    ? 'This is an original project clause that contributes to the displayed proof.'
+                                                    : 'This clause belongs to the project, but it is not required by the displayed proof. It remains on the graph so the complete starting clause set is visible.'}
                                         </div>
+                                        {!selectedNode.usedInProof && resolution.graph && (
+                                            <>
+                                                <p>Resolution search</p>
+                                                <div className="proof-detail-copy">
+                                                    {selectedPairings > 0
+                                                        ? `The full resolution search examined this clause in ${selectedPairings} ${selectedPairings === 1 ? 'pairing' : 'pairings'}, but none was needed for the displayed proof.`
+                                                        : 'No recorded pairing involving this clause was needed for the displayed proof.'}
+                                                </div>
+                                            </>
+                                        )}
                                         {selectedNode.sourceKnowledgeBase && (
                                             <><p>Knowledge base</p><div className="proof-detail-copy">{selectedNode.sourceKnowledgeBase}</div></>
                                         )}
@@ -510,22 +645,30 @@ export function FullResolutionView({
                                         <div className="proof-detail-copy"><strong>{display(selectedNode.pivot ?? '')}</strong></div>
                                         <p>Parent clauses</p>
                                         <div className="proof-parent-pair">
-                                            {selectedNode.parents.map(parent => (
-                                                <button key={parent.key} onClick={() => selectNode(layout.byKey.get(parent.key) ?? parent as PositionedProofNode)}>
-                                                    <small>{parent.clauseId}</small>
-                                                    <strong>{display(parent.expression)}</strong>
-                                                </button>
-                                            ))}
+                                            {selectedNode.parents.map(parent => {
+                                                const positionedParent = layout.byClauseId.get(parent.clauseId);
+                                                return (
+                                                    <button
+                                                        key={parent.key}
+                                                        onClick={() => positionedParent && selectNode(positionedParent)}
+                                                    >
+                                                        <small>{parent.clauseId}</small>
+                                                        <strong>{display(parent.expression)}</strong>
+                                                    </button>
+                                                );
+                                            })}
                                         </div>
                                     </>
                                 )}
 
                                 <p className="proof-click-note">
-                                    Clicking a clause jumps the walkthrough to where that clause is derived or first contributes to the proof.
+                                    {selectedNode.derivationStep === null && !selectedNode.usedInProof
+                                        ? 'This clause has no step in the displayed proof. Select a used clause, or choose Step through, to focus the proof path.'
+                                        : 'Clicking a proof clause jumps to where it is derived or first contributes to the proof, then the graph zooms to that inference.'}
                                 </p>
                             </>
                         ) : (
-                            <p>Select any clause in the proof tree to inspect it or begin walking through the proof from that point.</p>
+                            <p>Select any clause to inspect its role in the project and in the displayed proof.</p>
                         )}
                         <div className="graph-detail-actions">
                             <button className="button secondary" onClick={onBack}>Back to CNF</button>
@@ -540,7 +683,7 @@ export function FullResolutionView({
                     <div className="proof-data-heading">
                         <div>
                             <h2>Proof steps</h2>
-                            <p>The same proof in chronological inference order.</p>
+                            <p>The proof in chronological inference order. Show jumps back to the graph and focuses that inference.</p>
                         </div>
                         <button className="button secondary small" onClick={() => jumpToStep(0)}>Walk from step 1</button>
                     </div>
@@ -573,21 +716,73 @@ export function FullResolutionView({
 
             {tab === 'clauses' && (
                 <section className="panel proof-data graph-data">
-                    <h2>Input clauses</h2>
-                    <div className="clause-list">
-                        {resolution.initial_clauses.map(clause => (
-                            <div className="clause-list-row" key={clause.id}>
-                                <span>{clause.id}</span>
-                                <strong>{display(clause.expression)}</strong>
-                                <small>
-                                    {clause.is_negated_goal
-                                        ? 'Negated goal'
-                                        : clause.source_knowledge_base ?? 'Project input'}
-                                </small>
-                            </div>
-                        ))}
+                    <div className="proof-data-heading">
+                        <div>
+                            <h2>Project clauses</h2>
+                            <p>Every starting clause is listed here, including clauses that the displayed proof does not use.</p>
+                        </div>
+                    </div>
+                    <div className="clause-list proof-project-clause-list">
+                        {resolution.initial_clauses.map(clause => {
+                            const used = usedInputSet.has(clause.id);
+                            return (
+                                <div className="clause-list-row" key={clause.id}>
+                                    <span>{clause.id}</span>
+                                    <strong>{display(clause.expression)}</strong>
+                                    <small>
+                                        {clause.is_negated_goal
+                                            ? 'Negated goal'
+                                            : clause.source_knowledge_base ?? 'Project input'}
+                                    </small>
+                                    <em className={`proof-clause-status ${used ? 'used' : 'unused'}`}>
+                                        {used ? 'Used in proof' : 'Not used in displayed proof'}
+                                    </em>
+                                </div>
+                            );
+                        })}
                     </div>
                 </section>
+            )}
+
+            {completionOpen && (
+                <div className="proof-completion-backdrop" role="presentation">
+                    <section
+                        className="proof-completion-dialog"
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby="proof-completion-title"
+                        aria-describedby="proof-completion-description"
+                    >
+                        <div className="proof-completion-symbol" aria-hidden="true">□</div>
+                        <div className="proof-completion-copy">
+                            <span className="proof-completion-kicker">Contradiction reached</span>
+                            <h2 id="proof-completion-title">The goal is entailed</h2>
+                            <p id="proof-completion-description">
+                                Resolution derived the empty clause <strong>□</strong>. Because adding the negation of
+                                <strong> {display(goal)}</strong> leads to a contradiction, the original goal is entailed by the project knowledge base.
+                            </p>
+                            <div className={`proof-completion-save-state ${completionState}`}>
+                                {completionState === 'saving' && 'Saving project as completed…'}
+                                {completionState === 'saved' && 'Project status updated to Completed.'}
+                                {completionState === 'error' && (completionError || 'Could not save the completed status.')}
+                            </div>
+                        </div>
+                        <div className="proof-completion-actions">
+                            {completionState === 'error' && (
+                                <button className="button secondary" onClick={() => void persistCompletion()}>
+                                    Retry status update
+                                </button>
+                            )}
+                            <button
+                                className="button primary"
+                                disabled={completionState === 'saving'}
+                                onClick={() => setCompletionOpen(false)}
+                            >
+                                Return to proof
+                            </button>
+                        </div>
+                    </section>
+                </div>
             )}
         </main>
     );

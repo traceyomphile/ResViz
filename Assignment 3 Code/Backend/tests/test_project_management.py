@@ -67,6 +67,19 @@ class ProjectManagementTests(unittest.IsolatedAsyncioTestCase):
         self.assertIsNone(saved.cnf_kb)
         self.assertEqual(saved.status, "draft")
 
+    async def test_mark_completed_persists_completed_status(self):
+        project = Project(
+            project_id="project-1",
+            status="in-progress",
+            resolution_result="entailed",
+        )
+        self.manager.get.return_value = project
+
+        saved = await self.manager.mark_completed("session-1", "project-1")
+
+        self.assertEqual(saved.status, "completed")
+        self.manager.save.assert_awaited_once_with("session-1", project)
+
     async def test_activating_named_kb_loads_its_formulas(self):
         entry = KnowledgeBaseEntry(id="kb-1", name="Admissions", formulas=["A"])
         self.manager.get.return_value = Project(project_id="project-1", knowledge_bases=[entry])

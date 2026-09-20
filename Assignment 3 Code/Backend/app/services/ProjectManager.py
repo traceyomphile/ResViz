@@ -118,8 +118,20 @@ class ProjectManager:
             return None
 
         project.resolution_result = result
-        project.status = 'resolution-complete'
+        # Resolution has been computed, but the learner has not necessarily
+        # walked the proof through to the contradiction yet. Keep the project
+        # in progress until the UI explicitly marks the contradiction as reached.
+        project.status = 'in-progress'
 
+        return await self.save(session_id, project)
+
+    async def mark_completed(self, session_id: str, project_id: str) -> Project | None:
+        project = await self.get(session_id, project_id)
+
+        if project is None:
+            return None
+
+        project.status = 'completed'
         return await self.save(session_id, project)
 
     async def set_cnf_result(self, session_id: str, project_id: str, clauses: list, steps: list[dict[str, str | int]]) -> Project | None:

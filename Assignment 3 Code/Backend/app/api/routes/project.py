@@ -189,6 +189,33 @@ async def rename_project(project_id: str, payload: ProjectUpdate, session: Sessi
 
     return updated_project
 
+@project_router.post('/{project_id}/complete', response_model=Project)
+async def complete_project(project_id: str, session: SessionResponse = Depends(require_session)) -> Project:
+    """Mark a project complete after an entailment contradiction has been reached."""
+    project = await project_manager.get(session.session_id, project_id)
+
+    if project is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail='Project not found',
+        )
+
+    if project.resolution_result != 'entailed':
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail='The project can only be completed after resolution derives a contradiction.',
+        )
+
+    completed = await project_manager.mark_completed(session.session_id, project_id)
+    if completed is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail='Project not found',
+        )
+
+    return completed
+
+
 @project_router.delete('/{project_id}', status_code=status.HTTP_204_NO_CONTENT)
 async def delete_project(project_id: str, session: SessionResponse = Depends(require_session)) -> None:
     """Delete the project of the specified ID from the current session."""

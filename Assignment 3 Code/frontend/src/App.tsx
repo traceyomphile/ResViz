@@ -1,7 +1,7 @@
 import {useCallback, useEffect, useRef, useState} from 'react';
 import './App.css';
 import {restoreSession} from './api/session';
-import {getProjects, getProject, createProject, renameProject, type ProjectSummary, type SavedProjectKB} from './api/projects';
+import {completeProject, getProjects, getProject, createProject, renameProject, type ProjectSummary, type SavedProjectKB} from './api/projects';
 import {deleteSavedKnowledgeBase, convertProjectToCnf, resolveProject, saveNamedKnowledgeBase, saveQuery, updateNamedKnowledgeBase, validateKnowledgeBase, type CNFConversionResponse, type ResolutionResponse} from './api/knowledgeBase';
 import {DeleteKnowledgeBaseDialog} from './components/DeleteKnowledgeBaseDialog';
 import {KnowledgeBaseDialog} from './components/KnowledgeBaseDialog';
@@ -145,13 +145,14 @@ export default function App() {
       annotations,
       ...(goal ? {goal} : {}),
     };
-    const invalidFileNameChars = /[<>:"/\\|?*]/g;
+    const controlCharsPattern = new RegExp(
+      '[' + Array.from({length: 32}, (_, index) => String.fromCharCode(index)).join('') + ']',
+      'g',
+    );
     const safeName = selected.name
       .trim()
-      .replace(invalidFileNameChars, '-')
-      .split('')
-      .map(char => (char.charCodeAt(0) < 32 ? '-' : char))
-      .join('')
+      .replace(/[<>:"/\\|?*]/g, '-')
+      .replace(controlCharsPattern, '-')
       .replace(/\s+/g, '_')
       .replace(/[. ]+$/g, '')
       .slice(0, 100) || 'knowledge-base';
@@ -382,6 +383,23 @@ export default function App() {
     }
   }
 
+  async function markCurrentProjectCompleted(): Promise<void> {
+    if (!project || project.status === 'completed') return;
+
+    try {
+      const completed = await completeProject(project.id);
+      setProject(completed);
+      updateProject(completed);
+      setError('');
+    } catch (failure) {
+      const message = failure instanceof Error
+        ? failure.message
+        : 'The proof is complete, but the project status could not be saved.';
+      setError(message);
+      throw failure;
+    }
+  }
+
   async function beginResolution() {
     if (!project || locked) return;
     setBusy(true);
@@ -511,6 +529,7 @@ export default function App() {
       goal={project?.goal ?? ''}
       onBack={() => setScreen('cnf')}
       onBackToKnowledgeBase={() => setScreen('workspace')}
+      onContradictionReached={() => markCurrentProjectCompleted()}
     />}
 
     {screen === 'resolution' && error && <div className="global-status field-error" role="alert">{error}</div>}

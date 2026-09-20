@@ -393,6 +393,7 @@ export function ProjectView({
       <h2 className="recent-heading">Recent projects</h2>
       <div className="project-grid" aria-label="Projects">{displayProjects.map(item => {
         const demo = item.id.startsWith('demo-');
+        const completed = !demo && item.status === 'completed';
         const knowledgeBases = item.knowledgeBases ?? [];
         // The project-level formulas mirror the active KB, so don't add them twice.
         const formulaCount = knowledgeBases.length
@@ -404,7 +405,7 @@ export function ProjectView({
         const date = used ? new Intl.DateTimeFormat(undefined, {month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit'}).format(used) : demo ? 'Ready to explore' : 'Not opened yet';
         return <article key={item.id} className={`project-card ${selectedProjectId === item.id ? 'project-card--selected' : ''}`}>
           <div className="project-card-menu"><button aria-label={`Options for ${item.name}`} aria-expanded={menuId === item.id} onClick={() => setMenuId(menuId === item.id ? null : item.id)}>•••</button>{menuId === item.id && <div className="card-menu"><button disabled={isBusy} onClick={() => {setMenuId(null); void handleOpen(item);}}><Icon name="folder" size={16} />Open project</button><button disabled={isBusy || !allSavedProjects.some(p => p.id === item.id)} onClick={() => {setMenuId(null); void handleExport(item.id);}}><Icon name="download" size={16} />Export project</button><button className="delete-project-option" disabled={isBusy} onClick={() => {setMenuId(null); setDeleteError(''); setDeleteTarget(item);}}><Icon name="trash" size={16} />Delete project</button></div>}</div>
-          <div className="project-card-header"><span className={`project-card-icon ${!demo ? 'project-card-icon--cnf' : item.id === 'demo-b' ? 'project-card-icon--formula' : ''}`}>{!demo ? <><Icon name="file" size={51} /><b>CNF</b></> : item.id === 'demo-b' ? <span>(p ∨ q)<br />¬r</span> : <Icon name="tree" size={45} />}</span><div><h3>{item.name}</h3><span className={`badge ${demo ? 'sample' : 'progress'}`}>{demo ? 'Sample' : 'In progress'}</span></div></div>
+          <div className="project-card-header"><span className={`project-card-icon ${!demo ? 'project-card-icon--cnf' : item.id === 'demo-b' ? 'project-card-icon--formula' : ''}`}>{!demo ? <><Icon name="file" size={51} /><b>CNF</b></> : item.id === 'demo-b' ? <span>(p ∨ q)<br />¬r</span> : <Icon name="tree" size={45} />}</span><div><h3>{item.name}</h3><span className={`badge ${demo ? 'sample' : completed ? 'completed' : 'progress'}`}>{demo ? 'Sample' : completed ? 'Completed' : 'In progress'}</span></div></div>
           <p className="project-formula-count"><span>{formulaCount} {formulaCount === 1 ? 'formula' : 'formulas'}</span><span aria-hidden="true">·</span><span>{knowledgeBaseCount} {knowledgeBaseCount === 1 ? 'knowledge base' : 'knowledge bases'}</span></p>
           <footer className="project-card-footer"><div className="project-last-opened"><Icon name="clock" size={21} /><div><span>{used ? 'Last opened' : demo ? 'Sample project' : 'Last opened'}</span><span>{date}</span></div></div><button className="button primary" disabled={isBusy} onClick={() => { void handleOpen(item);}}>{isBusy && selectedProjectId === item.id ? 'Opening…' : 'Open'}</button></footer>
         </article>;
