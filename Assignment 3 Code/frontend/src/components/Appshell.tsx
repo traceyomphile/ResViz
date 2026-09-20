@@ -51,3 +51,4 @@ export function GuideView({section}: {section: 'learn' | 'help'}) {
     ['Explore the tree', 'Select a first choice above the canvas to focus its own subtree, or choose Whole tree to compare branches. Use + on a card to unfold its own children, and Expand all shown branches to reveal the generated tree. Initial generation is bounded to eight levels and 1,200 occurrences; select a limited card and Continue this branch to reveal more. Click a card for the history of only that path. Zoom, Fit view, 100% and background dragging help navigate larger trees.'],
   ]).map(([title, copy], index) => <li className="guide-section" key={title}><span className="guide-step-number" aria-hidden="true">{index + 1}.</span><div><h2>{title}</h2><p>{copy}</p></div></li>)}</ol></main>;
 }
+
