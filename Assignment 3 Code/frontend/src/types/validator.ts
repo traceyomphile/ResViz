@@ -408,3 +408,5 @@ export async function validateKBFile(file: File): Promise<UploadedValidationRes>
         return {valid: errors.length === 0, errors};
     } catch (error) {return fail(error instanceof Error ? error.message : 'Could not read the file.');}
 }
+
+

@@ -82,13 +82,15 @@ class ProjectManager:
 
         return project
 
-    async def set_knowledge_base(self, session_id: str, project_id: str, formulas: list) -> Project | None:
+    async def set_knowledge_base(self, session_id: str, project_id: str, formulas: list, annotations: list[str] | None = None) -> Project | None:
         project = await self.get(session_id, project_id)
 
         if project is None:
             return None
 
         project.knowledge_base = formulas
+        project.knowledge_base_annotations = annotations if annotations is not None else [''] * len(formulas)
+        project.active_knowledge_base_id = None
         self._invalidate_reasoning(project)
 
         return await self.save(session_id, project)
@@ -102,6 +104,9 @@ class ProjectManager:
         if project is None: return None
 
         project.goal = goal
+        active = next((entry for entry in project.knowledge_bases if entry.id == project.active_knowledge_base_id), None)
+        if active is not None:
+            active.goal = goal
         self._invalidate_reasoning(project)
 
         return await self.save(session_id, project)
@@ -134,10 +139,29 @@ class ProjectManager:
 
         if project is None: return None
 
+        if 'goal' not in entry.model_fields_set:
+            entry.goal = project.goal
         project.knowledge_bases.append(entry)
+        project.active_knowledge_base_id = entry.id
+        project.goal = entry.goal
         project.knowledge_base = entry.formulas
+        project.knowledge_base_annotations = list(entry.annotations)
         self._invalidate_reasoning(project)
 
+        return await self.save(session_id, project)
+
+    async def update_knowledge_base_entry(self, session_id: str, project_id: str, kb_id: str, name: str, formulas: list, goal, annotations: list[str] | None = None) -> Project | None:
+        project = await self.get(session_id, project_id)
+        if project is None: return None
+        entry = next((entry for entry in project.knowledge_bases if entry.id == kb_id), None)
+        if entry is None: return None
+        previous_formulas = [str(formula) for formula in entry.formulas]
+        entry.name, entry.formulas, entry.goal = name, formulas, goal
+        entry.annotations = annotations if annotations is not None else (entry.annotations if previous_formulas == [str(formula) for formula in formulas] else [''] * len(formulas))
+        project.active_knowledge_base_id = entry.id
+        project.knowledge_base, project.goal = entry.formulas, entry.goal
+        project.knowledge_base_annotations = list(entry.annotations)
+        self._invalidate_reasoning(project)
         return await self.save(session_id, project)
 
     async def list_knowledge_base_entries(self, session_id: str, project_id: str) -> list[KnowledgeBaseEntry] | None:
@@ -163,6 +187,9 @@ class ProjectManager:
         if entry is None: return None
 
         project.knowledge_base = entry.formulas
+        project.knowledge_base_annotations = list(entry.annotations)
+        project.goal = entry.goal
+        project.active_knowledge_base_id = entry.id
         self._invalidate_reasoning(project)
 
         return await self.save(session_id, project)
@@ -184,10 +211,14 @@ class ProjectManager:
 
         project.knowledge_bases = remaining
 
-        if deleted is not None and [str(item) for item in project.knowledge_base] == [
-            str(item) for item in deleted.formulas
-        ]:
-            project.knowledge_base = remaining[-1].formulas if remaining else []
+        if deleted is not None and (project.active_knowledge_base_id == kb_id or (
+            project.active_knowledge_base_id is None and [str(item) for item in project.knowledge_base] == [str(item) for item in deleted.formulas]
+        )):
+            fallback = remaining[-1] if remaining else None
+            project.active_knowledge_base_id = fallback.id if fallback else None
+            project.knowledge_base = fallback.formulas if fallback else []
+            project.knowledge_base_annotations = list(fallback.annotations) if fallback else []
+            project.goal = fallback.goal if fallback else None
 
         self._invalidate_reasoning(project)
 
@@ -196,7 +227,15 @@ class ProjectManager:
     async def delete(self, session_id: str, project_id: str) -> bool:
         deleted_count = await self._redis.delete(self._key(session_id, project_id))
 
-        return deleted_count > 0
+        if deleted_count == 0:
+            return False
+        session = await session_manager.get(session_id, datetime.now(timezone.utc))
+        if session is not None:
+            session.project_ids = [item for item in session.project_ids if item != project_id]
+            if session.active_project_id == project_id:
+                session.active_project_id = None
+            await session_manager.save(session)
+        return True
 
     async def get_all(self, session_id: str) -> list[Project]:
         now = datetime.now(timezone.utc)
