@@ -346,6 +346,84 @@ async def save_named_knowledge_base(project_id: str, payload: SaveKnowledgeBaseP
         formula_count=len(entry.formulas),
         created_at=entry.created_at,
     )
+
+@knowledge_base_router.put('/projects/{project_id}/knowledge-bases/{kb_id}', response_model=KnowledgeBaseEntrySummary)
+async def update_saved_knowledge_base(project_id: str, kb_id: str, payload: SaveKnowledgeBasePayload, session: SessionResponse = Depends(require_session)) -> KnowledgeBaseEntrySummary:
+    try:
+        parsed_formulas = [
+            parse_formula(formula)
+            for formula in payload.formulas
+        ]
+
+        parsed_goal = (
+            parse_formula(payload.goal)
+            if payload.goal and payload.goal.strip()
+            else None
+        )
+
+    except (ValidationError, ValueError, TypeError) as exc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail=f'Invalid propositional formula: {exc}',
+        ) from exc
+
+    # If annotations were supplied, they should match the formulas.
+    if (
+        payload.annotations is not None
+        and len(payload.annotations) != len(parsed_formulas)
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail=(
+                'The number of annotations must match '
+                'the number of formulas.'
+            ),
+        )
+
+    # Keep Node.annotation consistent with the separate annotations list.
+    if payload.annotations is not None:
+        for formula, annotation in zip(
+            parsed_formulas,
+            payload.annotations,
+        ):
+            formula.annotation = annotation or None
+
+    project = await project_manager.update_knowledge_base_entry(
+        session.session_id,
+        project_id,
+        kb_id,
+        payload.name,
+        parsed_formulas,
+        parsed_goal,
+        payload.annotations,
+    )
+
+    if project is None:
+        existing_project = await project_manager.get(
+            session.session_id,
+            project_id,
+        )
+
+        if existing_project is None:
+            raise project_not_found()
+
+        raise knowledge_base_not_found()
+
+    entry = await project_manager.get_knowledge_base_entry(
+        session.session_id,
+        project_id,
+        kb_id,
+    )
+
+    if entry is None:
+        raise knowledge_base_not_found()
+
+    return KnowledgeBaseEntrySummary(
+        id=entry.id,
+        name=entry.name,
+        formula_count=len(entry.formulas),
+        created_at=entry.created_at,
+    )
  
 @knowledge_base_router.put('/projects/{project_id}/knowledge-bases/{kb_id}/activate', response_model=KnowledgeBaseResponse)
 async def activate_saved_knowledge_base(project_id: str, kb_id: str, session: SessionResponse = Depends(require_session)) -> KnowledgeBaseResponse:

@@ -9,11 +9,15 @@ const resolution: ResolutionResponse = {
     project_id: 'project-1',
     entailed: true,
     status: 'entailed',
-    initial_clauses: [],
+    initial_clauses: [
+        {id: 'C1', expression: '~P | Q', source_formula: '(P -> Q)', source_knowledge_base: 'Rules'},
+        {id: 'C2', expression: 'P', source_formula: 'P', source_knowledge_base: 'Facts'},
+        {id: 'C3', expression: '~Q', source_formula: '~(Q)', is_negated_goal: true},
+    ],
     clauses: [
         {id: 'C1', expression: '~P | Q', source_formula: '(P -> Q)'},
         {id: 'C2', expression: 'P', source_formula: 'P'},
-        {id: 'C3', expression: '~Q', source_formula: '~(Q)'},
+        {id: 'C3', expression: '~Q', source_formula: '~(Q)', is_negated_goal: true},
         {id: 'C4', expression: '~P', source_formula: null},
         {id: 'C5', expression: '□', source_formula: null},
     ],
@@ -24,33 +28,39 @@ const resolution: ResolutionResponse = {
 };
 
 describe('ResolutionView', () => {
-    it('shows parent clauses, complementary literals and the resolvent', () => {
-        render(<ResolutionView resolution={resolution} onBack={vi.fn()} onBackToKnowledgeBase={vi.fn()} />);
-        expect(screen.getByText('Step 1 of 2')).toBeInTheDocument();
-        expect(screen.getByText('~P | Q')).toBeInTheDocument();
-        expect(screen.getByText(/Complementary literals:/)).toHaveTextContent('~Q / Q');
-        expect(screen.getByText('C4')).toBeInTheDocument();
+    it('starts from the negated goal and shows independent resolution choices', () => {
+        render(<ResolutionView resolution={resolution} goal="Q" onBack={vi.fn()} onBackToKnowledgeBase={vi.fn()} />);
+        expect(screen.getByRole('heading', {name: 'Resolution visualisation'})).toBeInTheDocument();
+        expect(screen.getByText('Entailed')).toBeInTheDocument();
+        expect(screen.getByText('Goal:').parentElement).toHaveTextContent('Goal: Q');
+        expect(screen.getByText(/3 input clauses/)).toBeInTheDocument();
+        expect(screen.getByRole('button', {name: /C1:/})).toBeInTheDocument();
     });
 
-    it('navigates to the final step and displays entailment', async () => {
+    it('shows the project input clauses and identifies the negated goal', async () => {
         const user = userEvent.setup();
-        render(<ResolutionView resolution={resolution} onBack={vi.fn()} onBackToKnowledgeBase={vi.fn()} />);
-        await user.click(screen.getByRole('button', {name: 'Next'}));
-        expect(screen.getByText('Step 2 of 2')).toBeInTheDocument();
-        expect(screen.getByText('Empty clause reached — the query is entailed.')).toBeInTheDocument();
-        expect(screen.getByRole('button', {name: 'Next'})).toBeDisabled();
+        render(<ResolutionView resolution={resolution} goal="Q" onBack={vi.fn()} onBackToKnowledgeBase={vi.fn()} />);
+        await user.click(screen.getByRole('button', {name: 'Input clauses'}));
+        expect(screen.getByRole('heading', {name: 'Input clauses'})).toBeInTheDocument();
+        expect(screen.getAllByText('¬P | Q').length).toBeGreaterThan(0);
+        expect(screen.getByText('Negated goal')).toBeInTheDocument();
+        expect(screen.getByText('Rules')).toBeInTheDocument();
     });
 
-    it('provides navigation when no steps exist', async () => {
-        const user = userEvent.setup();
-        const backToKb = vi.fn();
-        render(<ResolutionView
-            resolution={{...resolution, entailed: false, status: 'not_entailed', steps: []}}
-            onBack={vi.fn()}
-            onBackToKnowledgeBase={backToKb}
-        />);
-        expect(screen.getByText('No resolution steps could be derived.')).toBeInTheDocument();
-        await user.click(screen.getByRole('button', {name: 'Back to Knowledge Base'}));
-        expect(backToKb).toHaveBeenCalledOnce();
+    it('still provides navigation when a branch cannot derive a contradiction', () => {
+        const unresolved: ResolutionResponse = {
+            ...resolution,
+            entailed: false,
+            status: 'not_entailed',
+            initial_clauses: [
+                {id: 'C1', expression: 'P', source_formula: 'P'},
+                {id: 'C2', expression: '~Q', source_formula: '~(Q)', is_negated_goal: true},
+            ],
+            steps: [],
+        };
+        render(<ResolutionView resolution={unresolved} goal="Q" onBack={vi.fn()} onBackToKnowledgeBase={vi.fn()} />);
+        expect(screen.getByText('Not entailed')).toBeInTheDocument();
+        expect(screen.getByRole('button', {name: 'Back to CNF'})).toBeInTheDocument();
+        expect(screen.getByRole('button', {name: 'Back to Knowledge Base'})).toBeInTheDocument();
     });
 });

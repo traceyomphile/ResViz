@@ -63,6 +63,7 @@ export default function App() {
     drafts.current[key] = data;
   }, [project?.id, entryId]);
   function openProject(item: ProjectSummary) {
+    console.log('🔥 APP openProject received:', item)
     setProject(item);
     const saved = item.knowledgeBases?.find(kb => kb.id === item.activeKnowledgeBaseId)
       ?? item.knowledgeBases?.find(kb => JSON.stringify(kb.formulas) === JSON.stringify(item.formulas))

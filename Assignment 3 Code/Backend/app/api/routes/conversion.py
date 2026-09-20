@@ -8,6 +8,7 @@ from starlette.concurrency import run_in_threadpool
 
 from app.api.routes.project import require_session
 from app.schemas.project import Project
+from app.schemas.session import SessionResponse
 from app.services.ProjectManager import project_manager
 from app.src.clause import Clause, Literal
 from app.src.cnf_converter import CNFConverter
@@ -136,9 +137,9 @@ def project_formulas(project: Project) -> list[Node]:
 )
 async def convert_to_cnf(
     project_id: str,
-    session_id: str = Depends(require_session),
+    session: SessionResponse = Depends(require_session),
 ) -> CNFConversionResponse:
-    project = await project_manager.get(session_id, project_id)
+    project = await project_manager.get(session.session_id, project_id)
     if project is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -185,7 +186,7 @@ async def convert_to_cnf(
     ]
 
     saved = await project_manager.set_cnf_result(
-        session_id,
+        session.session_id,
         project_id,
         clause_strings,
         [step.model_dump() for step in steps],
@@ -212,9 +213,9 @@ async def convert_to_cnf(
 )
 async def resolve_project(
     project_id: str,
-    session_id: str = Depends(require_session),
+    session: SessionResponse = Depends(require_session),
 ) -> ResolutionResponse:
-    project = await project_manager.get(session_id, project_id)
+    project = await project_manager.get(session.session_id, project_id)
     if project is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -292,7 +293,7 @@ async def resolve_project(
     ) for step in result.steps]
 
     saved = await project_manager.set_resolution_result(
-        session_id,
+        session.session_id,
         project_id,
         full_status,
     )

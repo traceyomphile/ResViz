@@ -1,4 +1,4 @@
-import {getSessionId, getTabId} from './session'
+import { getTabId } from './session'
 
 const API_URL = (import.meta as ImportMeta & {
     env?: {VITE_API_URL?: string };
@@ -35,12 +35,12 @@ export interface CreateProjectInput {
 export class ProjectImportConflictError extends Error {
     constructor() {
         super('A project with this ID already exists');
-        this.name = 'ProjectImportConflictError';
+        this.name = 'ProjectImportConflictError'; 
     }
 }
 
 
-type RawProject =
+type RawProject = 
     | string
     | {
         id?: string,
@@ -57,21 +57,13 @@ type RawProject =
     };
 
 export async function getProjects(): Promise<ProjectSummary[]> {
-    const sessionId = getSessionId();
-
-    if (!sessionId) {
-        throw new Error('Cannot load projects without an active session');
-    }
-
     let response: Response;
 
     try {
         response = await fetch(`${API_URL}/api/projects`, {
             method: 'GET',
-            headers: {
-                'X-Session-ID': sessionId,
-                'X-Tab-ID': getTabId(),
-            },
+            headers: projectHeaders(),
+            credentials: 'include',
         });
     } catch (err) {
         console.error('getProjects: network/CORS error', err);
@@ -106,14 +98,7 @@ export async function getProjects(): Promise<ProjectSummary[]> {
 }
 
 function projectHeaders(): Record<string, string> {
-    const sessionId = getSessionId();
-
-    if (!sessionId) {
-        throw new Error('Cannot access projects without an active session');
-    }
-
     return {
-        'X-Session-ID': sessionId,
         'X-Tab-ID': getTabId(),
     };
 }
@@ -149,6 +134,7 @@ export async function getProject(projectId: string): Promise<ProjectSummary> {
         {
             method: 'GET',
             headers: projectHeaders(),
+            credentials: 'include',
         }
     );
 
@@ -189,6 +175,7 @@ export async function createProject(input: CreateProjectInput): Promise<ProjectS
             ...projectHeaders(),
             'Content-Type': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify({
             project_id: input.id ?? generateProjectId(),
             name: input.name,
@@ -231,6 +218,7 @@ export async function importProject(file: File, overwrite = false): Promise<Proj
         {
             method: 'POST',
             headers: projectHeaders(),
+            credentials: 'include',
             body: formData,
         },
     );
@@ -253,6 +241,7 @@ export async function exportProject(projectId: string): Promise<void> {
         {
             method: 'GET',
             headers: projectHeaders(),
+            credentials: 'include',
         },
     );
 
@@ -291,7 +280,7 @@ export async function renameProject(projectId: string, name: string): Promise<Pr
         },
     );
 
-        if (!response.ok) {
+    if (!response.ok) {
         throw await responseError(
             response,
             `Could not update project name (${response.status})`,

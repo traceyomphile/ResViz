@@ -1,10 +1,9 @@
 # app/schemas/project.py
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
-from typing import Self
+from pydantic import BaseModel, ConfigDict, Field
 
 from app.src.parser import Node
-from app.schemas.knowledge_base import KnowledgeBaseEntry, align_annotations
+from app.schemas.knowledge_base import KnowledgeBaseEntry
 
 
 class Project(BaseModel):
@@ -16,6 +15,7 @@ class Project(BaseModel):
 
     knowledge_base: list[Node] = Field(default_factory=list)
     knowledge_base_annotations: list[str] = Field(default_factory=list)
+
     knowledge_bases: list[KnowledgeBaseEntry] = Field(default_factory=list)
     active_knowledge_base_id: str | None = None
 
@@ -26,19 +26,8 @@ class Project(BaseModel):
     status: str = "draft"
     resolution_result: str = ""
 
-    @model_validator(mode='after')
-    def restore_legacy_knowledge_bases(self) -> Self:
-        # Earlier exports kept one project goal and no active KB identifier.
-        for entry in self.knowledge_bases:
-            if 'goal' not in entry.model_fields_set:
-                entry.goal = self.goal
-        if self.active_knowledge_base_id is None:
-            signature = [str(formula) for formula in self.knowledge_base]
-            selected = next((entry for entry in self.knowledge_bases if [str(formula) for formula in entry.formulas] == signature), None)
-            if selected is not None:
-                self.active_knowledge_base_id = selected.id
-        active = next((entry for entry in self.knowledge_bases if entry.id == self.active_knowledge_base_id), None)
-        if 'knowledge_base_annotations' not in self.model_fields_set and active is not None:
-            self.knowledge_base_annotations = list(active.annotations)
-        self.knowledge_base_annotations = align_annotations(self.knowledge_base_annotations, len(self.knowledge_base))
-        return self
+"""
+Separate class for updating to avoid requesting the whole project just to change the name.
+"""
+class ProjectUpdate(BaseModel):
+    name: str = Field(min_length=1, max_length=80)
