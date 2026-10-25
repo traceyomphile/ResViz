@@ -526,7 +526,6 @@ The backend allows a set of configured frontend origins in `backend/app/config.p
 FRONTEND_URLS = [
     'http://127.0.0.1:5173',
     'http://localhost:5173',
-    'http://192.168.232.157:5173'
 ]
 ```
 
